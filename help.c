@@ -2,14 +2,14 @@
 #include <unistd.h>
 #include "svmwgraph/svmwgraph.h"
 #include "tb1_state.h"
-#include "menu_tools.h"
+#include "graphic_tools.h"
 
-void help(struct tb1_state *game_state)
+void help(tb1_state *game_state)
 {
     vmwVisual *vis;
     vmwFont *tb1_font;
    
-    vis=game_state->virtual_1;
+    vis=game_state->virtual_3;
     tb1_font=game_state->graph_state->default_font;
    
     coolbox(0,0,319,199,1,vis);

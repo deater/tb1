@@ -1,0 +1,35 @@
+Some Frequently Asked Questions
+
+
+Q1.)  Why does it give me an SDL display error?
+
+A1).  Tom Bombem runs by default in a 320x200x16bpp display.  It may
+      not work if you have an 8, 24, or 32bpp display.  This can
+      be fixed, it just hasn't yet.
+      
+Q2.)  Why is the picture 320x200 anyway?
+
+A2).  Tom Bombem is internally rendered at 320x200 and 256colors.
+      This is because the original game was for dos VGA Bios mode
+      0x13, which was MCGA 320x200 mode.  Why did I use this mode?
+      Because it was a nice linear 64kB graphics display, and I had
+      sample code from the PCGPE.
+      
+Q3).  What are paintpro graphics?  Are these any relation to a commercial
+      graphics package known as PaintPro(TM)?
+      
+A3).  No.  A long time ago I made my own graphics program.  I called it
+      (with much originality) "paintprogram.pas", but because of the wonders 
+      of MS-DOS it was truncated to "paintpro.pas".  I still referred to
+      it as paintprogram, but my friends Jeff and John [who used it to
+      make graphics for Basic and C respectively] referred to it as paintpro
+      and the name stuck.
+      
+      I invented the format myself, originally as a text output and later
+      as a binary.  I "invented" RLE [Run Length Encoding] before I knew 
+      what it was.  In the end, it is very [and quite accidentally]
+      similar to the PCX graphics format.  All this because I couldn't
+      find source code for common file formats.  Thank goodness for
+      the internet and the GPL.
+      
+      See http://..... for more info.

@@ -1,1 +1,1 @@
-void about(struct tb1_state *game_state);
+void about(tb1_state *game_state);

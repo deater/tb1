@@ -1,8 +1,12 @@
 Finish the game [or at least get it on-par with the dos version]
 Requires:
-  Levels2-4
-  Highscore list
-  Save Games
-  Implement Shield Color
-  Scrolling Credits
+  Levels3-4
   Finish Story
+
+Other aspirations:
+   Free RAM instead of leaking it.
+   8bpp, 24bpp, 32bpp displays
+   Double and Quad sized displays
+   Re-implement fading in/out
+   Implement level editor
+   

@@ -17,7 +17,8 @@
 #include "tblib.h"
 #include "sidebar.h"
 #include "help.h"
-#include "menu_tools.h"
+#include "loadsave.h"
+#include "graphic_tools.h"
 
     /* Define this to get a frames per second readout */
 /* #define DEBUG_ON */
@@ -73,7 +74,7 @@ int level_one_wave_behavior[]=
 
 
     /* The little Sequence Before you hit the Boss */
-void beforeboss(struct tb1_state *game_state)
+void beforeboss(tb1_state *game_state)
 {
 
     vmwClearKeyboardBuffer();
@@ -116,12 +117,12 @@ void beforeboss(struct tb1_state *game_state)
 		                     2,0,1,game_state->graph_state->default_font,game_state->virtual_1);
     vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
     pauseawhile(5);
-    setupsidebar(game_state);
+    setupsidebar(game_state,game_state->virtual_2);
     vmwFlipVirtual(game_state->virtual_1,game_state->virtual_2,320,200);
 }
 
     /* The Sequence After You Defeat (hopefully) the Boss */
-void afterboss(struct tb1_state *game_state)
+void afterboss(tb1_state *game_state)
 {
    
     vmwFont *tb1_font;
@@ -173,13 +174,14 @@ void afterboss(struct tb1_state *game_state)
 		          9,0,1,tb1_font,game_state->virtual_1);
     vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
     pauseawhile(5);
+    game_state->level++;
 
 }
 
 
 
     /* Defines the behavior of the objects in level 1 */
-int level_one_behavior(int reset, struct tb1_state *game_state)
+int level_one_behavior(int reset, tb1_state *game_state)
 {
     int what,temp,whichone,need_to_pause=0;
     static int wave=0;
@@ -333,7 +335,7 @@ int level_one_behavior(int reset, struct tb1_state *game_state)
 
 
     /* The Main Level One */
-void levelone(struct tb1_state *game_state) {
+void levelone(tb1_state *game_state) {
    
     int ch=0;
     int i,j,grapherror;
@@ -345,7 +347,6 @@ void levelone(struct tb1_state *game_state) {
     long oldsec,oldusec,time_spent;
     int howmuchscroll=0;
     int speed_factor=1,game_paused=0;
-    int beginscore,beginshield;
     
     vmwVisual *virtual_1,*virtual_2;
     vmwFont *tb1_font;
@@ -356,8 +357,8 @@ void levelone(struct tb1_state *game_state) {
     virtual_2=game_state->virtual_2;
    
        /* Set this up for Save Game */
-    beginscore=game_state->score;
-    beginshield=game_state->shields;
+    game_state->begin_score=game_state->score;
+    game_state->begin_shields=game_state->shields;
    
        /* Load Sprites */
     grapherror=vmwLoadPicPacked(0,0,virtual_1,1,1,
@@ -397,7 +398,7 @@ void levelone(struct tb1_state *game_state) {
 
       
        /* Setup and draw the sidebar */
-    setupsidebar(game_state);
+    setupsidebar(game_state,virtual_2);
 
     vmwFlipVirtual(virtual_1,virtual_2,320,200);
     sprintf(tempst,"%d",game_state->level);
@@ -562,7 +563,7 @@ void levelone(struct tb1_state *game_state) {
 	   case 's': if (game_state->sound_enabled) 
 	                game_state->sound_enabled=!(game_state->sound_enabled); break;
            case VMW_F2: game_paused=1; 
-//	               savegame(*level,beginscore,beginshield);
+	                savegame(game_state);
 	               break;
            case ' ':  for(j=0;j<2;j++)
 	                if (!bullet[j].out) {
@@ -631,7 +632,7 @@ void levelone(struct tb1_state *game_state) {
 }
 
     /* The little opener before Level 1 */
-void littleopener(struct tb1_state *game_state)
+void littleopener(tb1_state *game_state)
 {
 
     vmwSprite *ship1,*ship2;

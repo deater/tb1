@@ -1,1 +1,1 @@
-int quit(struct tb1_state *game_state);
+int quit(tb1_state *game_state);

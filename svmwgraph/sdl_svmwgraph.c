@@ -104,7 +104,10 @@ int SDL_getInput() {
 	      case SDLK_F2       : return VMW_F2;
 	      case SDLK_PAGEUP   : return VMW_PGUP;
 	      case SDLK_PAGEDOWN : return VMW_PGDN;
-	      default:             return keypressed;
+	      default: if ((keypressed>='a') && (keypressed<='z')  
+		          && (event.key.keysym.mod & KMOD_SHIFT) )
+		          return keypressed-32;
+		       else return keypressed;
 	     }
 	default: break;
        }

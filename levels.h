@@ -1,4 +1,4 @@
-void levelone(struct tb1_state *game_state);
+void levelone(tb1_state *game_state);
 void littleopener();
-void leveltwoengine(struct tb1_state *game_state);
+void leveltwoengine(tb1_state *game_state);
 void littleopener2();

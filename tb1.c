@@ -23,13 +23,13 @@
 #include "tblib.h"
 #include "sound.h"
 
-#include "menu_tools.h"
+#include "graphic_tools.h"
 #include "help.h"
 #include "quit.h"
 #include "story.h"
 #include "credits.h"
 #include "about.h"
-#include "loadgame.h"
+#include "loadsave.h"
 #include "options.h"
 #include "playgame.h"
 
@@ -56,9 +56,9 @@ int main(int argc,char **argv)
     int ch,x,barpos,time_sec;
     int scale=1;
     FILE *fff;
-    vmwVisual *virtual_1,*virtual_2; 
+    vmwVisual *virtual_1,*virtual_2,*virtual_3; 
    
-    struct tb1_state *game_state;
+    tb1_state *game_state;
  
     vmwFont *tb1_font;
    
@@ -70,7 +70,7 @@ int main(int argc,char **argv)
    
        /* Setup the game state */
    
-    if ( (game_state=calloc(1,sizeof(struct tb1_state)))==NULL) {
+    if ( (game_state=calloc(1,sizeof(tb1_state)))==NULL) {
        printf("You are seriously low on RAM!\n");
        return 3;
     }
@@ -191,6 +191,7 @@ int main(int argc,char **argv)
       /* To ease typing burden */
     virtual_1=game_state->virtual_1;
     virtual_2=game_state->virtual_2;
+    virtual_3=game_state->virtual_3;
     tb1_font=game_state->graph_state->default_font;
 
     for (x=0;x<256;x++) custom_palette[x]=vmwPack3Bytes(0,0,0); /* 0=black */
@@ -242,15 +243,20 @@ int main(int argc,char **argv)
        /* Load the title screen */
     grapherror=vmwLoadPicPacked(0,0,virtual_1,1,1,
 				tb1_data_file("tbomb1.tb1",game_state->path_to_data)); 
+    
+       /* Set up palettes */
     grapherror=vmwLoadPicPacked(0,0,virtual_2,1,1,
 				tb1_data_file("tbomb1.tb1",game_state->path_to_data));
     
+    grapherror=vmwLoadPicPacked(0,0,game_state->virtual_3,1,1,
+				tb1_data_file("tbomb1.tb1",game_state->path_to_data));
+   
     vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
     
        /* Main Menu Loop */
     while (1) {
        if (reloadpic) {
-          grapherror=vmwLoadPicPacked(0,0,virtual_2,1,1,
+          grapherror=vmwLoadPicPacked(0,0,virtual_3,1,1,
 				    tb1_data_file("tbomb1.tb1",game_state->path_to_data));
 	  grapherror=vmwLoadPicPacked(0,0,virtual_1,1,0,
 				    tb1_data_file("tbomb1.tb1",game_state->path_to_data));
@@ -258,7 +264,7 @@ int main(int argc,char **argv)
 	  reloadpic=0;
        }
        
-       vmwFlipVirtual(virtual_1,virtual_2,320,200);
+       vmwFlipVirtual(virtual_1,virtual_3,320,200);
        if (game_state->sound_enabled) playSound();
        vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
 
@@ -330,13 +336,13 @@ int main(int argc,char **argv)
           /* Run whatever it was that the person pressed */
        switch (barpos) {
         case 0:  playthegame(game_state); reloadpic=1; break;
-	case 1:  options(game_state); reloadpic=1; break;
+	case 1:  options(game_state); break;
         case 2:  about(game_state); reloadpic=1; break;
-        case 3:  loadgame(); reloadpic=1; break;
+        case 3:  loadgame(game_state); reloadpic=1; break;
         case 4:  story(game_state); reloadpic=1; break;
-        case 5:  credits(game_state);  reloadpic=1; break;
+        case 5:  credits(game_state);  break;
 	case 6:  barpos=quit(game_state); break;
-        case 10: help(game_state);   break;
+        case 10: help(game_state); reloadpic=1; break;
        }
     }
 }

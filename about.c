@@ -4,9 +4,9 @@
 #include "svmwgraph/svmwgraph.h"
 #include "tb1_state.h"
 #include "tblib.h"
-#include "menu_tools.h"
+#include "graphic_tools.h"
 
-void about(struct tb1_state *game_state)
+void about(tb1_state *game_state)
 {
     int pagenum=1,firstime=0,oldpagenum=0,numpages=4,ch=0;
     char tempst[300];

@@ -8,7 +8,7 @@
 
 
 
-void story(struct tb1_state *game_state)
+void story(tb1_state *game_state)
 {
     int error;
     int xtemp,ytemp;

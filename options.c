@@ -3,10 +3,10 @@
 
 #include "svmwgraph/svmwgraph.h"
 #include "tb1_state.h"
-#include "menu_tools.h"
+#include "graphic_tools.h"
 #include "hiscore.h"
 
-void options(struct tb1_state *game_state)
+void options(tb1_state *game_state)
 {
 
     int opbarpos,argh=0,ch=0;
@@ -52,5 +52,5 @@ void options(struct tb1_state *game_state)
        if (opbarpos==2) opbarpos=0;
        if (opbarpos==-1) opbarpos=1;
     }
-    if (argh==4) showhiscore(game_state,1);
+    if (argh==4) showhiscore(game_state,1,0);
 }

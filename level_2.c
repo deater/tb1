@@ -15,7 +15,8 @@
 
 #include "sidebar.h"
 #include "help.h"
-#include "menu_tools.h"
+#include "loadsave.h"
+#include "graphic_tools.h"
 
     /* Define this to get a frames per second readout */
 /* #define DEBUG_ON */
@@ -53,13 +54,13 @@ struct obstruction {
     int kind,lastshot;
 };
 
-void leveltwoengine(struct tb1_state *game_state)
+void leveltwoengine(tb1_state *game_state)
 {
     int ch,i;
     char tempst[BUFSIZ];
     int k,game_paused=0,speed_factor=1;
     int shipx=36;
-    int whatdelay=1,beginscore,beginshield;
+    int whatdelay=1;
     FILE *f=NULL;
     int levelover=0,j,backrow=0;
     int background[201][13];
@@ -89,8 +90,8 @@ void leveltwoengine(struct tb1_state *game_state)
     virtual_2=game_state->virtual_2;
    
        /* Set this up for Save Game */
-    beginscore=game_state->score;
-    beginshield=game_state->shields;
+    game_state->begin_score=game_state->score;
+    game_state->begin_shields=game_state->shields;
     
     printf("Starting level 2\n"); fflush(stdout);
    
@@ -157,7 +158,7 @@ void leveltwoengine(struct tb1_state *game_state)
     pauseawhile(5);
 
        /* Setup and draw the sidebar */
-    setupsidebar(game_state);
+    setupsidebar(game_state,virtual_2);
     vmwFlipVirtual(virtual_1,virtual_2,320,200);
     sprintf(tempst,"%d",game_state->level);
     vmwDrawBox(251,52,63,7,0,virtual_2);
@@ -364,8 +365,9 @@ void leveltwoengine(struct tb1_state *game_state)
 	case '-': whatdelay--; break;
 	case 'S':
 	case 's': game_state->sound_enabled=!(game_state->sound_enabled); break;
-        case VMW_F2: game_paused=1; /*savegame(*level,beginscore,beginshield);*/
-	            break;
+        case VMW_F2: game_paused=1; 
+	             savegame(game_state);
+	             break;
 	case ' ':  for(j=0;j<3;j++)
 	              if (!bullet[j].out) {
 			 if (game_state->sound_enabled) playGameFX(SND_CC);

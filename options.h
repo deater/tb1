@@ -1,1 +1,1 @@
-void options(struct tb1_state *game_state);
+void options(tb1_state *game_state);

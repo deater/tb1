@@ -9,12 +9,12 @@
 #include "hiscore.h"
 
     /* Convenience Function */
-int change_shields(struct tb1_state *game_state)
+int change_shields(tb1_state *game_state)
 {
 
        int itemp,jtemp;
   
-       game_state->shield_color=(game_state->shields)*0x1000;
+//       game_state->shield_color=(game_state->shields)*0x1000;
        game_state->virtual_1->palette[254]=(game_state->shields)*0x1000;
    
        vmwDrawBox(250,71,64,8,0,game_state->virtual_1);
@@ -26,7 +26,7 @@ int change_shields(struct tb1_state *game_state)
 }
  
     /* TSIA [well actually FNSIA (function name says it all) */
-int changescore(struct tb1_state *game_state)
+int changescore(tb1_state *game_state)
 {
 
        char scorest[20];
@@ -62,38 +62,31 @@ void makehole(int y,vmwVisual *target)
 
 }
 
-void setupsidebar(struct tb1_state *game_state)
+void setupsidebar(tb1_state *game_state,vmwVisual *vaddr2)
 {
 
     int i,hiscore;
     char it[50]; 
    
-    vmwVisual *vaddr2;
     vmwFont *tb1_font;
    
     tb1_font=game_state->graph_state->default_font;
-    vaddr2=game_state->virtual_2;
+      
+    vmwDrawBox(240,0,80,199,19,vaddr2);
    
-    vmwDrawBox(240,0,80,199,19,game_state->virtual_2);
-   
-    vmwDrawVLine(240,0,199,18,game_state->virtual_2);
-    vmwDrawHLine(240,0,79,18,game_state->virtual_2);
+    vmwDrawVLine(240,0,199,18,vaddr2);
+    vmwDrawHLine(240,0,79,18,vaddr2);
 
-    vmwDrawVLine(319,0,199,24,game_state->virtual_2);
-    vmwDrawHLine(241,199,78,24,game_state->virtual_2);
+    vmwDrawVLine(319,0,199,24,vaddr2);
+    vmwDrawHLine(241,199,78,24,vaddr2);
      
-    printf("1\n"); fflush(stdout);
-   
     vmwTextXY("SCORE",241,1,127,0,0,tb1_font,vaddr2);
     vmwTextXY("SCORE",242,2,143,0,0,tb1_font,vaddr2);
     makehole(10,vaddr2);
     sprintf(it,"%d",game_state->score);
     vmwTextXY(it,250+(8*(8-strlen(it))),11,12,0,1,tb1_font,vaddr2);
 
-    printf("2\n"); fflush(stdout);
-   
-   
-    hiscore=showhiscore(game_state,0);
+    hiscore=showhiscore(game_state,0,1);
     printf("show high done\n"); fflush(stdout);
    
     vmwTextXY("HI-SCORE",241,21,127,0,0,tb1_font,vaddr2);
@@ -102,9 +95,6 @@ void setupsidebar(struct tb1_state *game_state)
     makehole(30,vaddr2);
     vmwTextXY(it,250+(8*(8-strlen(it))),31,12,0,1,tb1_font,vaddr2);
   
-    printf("3\n"); fflush(stdout);
-   
-   
     vmwTextXY("LEVEL",241,41,127,0,0,tb1_font,vaddr2);
     vmwTextXY("LEVEL",242,42,143,0,0,tb1_font,vaddr2);
     makehole(50,vaddr2);
@@ -118,18 +108,12 @@ void setupsidebar(struct tb1_state *game_state)
     vmwTextXY("WEAPONS",242,82,143,0,0,tb1_font,vaddr2);
     makehole(90,vaddr2);
 
-    printf("4\n"); fflush(stdout);
-   
-   
     vmwDrawBox(249,111,65,78,0,vaddr2);
    
     vmwDrawVLine(249,111,78,24,vaddr2);
     vmwDrawHLine(249,111,66,24,vaddr2);
     vmwDrawVLine(315,111,78,18,vaddr2);
     vmwDrawHLine(249,189,66,18,vaddr2);
-   
-    printf("5\n"); fflush(stdout);
-   
    
     vmwTextXY("  TB1   ",250,114,2,0,0,tb1_font,vaddr2);
     vmwTextXY("  TB1   ",251,115,10,0,0,tb1_font,vaddr2);

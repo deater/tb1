@@ -6,6 +6,8 @@
 + Debugged the problems from the svmwgraph change.. suprisingly it
   was very few.
 + Started adding features that depended on the svmwgraph rewrite
++ Added load/save support!  Tracked down a nasty out-of-bounds
+  error with coolbox.  Those type of errors are so hard to find in C...
 
 12 September 2000
 + Added support for level2

@@ -3,10 +3,10 @@
 
 #include "svmwgraph/svmwgraph.h"
 #include "tb1_state.h"
-#include "menu_tools.h"
+#include "graphic_tools.h"
 #include "sound.h"
 
-int quit(struct tb1_state *game_state)
+int quit(tb1_state *game_state)
 {
 
     int barpos=0,ch=0;

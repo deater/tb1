@@ -6,7 +6,7 @@
 #include "tb1_state.h"
 #include "tblib.h"
 
-void credits(struct tb1_state *game_state)
+void credits(tb1_state *game_state)
 {
 
     int i,keypressed=0;

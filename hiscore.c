@@ -2,12 +2,16 @@
 
 #include "svmwgraph/svmwgraph.h"
 #include "tb1_state.h"
-#include "menu_tools.h"
-
+#include "graphic_tools.h"
+#include "tblib.h"
 
 #include <unistd.h>  /* For usleep */
+#include <string.h>  /* For strncpy */
 
-int showhiscore(struct tb1_state *game_state,int showchart)
+/* Yes these routines are simplistic, but they seemed amazingly */
+/* clever when I came up with them 6 years ago. */
+
+int showhiscore(tb1_state *game_state,int showchart,int return_highest)
 {
    
     FILE *hilist;
@@ -16,7 +20,7 @@ int showhiscore(struct tb1_state *game_state,int showchart)
     char names[10][25];
     int scores[10];
 
-    hilist=fopen("hiscore.tb1","r+");
+    hilist=fopen(tb1_data_file("hiscore.tb1",game_state->path_to_data),"r");
     if (hilist==NULL) {
        printf("Error! can't open high score file!\n");
        return 0;
@@ -25,7 +29,10 @@ int showhiscore(struct tb1_state *game_state,int showchart)
     for (i=0;i<10;i++) fscanf(hilist,"%s",names[i]);
     for (i=0;i<10;i++) fscanf(hilist,"%i",&scores[i]);
     fclose(hilist);
-    if (!showchart) return scores[0];
+    if (!showchart) {
+       if (return_highest) return scores[0];
+       else return scores[9];
+    }
     if (showchart) {
        vmwDrawBox(45,40,240,120,7,game_state->virtual_1);
        coolbox(45,40,285,160,1,game_state->virtual_1);
@@ -35,41 +42,67 @@ int showhiscore(struct tb1_state *game_state,int showchart)
          sprintf(tempstr,"%i",scores[i]);
          vmwTextXY(tempstr,181,46+(i*10),9,7,1,game_state->graph_state->default_font,game_state->virtual_1);
        }
-       vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);        
+       vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
+       
        while(vmwGetInput()==0) usleep(100);
     }
    return 0;
 }
 
-void write_hs_list(int score,char *hiname)
+typedef struct {
+   char name[12];
+   int score;
+} vmwHighScore;
+
+void write_hs_list(tb1_state *game_state,int score,char *hiname,int wipe)
 {
-#if 0
-   int i,place;
+
+    int i,place,in_place;
     FILE *hilist;
-    char names[10][25];
-    int scores[10];
+    vmwHighScore old_list[10];
+    vmwHighScore new_list[10];
    
-    hilist=fopen("hiscore.tb1","r+");
-    for (i=0;i<10;i++) fscanf(hilist,"%s",names[i]);
-    for (i=0;i<10;i++) fscanf(hilist,"%i",&scores[i]);
+    hilist=fopen(tb1_data_file("hiscore.tb1",game_state->path_to_data),"r");
+    for (i=0;i<10;i++) fscanf(hilist,"%s",old_list[i].name);
+    for (i=0;i<10;i++) fscanf(hilist,"%i",&old_list[i].score);
     fclose(hilist);
    
     place=0;
-    for(i=0;i<9;i++) 
-       if (score>scores[i]) place++;
-    place=10-place;
-    for(i=9;i>place;i--) 
-       scores[i]=scores[i-1];
-    for(i=9;i>place;i--) 
-       strcpy(names[i-1],names[i]);
-    scores[place]=score;
-    strcpy(hiname,names[place]);
-    if (!read_only_mode) {
-       hilist=fopen("hiscore.tb1","w");
-       for(i=0;i<9;i++) fprintf(hilist,"%s\n",names[i]);
-       for(i=0;i<9;i++) fprintf(hilist,"%i\n",scores[i]);
-       fclose(hilist);
+    i=0;
+    in_place=0;
+    while (i<10) {
+       if ((score>old_list[place].score) && (in_place==0)) {
+	  strncpy(new_list[i].name,hiname,10);
+	  new_list[i].score=score;
+	  i++;
+	  in_place=1;
+       }
+       if (i<10) {
+          strncpy(new_list[i].name,old_list[place].name,10);
+          new_list[i].score=old_list[place].score;
+       }
+       place++;
+       i++;
     }
-#endif
+	  
+//    if (!read_only_mode) {
+       if ((hilist=fopen(tb1_data_file("hiscore.tb1",
+				       game_state->path_to_data),"w"))==NULL) {
+	  printf("Error opening high score file!\n");
+	  return;
+       }
+   
+       if (wipe) {
+	  fprintf(hilist,"Vince\nChipper\nMarie\nHairold\nKevin\n"
+		         "Leonard\nLizann\nPete\nJim\nBrigid\n"
+		         "5000\n4500\n4000\n3500\n3000\n"
+		         "2500\n2000\n1500\n1000\n500\n");
+       }
+       else {
+          for(i=0;i<10;i++) fprintf(hilist,"%s\n",new_list[i].name);
+          for(i=0;i<10;i++) fprintf(hilist,"%i\n",new_list[i].score);
+       }
+       fclose(hilist);
+//    }
 }
 
