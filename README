@@ -18,18 +18,22 @@ Contents
 --------
  1.0  COMPILING INSTRUCTIONS
  2.0  SYSTEM REQUIREMENTS
- 3.0  THE STORY
- 4.0  GAME PLAY
- 5.0  SAVING/LOADING GAMES
- 6.0  HISTORY
- 7.0  ACKNOWLEDGEMENTS
- 8.0  PRAISE/ACCOMPLISHMENTS
+ 3.0  STARTING THE GAME
+ 4.0  THE STORY
+ 5.0  GAME PLAY
+ 6.0  SAVING/LOADING GAMES
+ 7.0  HISTORY
+ 8.0  ACKNOWLEDGEMENTS
+ 9.0  PRAISE/ACCOMPLISHMENTS
 
 
  1.0  Compiling Instructions
 ---------------------------------------------------------------------
 
 Sorry, there is no "configure" file as of yet.
+
+If you have SDL or ncurses in non-standard places, you'll
+   have to edit the Makefiles.
 
 You need the SDL game development library, 1.1.4 or newer:
    http://www.libsdl.org/download-1.1.html   
@@ -58,7 +62,35 @@ Then a "make" should compile it.
       The game has not been verified to run on 64 bit or big-endian machines.
 
 
- 3.0  THE STORY
+ 3.0  STARTING THE GAME
+---------------------------------------------------------------------
+   
+   tb1 [-curses] [-double] [-fullscreen] [-nosound] [-version] [-?]
+   
+      [-curses] : sets the game to run in curses [that is, text] mode.
+                  it is actually playable on a 80x25 screen! 
+                  [Although you want color for best results].
+                  It looks particularly nice in an Eterm with a
+                  small font dragged across the whole screen.  You
+                  want to become familiar with the menu-interface
+                  before you try this though.
+
+      [-double] : Double the size of the game on screen.  This
+                  is good if you have a high-resolution monitor
+                  and the 320x200 of TB1 is way too small.
+		  It is, 4 times slower, however.
+                  Also look into using the -fullscreen option.
+
+      [-fullscreen] : Attempts to play the game fullscreen.  For
+                  best results you probably want to use this in
+                  conjunction to the -double option.
+ 
+      [-nosound] : Start the game with no sound.
+
+      [-help]   : Display the command line options
+
+
+ 4.0  THE STORY
 ---------------------------------------------------------------------
 
       To understand the game, pick the "Story" option off of the
@@ -73,7 +105,8 @@ Then a "make" should compile it.
       Anyway in the story, any key will speed up most scenes, and
       escape will quit the whole thing.
 
- 4.0  GAME PLAY
+
+  5.0  GAME PLAY
  --------------------------------------------------------------------
       To begin the game, select "NEW GAME" at the main menu.
 
@@ -117,7 +150,8 @@ Then a "make" should compile it.
       F1     Shows help message
       F2     Saves the Game (see "SAVING/LOADING GAMES")
 
- 5.0  SAVING/ LOADING GAMES
+
+ 6.0  SAVING/ LOADING GAMES
 ---------------------------------------------------------------------
       You can save games.  However the only part that is saved is
       how you begin the level.  Therefore there is no real purpose
@@ -127,7 +161,7 @@ Then a "make" should compile it.
       practical way to implement saved games.
       
  
- 6.0  HISTORY
+ 7.0  HISTORY
 ---------------------------------------------------------------------
 
       Ever since I have had a computer, starting with an Apple IIe
@@ -180,7 +214,7 @@ Then a "make" should compile it.
       it for ages to come ;)
         
 
- 7.0  ACKNOWLEDGEMENTS
+ 8.0  ACKNOWLEDGEMENTS
 ---------------------------------------------------------------------
 
     The following are for the DOS version.  I'll add linux ones later.
@@ -205,7 +239,8 @@ Then a "make" should compile it.
       who actually plays this game a lot, and whose comments 
       have hastened work on level 3.
 
-8.0  PRAISE/ACCOMPLISHMENTS OF TOM BOMBEM
+
+ 9.0  PRAISE/ACCOMPLISHMENTS OF TOM BOMBEM
 ___________________________________________________________________
 
      Supposedly it will be on one of Pacific Hi-Tech's

@@ -80,7 +80,11 @@ vmwSVMWGraphState *vmwSetupSVMWGraph(int display_type,int xsize,int ysize,
                break;
        case VMW_SDLTARGET: 
                if (temp_state->bpp==8) {
-		  vmwBlitMemToDisplay=SDL_NoScale8bpp_BlitMem;
+		  if (scale==1) {
+		     vmwBlitMemToDisplay=SDL_NoScale8bpp_BlitMem;
+		  } else {
+		     vmwBlitMemToDisplay=SDL_Double8bpp_BlitMem;
+		  }
 	       }
                if (temp_state->bpp>=16) {
 		  if (scale==1) {

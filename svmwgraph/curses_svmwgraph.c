@@ -84,7 +84,7 @@ void lookup_color(int r,int g,int b,int i) {
 
 
     int bitmask;
-    FILE *fff;
+//    FILE *fff;
      
       /* Black */
    if ((r<85) && (g<85) && (b<85)) {
@@ -318,9 +318,9 @@ void lookup_color(int r,int g,int b,int i) {
    }
       
 
-   fff=fopen("temp.temp","a");
-   fprintf(fff,"%i: %i %i %i\n",i,r,g,b);
-   fclose(fff);
+//   fff=fopen("temp.temp","a");
+//   fprintf(fff,"%i: %i %i %i\n",i,r,g,b);
+//   fclose(fff);
 
       /* When we aren't sure what we are */
    bitmask=0;

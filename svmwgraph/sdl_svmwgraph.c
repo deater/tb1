@@ -199,6 +199,50 @@ void SDL_NoScale8bpp_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
 }
 
 
+void SDL_Double8bpp_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
+   
+   int x,y;
+   
+   unsigned char *s_pointer,*t_pointer;
+   
+   SDL_Surface *target;
+   
+   target=(SDL_Surface *)target_p->output_screen;
+   
+   if ( SDL_MUSTLOCK(target) ) {
+      if ( SDL_LockSurface(target) < 0 )
+      return;
+   }
+   
+   s_pointer=source->memory;
+   t_pointer=((Uint8 *)target->pixels);
+   
+   for (y=0;y<source->ysize;y++) {
+       for (x=0;x<source->xsize;x++) {
+	      /* i=0, j=0 */
+          *((Uint8 *)(t_pointer))=*(s_pointer);
+	      /* i=1, j=0 */
+	  *((Uint8 *)(t_pointer+(target_p->xsize)))=*(s_pointer);
+	     /* i=0, j=1 */
+	   *((Uint8 *)(t_pointer+1))=*(s_pointer);
+	     /* i=1, j=1 */
+	   *((Uint8 *)(t_pointer+1+target_p->xsize))=*(s_pointer);
+           s_pointer++; t_pointer+=2;
+       }
+       t_pointer+=target_p->xsize;
+   }
+   
+     /* Update the display */
+      if ( SDL_MUSTLOCK(target) ) {
+	 SDL_UnlockSurface(target);
+      }
+   
+      /* Write this out to the screen */
+   SDL_UpdateRect(target, 0, 0, target_p->xsize, target_p->ysize);
+   
+}
+
+
 void SDL_clearKeyboardBuffer() {
    SDL_Event event;
    while (SDL_PollEvent(&event)) {
