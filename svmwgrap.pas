@@ -4,6 +4,19 @@ unit SVmwGraph;  {Super Vmw Graphics Unit}
 
 INTERFACE
 
+CONST VGA = $a000;
+
+var unfadered:array[0..255] of byte;
+    unfadeblue:array[0..255] of byte;
+    unfadegreen:array[0..255] of byte;
+    fontline:array[0..255] of byte;
+    charset:array[0..255,0..15] of byte;
+    charheight:byte;
+    fontseg,fontoff:word;
+
+
+
+
 
 function Mode13SavePicPacked(x1,y1,x2,y2,numcolors:integer;where:word;filename:string):byte;
 function Mode13LoadPicPacked(x1,y1:integer;where:word;LoadPal,LoadPic:boolean;FileName:string):byte;
@@ -11,6 +24,38 @@ procedure cls32(col:byte;where:word);
 procedure flipd320(source,dest:word);
 procedure flipd240(hm,va,va2:word);
 procedure flipd50(fromwhere,off1,whereto,off2:word);
+
+Procedure SetMCGA;
+Procedure SetText;  { This procedure returns you to text mode.  }
+Procedure LoadFont(namest:string);
+
+Procedure Putpixel (X,Y : Integer; Col : Byte; where:word);
+Procedure Putpixel240 (X,Y : Integer; Col : Byte; where:word);
+function getpixel(x,y,where:word):byte;
+Procedure Pal(Col,R,G,B : Byte);
+Procedure GetPal(Col : Byte; Var R,G,B : Byte);
+procedure WaitRetrace;
+procedure outtextlineover(st:string;x,y:integer;col,background:byte;line:integer;where:word);
+procedure outtextline(st:string;x,y:integer;col,background:byte;line:integer;where:word);
+procedure outtextxy(st:string;x,y,col,background:integer;where:word;overwrite:boolean);
+procedure outsmalltextlineover(st:string;x,y:integer;col,background:byte;line:integer;where:word);
+procedure outsmalltextline(st:string;x,y:integer;col,background:byte;line:integer;where:word);
+procedure outsmalltextxy(st:string;x,y,col,background:integer;where:word;overwrite:boolean);
+function  sgn(a:real):integer;
+procedure line(a,b,c,d,col:integer;where:word);
+procedure horizontalline(FromX1,ToX2,AtY,col:integer;where:word);
+procedure verticalline(FromY1,ToY2,AtX,col:integer;where:word);
+procedure fade;
+procedure unfade;
+procedure box(x1,y1,x2,y2,col:integer;where:word);
+procedure vdelay(howlong:integer);
+procedure setupvmwgraph;
+procedure setuptb1;
+
+
+
+
+
 
 {Errors:  0=No Errors
           1=File Not Found
@@ -304,67 +349,8 @@ procedure flipd320(source,dest:word);EXTERNAL;
 procedure flipd240(hm,va,va2:word);EXTERNAL;
 procedure flipd50(fromwhere,off1,whereto,off2:word);EXTERNAL;
 
-begin
-end.
 
 
-
-unit NVMWgraph;  {the new vmw graph unit}
-{$X+} {$G+}
-INTERFACE
-
-CONST VGA = $a000;
-
-var unfadered:array[0..255] of byte;
-    unfadeblue:array[0..255] of byte;
-    unfadegreen:array[0..255] of byte;
-    fontline:array[0..255] of byte;
-    charset:array[0..255,0..15] of byte;
-    charheight:byte;
-    fontseg,fontoff:word;
-
-Procedure SetMCGA;
-Procedure SetText;  { This procedure returns you to text mode.  }
-Procedure LoadFont(namest:string);
-Procedure Cls (Col : Byte; Where:word);
-Procedure Putpixel (X,Y : Integer; Col : Byte; where:word);
-Procedure Putpixel240 (X,Y : Integer; Col : Byte; where:word);
-function getpixel(x,y,where:word):byte;
-Procedure Pal(Col,R,G,B : Byte);
-Procedure GetPal(Col : Byte; Var R,G,B : Byte);
-procedure WaitRetrace;
-procedure flip(source,dest:Word);
-procedure outtextlineover(st:string;x,y:integer;col,background:byte;line:integer;where:word);
-procedure outtextline(st:string;x,y:integer;col,background:byte;line:integer;where:word);
-procedure outtextxy(st:string;x,y,col,background:integer;where:word;overwrite:boolean);
-procedure outsmalltextlineover(st:string;x,y:integer;col,background:byte;line:integer;where:word);
-procedure outsmalltextline(st:string;x,y:integer;col,background:byte;line:integer;where:word);
-procedure outsmalltextxy(st:string;x,y,col,background:integer;where:word;overwrite:boolean);
-function sgn(a:real):integer;
-procedure line(a,b,c,d,col:integer;where:word);
-procedure horizontalline(FromX1,ToX2,AtY,col:integer;where:word);
-procedure verticalline(FromY1,ToY2,AtX,col:integer;where:word);
-procedure fade;
-procedure unfade;
-function SavePicSuperPacked(x1,y1,x2,y2,maxcolors:integer;where:word;filename:string):byte;
-function LoadPicSuperPacked(x1,y1:integer;where:word;LoadPal,LoadPic:boolean;FileName:string):byte;
-function oldloadpicsuperpacked(x1,y1:integer;where:word;fil:string):byte;
-procedure box(x1,y1,x2,y2,col:integer;where:word);
-procedure vdelay(howlong:integer);
-procedure setupvmwgraph;
-procedure setuptb1;
-
-{Errors for save and load:
-   0=No error
-   1=File Not Found
-   2=Improper file type (No PAINTPROVX.XX header)
-   3=Improper version
-   4=Too Many Colors
-   5=Picture Too Big
- }
-
-
-IMPLEMENTATION
 
 Procedure SetMCGA;  { This procedure gets you into 320x200x256 mode. }
 BEGIN
@@ -406,20 +392,6 @@ begin
   close(f);
 end;
 
-Procedure Cls (Col : Byte; Where:word);
-   { This clears the screen to the specified color }
-BEGIN
-     asm
-        push    es
-        mov     cx, 32000;
-        mov     es,[where]
-        xor     di,di
-        mov     al,[col]
-        mov     ah,al
-        rep     stosw
-        pop     es
-     End;
-END;
 
 Procedure Putpixel (X,Y : Integer; Col : Byte; where:word);
   { This puts a pixel on the screen by writing directly to memory. }
@@ -1038,298 +1010,6 @@ begin
 end;
 
 
-function SavePicSuperPacked(x1,y1,x2,y2,maxcolors:integer;where:word;filename:string):byte;
-
-var buffer:array[0..2] of byte;
-    f:file;
-    col,x,y,xsize,ysize,i,oldcol,numacross:integer;
-    header:string;
-    byte1,byte2,byte3,temp:byte;
-    r,g,b:byte;
-
-procedure integer23bytes(inter1,inter2:integer);
-var temp1,temp2,temp3,temp:byte;
-begin
-  asm
-    mov ax,inter1
-    shl ax,1
-      shl ax,1
-      shl ax,1
-      shl ax,1
-    mov temp1,ah
-    sub ah,ah
-    shr ax,1
-      shr ax,1
-      shr ax,1
-      shr ax,1
-    mov temp,al
-    mov ax,inter2
-    mov temp3,al
-    shr ax,1
-      shr ax,1
-      shr ax,1
-      shr ax,1
-    mov ah,temp
-    shl ax,1
-      shl ax,1
-      shl ax,1
-      shl ax,1
-    mov temp2,ah
-  end;
-    buffer[0]:=temp1;
-    buffer[1]:=temp2;
-    buffer[2]:=temp3;
-    blockwrite(f,buffer,1);
-end;
-
-begin
-  header:='PAINTPROV5.0';
-  savepicsuperpacked:=0;
-  assign(f,filename);
-  {$I-}
-   rewrite(f,3);
-  {$I+}
-   if Ioresult<>0 then savepicsuperpacked:=1;
-   if Ioresult<>0 then exit;
-  for i:=0 to 3 do begin
-      buffer[0]:=ord(header[(i*3)+1]);
-      buffer[1]:=ord(header[(i*3)+2]);
-      buffer[2]:=ord(header[(i*3)+3]);
-      blockwrite(f,buffer,1);
-  end;
-
-  for i:=0 to (maxcolors-1) do
-  begin
-      getpal(i,buffer[0],buffer[1],buffer[2]);
-      blockwrite(f,buffer,1);
-  end;
-
-  xsize:=abs(x2-x1);
-  ysize:=abs(y2-y1);
-  integer23bytes(xsize,ysize);
-  integer23bytes(maxcolors,0);
-
-  for y:=y1 to y2 do begin
-      oldcol:=getpixel(x1,y,where);  numacross:=1;
-      for x:=(x1+1) to x2 do begin
-          col:=getpixel(x,y,where);
-          if col=oldcol then inc(numacross)
-          else begin
-             integer23bytes(oldcol,numacross);
-             numacross:=1;
-          end;
-          oldcol:=col;
-      end;
-      integer23bytes(col,numacross);
-  end;
-  close(f);
-end;
-
-function LoadPicSuperPacked(x1,y1:integer;where:word;LoadPal,LoadPic:boolean;FileName:string):byte;
-
-var buffer:array[0..299] of byte;
-    result,buffpointer:integer;
-    f:file;
-    col,x,y,xsize,ysize,i,oldcol,
-    maxcolors,tempint1,tempint2,numacross:integer;
-    header:string;
-    lastread:boolean;
-    tempbyte,r,g,b:byte;
-
-procedure sixbytes2twoint;
-var temp1,temp2,temp3:byte;
-    int1,int2:integer;
-begin
-  temp1:=buffer[buffpointer];
-  temp2:=buffer[buffpointer+1];
-  temp3:=buffer[buffpointer+2];
-  inc(buffpointer,3);
-  if (buffpointer>=result) then
-     if (result=300) then begin
-        blockread(f,buffer,300,result);
-        buffpointer:=0;
-     end
-     else lastread:=true;
-  asm
-    mov ah,temp1
-    mov al,temp2
-    shr ax,4
-    mov int1,ax
-    mov ah,temp2
-    mov al,temp3
-    shl ah,4
-    shr ah,4
-     mov int2,ax
-  end;
-  tempint1:=int1;
-  tempint2:=int2;
-end;
-
-
-
-begin
-  lastread:=false;
-  loadpicsuperpacked:=0;
-  header:='';
-  buffpointer:=0;
-  assign(f,filename);
-  {$I-}
-    reset(f,1);
-  {$I+}
-  if IOresult<>0 then LoadPicSuperPacked:=1;
-  if IOresult<>0 then exit;
-
-  blockread(f,buffer,300,result);
-
-  for i:=1 to 9 do header:=concat(header,chr(buffer[i-1]));
-
-
-  if header<> 'PAINTPROV' then LoadPicSuperPacked:=2;
-  if header<> 'PAINTPROV' then exit;
-
-  header:='';
-
-  header:=concat(header,chr(buffer[9]),chr(buffer[10]),chr(buffer[11]));
-
-  if header<>'5.0' then LoadPicSuperPacked:=3;
-  if header<>'5.0' then exit;
-  buffpointer:=12;
-
-  for i:=0 to 255 do begin
-      r:=buffer[buffpointer];
-      g:=buffer[buffpointer+1];
-      b:=buffer[buffpointer+2];
-  inc(buffpointer,3);
-  if (buffpointer>=result) then
-     if (result=300) then begin
-        blockread(f,buffer,300,result);
-        buffpointer:=0;
-     end
-     else
-
-     lastread:=true;
-  if loadpal then pal(i,r,g,b);
-  end;
-
-
-
-  sixbytes2twoint;
-  xsize:=tempint1;
-  ysize:=tempint2;
-  sixbytes2twoint;
-  maxcolors:=tempint1;
-
-  {if maxcolors>256 then error=4}
-
-  x:=x1;
-  y:=y1;
-if loadpic=true then begin
-   while (lastread=false) do begin
-     sixbytes2twoint;
-     col:=tempint1;
-     numacross:=tempint2;
-     horizontalline(x,x+numacross,y,col,where);
-     {  for i:=x to (x+numacross) do putpixel(i,y,col,where);}
-     if (x+numacross)>xsize+x1 then begin
-        inc(y);
-        x:=x1;
-        numacross:=0;
-     end;
-     x:=x+numacross;
-   end;
-end;
-close(f);
-end;
-
-function oldloadpicsuperpacked(x1,y1:integer;where:word;fil:string):byte;
-
-var buffer:array[0..255] of byte;
-    f:file;
-    col,x,y,xsize,ysize,buffpointer,i,oldcol,
-    tempint1,tempint2,numacross:integer;
-    header:string;
-    lastread,done:boolean;
-    temp7:string;
-
-procedure readbuffer;
-begin
-  blockread(f,buffer,1);
-  if buffer[255]=90 then lastread:=true;
-end;
-
-procedure sixbytes2twoint;
-var temp1,temp2,temp3:byte;
-    int1,int2:integer;
-begin
-  if buffpointer>=253 then begin
-     readbuffer;
-     buffpointer:=0;
-  end;
-  if not done then begin
-     temp1:=buffer[buffpointer];
-     temp2:=buffer[buffpointer+1];
-     temp3:=buffer[buffpointer+2];
-     if (temp1=255) and (temp2=255) and (temp3=255) then
-        done:=true;
-     inc(buffpointer,3);
-  asm
-    mov ah,temp1
-    mov al,temp2
-    shr ax,1
-      shr ax,1
-      shr ax,1
-      shr ax,1
-    mov int1,ax
-    mov ah,temp2
-    mov al,temp3
-      shl ah,4
-      shr ah,4
-    mov int2,ax
-  end;
-  tempint1:=int1;
-  tempint2:=int2;
-end;
-end;
-label ender;
-begin
-  done:=false;
-  header:='PAINTPROV4.00';
-  assign(f,fil);
-  reset(f,256);
-  readbuffer;
-  buffpointer:=0;
-  temp7:=header;
-  for i:=1 to 13 do temp7[i]:=chr(buffer[i-1]);
-  if temp7<>header then begin
-     oldloadpicsuperpacked:=01;
-     exit;
-  end;
-  buffpointer:=13;
-  sixbytes2twoint;
-  xsize:=tempint1;
-  ysize:=tempint2;
-  sixbytes2twoint;
-
-  x:=x1;
-  y:=y1;
-repeat
-  sixbytes2twoint;
-  if done then goto ender;
-  col:=tempint1;
-  numacross:=tempint2;
-  for i:=x to (x+numacross) do putpixel(i,y,col,where);
-  if (x+numacross)>xsize+x1 then begin
-     inc(y);
-     x:=x1;
-     numacross:=0;
-  end;
-  x:=x+numacross;
-  ender:
-until done=true;
-close(f);
-end;
-
-
 
 
 procedure box(x1,y1,x2,y2,col:integer;where:word);
@@ -1361,6 +1041,7 @@ begin
   fontseg:=seg(fontline[0]);
   fontoff:=ofs(fontline[0]);
 end;
+
 
 begin
 end.
