@@ -231,7 +231,7 @@ void leveltwoengine(tb1_state *game_state)
 		    (collision(bullet[j].x,bullet[j].y,3,4,passive[i].x,
 						  passive[i].y,10,5))){
                     if (passive[i].kind!=10) {
-		       if (game_state->sound_enabled) 
+		       if ((game_state->sound_possible)&&(game_state->sound_enabled)) 
 			  playGameFX(SND_KAPOW);
                        passive[i].exploding=1;
                        passive[i].explodeprogress=0;
@@ -258,7 +258,8 @@ void leveltwoengine(tb1_state *game_state)
           if ((passive[i].y>155) && (passive[i].kind!=10)) {
              if ((collision(passive[i].x,passive[i].y,10,5,shipx+16,165,5,5))||
 		(collision(passive[i].x,passive[i].y,10,5,shipx+6,175,18,8))) {
-                if (game_state->sound_enabled) playGameFX(SND_BONK);
+                if ((game_state->sound_possible)&&(game_state->sound_enabled))
+		   playGameFX(SND_BONK);
                 passive[i].dead=1;
                 game_state->shields--;
                 if(game_state->shields<0) levelover=1;
@@ -274,7 +275,8 @@ void leveltwoengine(tb1_state *game_state)
 	 if (enemy[i].out) {
             if ((collision(enemy[i].x,enemy[i].y,2,5,shipx+16,165,5,5)) ||
                 (collision(enemy[i].x,enemy[i].y,2,5,shipx+6,175,18,8))) {
-                if (game_state->sound_enabled) playGameFX(SND_BONK);
+                if ((game_state->sound_possible)&&(game_state->sound_enabled))
+		   playGameFX(SND_BONK);
                 enemy[i].out=0;
                 game_state->shields--;
                 if (game_state->shields<0) levelover=1;
@@ -368,7 +370,8 @@ void leveltwoengine(tb1_state *game_state)
 	             break;
 	case ' ':  for(j=0;j<3;j++)
 	              if (!bullet[j].out) {
-			 if (game_state->sound_enabled) playGameFX(SND_CC);
+			 if ((game_state->sound_possible)&&(game_state->sound_enabled))
+			    playGameFX(SND_CC);
 			 bullet[j].out=1;
 			 bullet[j].x=shipx+21;
 			 bullet[j].y=165;

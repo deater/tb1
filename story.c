@@ -134,10 +134,15 @@ void story(tb1_state *game_state)
    
     vmwTextXY("Ahhh.... Mr. Bombem.... ",1,1,15,0,0,tb1_font,game_state->virtual_1);  
     vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
-  if (game_state->sound_enabled) playGameFX(0);
+    
+    if ((game_state->sound_possible) && (game_state->sound_enabled)) 
+       playGameFX(0);
+
     pauseawhile(6);
    
-    if (game_state->sound_enabled) playGameFX(2);
+    if ((game_state->sound_possible) && (game_state->sound_enabled))
+       playGameFX(2);
+   
       /* Show fake error message */
     vmwArbitraryCrossBlit(game_state->virtual_2,188,14,91,59,
 			  game_state->virtual_1,115,55);
@@ -321,7 +326,9 @@ void story(tb1_state *game_state)
     usleep(80000);
     vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
    
-    if (game_state->sound_enabled) playGameFX(2);
+    if ((game_state->sound_possible) && (game_state->sound_enabled))
+       playGameFX(2);
+   
     for(xtemp=0;xtemp<10;xtemp++) { 
        vmwPutSprite(explosion2,160,118,game_state->virtual_1);
        doflames(game_state);

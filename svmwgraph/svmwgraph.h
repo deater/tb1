@@ -112,8 +112,7 @@ void vmwUnFade(vmwVisual *source);
 extern void *(*vmwSetupGraphics)(int *xsize,int *ysize, int *bpp, 
 				 int fullscreen,int verbose);
 extern void (*vmwBlitMemToDisplay)(vmwSVMWGraphState *display, vmwVisual *source);
-extern void (*vmwWritePaletteColor)(vmwSVMWGraphState *state,
-		   unsigned char r,unsigned char g,unsigned char b,int color);
+extern void (*vmwFlushPalette)(vmwSVMWGraphState *state);
 extern void (*vmwClearKeyboardBuffer)(void);
 extern int (*vmwGetInput)(void);
 vmwSVMWGraphState *vmwSetupSVMWGraph(int display_type,int xsize,int ysize,

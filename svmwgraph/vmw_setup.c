@@ -9,8 +9,7 @@
 void *(*vmwSetupGraphics)(int *xsize,int *ysize, int *bpp, 
 			  int fullscreen,int verbose);
 void (*vmwBlitMemToDisplay)(vmwSVMWGraphState *display, vmwVisual *source);
-void (*vmwWritePaletteColor)(vmwSVMWGraphState *state,
-	        unsigned char r,unsigned char g,unsigned char b,int color);
+void (*vmwFlushPalette)(vmwSVMWGraphState *state);
 
 void (*vmwClearKeyboardBuffer)(void);
 int (*vmwGetInput)(void);
@@ -64,7 +63,7 @@ vmwSVMWGraphState *vmwSetupSVMWGraph(int display_type,int xsize,int ysize,
 	            vmwBlitMemToDisplay=SDL_Double16bpp_BlitMem;
 		  }
 	       }
-               vmwWritePaletteColor=SDL_WritePaletteColor;
+               vmwFlushPalette=SDL_FlushPalette;
                vmwClearKeyboardBuffer=SDL_clearKeyboardBuffer;
                vmwGetInput=SDL_getInput;
                break;

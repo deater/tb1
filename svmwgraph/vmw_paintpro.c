@@ -98,7 +98,7 @@ int vmwLoadPicPacked(int x1,int y1,vmwVisual *target,
        /* 565 packed 16bit RGB */
     
     for(i=0;i<256;i++) { 
-       if (LoadPal)
+       if (LoadPal) 
           vmwLoadPalette(graph_state,
 			 buffer[buffpointer],
 			 buffer[buffpointer+1],
@@ -114,6 +114,8 @@ int vmwLoadPicPacked(int x1,int y1,vmwVisual *target,
 	  }
        }    
     }
+   
+    if (LoadPal) vmwFlushPalette(graph_state);
       
     x=x1;
     y=y1;

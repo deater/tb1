@@ -4,24 +4,15 @@
 #include "svmwgraph.h"
 #include <stdlib.h>  /* For atexit() */
 
-#define BPP_NUM_TO_TRY 2
-/* Should this be the following instead?
-int bpp_to_try[]={32,24,16,15,8
-};
-*/
-
-int bpp_to_try[]={16,8
-};
-
     /* Setup the Graphics */
     /* Pass '0' to auto-detect bpp */
 void *SDL_setupGraphics(int *xsize,int *ysize,int *bpp,
 			int fullscreen,int verbose)
 {
     SDL_Surface *sdl_screen=NULL;
-    int mode,i=0;
+    int mode;
    
-    mode=SDL_SWSURFACE;
+    mode=SDL_SWSURFACE|SDL_HWPALETTE|SDL_HWSURFACE;
     if (fullscreen) mode|=SDL_FULLSCREEN;
       
        /* Initialize the SDL library */
@@ -40,19 +31,17 @@ void *SDL_setupGraphics(int *xsize,int *ysize,int *bpp,
        sdl_screen = SDL_SetVideoMode(*xsize, *ysize, *bpp, mode);
     }
     else {
-       i=0;
-       while ((i<BPP_NUM_TO_TRY)&&(sdl_screen==NULL)) {
-	  i++;
-	  sdl_screen=SDL_SetVideoMode(*xsize,*ysize,bpp_to_try[i-1],mode);
-       }
+       sdl_screen=SDL_SetVideoMode(*xsize,*ysize,0,mode);
     }
+    
     
     if ( sdl_screen == NULL ) {
        fprintf(stderr, "ERROR!  Couldn't set %dx%d video mode: %s\n",
 	       *xsize,*ysize,SDL_GetError());
        return NULL;
     }
-    if (*bpp==0) *bpp=bpp_to_try[i-1];
+   
+    if (*bpp==0) *bpp=sdl_screen->format->BytesPerPixel*8;
     if (verbose) {
        printf("  + SDL Graphics Initialization successful...\n");
        printf("  + Using %dx%dx%dbpp Visual...\n",*xsize,*ysize,*bpp);
@@ -61,23 +50,23 @@ void *SDL_setupGraphics(int *xsize,int *ysize,int *bpp,
 }
 
 
-void SDL_WritePaletteColor(vmwSVMWGraphState *state,
-			   unsigned char r,
-			   unsigned char g,
-			   unsigned char b,
-			   int color) {
+void SDL_FlushPalette(vmwSVMWGraphState *state) {
  
    SDL_Surface *target;
-   SDL_Color temp_col;
+   SDL_Color temp_col[256];
+   int i;
    
-   temp_col.r=r;
-   temp_col.g=g;
-   temp_col.b=b;
+   if (state->bpp==8) {
+      for(i=0;i<256;i++) {
+         temp_col[i].r=(state->palette[i]>>11)<<3;
+         temp_col[i].g=((state->palette[i]>>5)&0x3f)<<2;
+         temp_col[i].b=(state->palette[i]&0x1f)<<3;
+      }
    
-   target=(SDL_Surface *)state->output_screen;
+      target=(SDL_Surface *)state->output_screen;
    
-   SDL_SetColors(target,&temp_col,color,1);
-   
+      SDL_SetColors(target,temp_col,0,256);
+   }
 }
 
 

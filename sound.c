@@ -41,7 +41,7 @@ int initSound(char *path_to_data) {
   /* open the audio device */
   if(Mix_OpenAudio(22050, AUDIO_U16, 1, 1024) < 0) {
     fprintf(stderr, "can't open audio: %s\n", SDL_GetError());
-    exit(2);
+    return -1;
   }
   loadFX(path_to_data);
   return 0;

@@ -41,7 +41,7 @@ int changescore(tb1_state *game_state)
        vmwTextXY(scorest,317-(strlen(scorest)*9),11,
                  12,0,1,tb1_font,vaddr);
        if ( ((game_state->score % 400)==0) && (game_state->shields<16) ) {
-	         if (game_state->sound_enabled) 
+	         if ((game_state->sound_possible)&&(game_state->sound_enabled)) 
 	            playGameFX(/*SND_ZRRP*/7);
 	         game_state->shields++;
 	         change_shields(game_state);

@@ -10,7 +10,7 @@
 \*          This source is released under the GPL               */
 /****************************************************************/
 
-#define TB1_VERSION "2.9.5"
+#define TB1_VERSION "2.9.7"
 
 #include <stdio.h>
 #include <stdlib.h>   /* for calloc */
@@ -82,6 +82,8 @@ int main(int argc,char **argv)
     game_state->virtual_1=NULL;
     game_state->virtual_2=NULL;
     game_state->virtual_3=NULL;
+    game_state->sound_possible=1;
+    game_state->music_enabled=1;
     game_state->sound_enabled=1;
    
        /* Parse Command Line Arguments */
@@ -158,18 +160,32 @@ int main(int argc,char **argv)
     printf("  + Seeding random number generator...\n");
    
        /* Load sounds */
-    initSound(game_state->path_to_data);
-    loadSound(tb1_data_file("music/vmwfan.mod",game_state->path_to_data));
+    if (initSound(game_state->path_to_data)<0) game_state->sound_possible=0;
+    
+    if (game_state->sound_possible) {  
+       loadSound(tb1_data_file("music/vmwfan.mod",game_state->path_to_data));
+    }
    
     printf("  + Loaded sounds...\n");
    
        /* Setup Graphics */
-     
+    
+    if (scale==1) {
+   
     if ( (game_state->graph_state=vmwSetupSVMWGraph(VMW_SDLTARGET,
 						 320,200,
 						 0,scale,fullscreen,1))==NULL) {   
        fprintf(stderr,"ERROR: Couldn't get display set up properly.\n");
        return VMW_ERROR_DISPLAY;
+    }
+    }
+    else {
+       if ( (game_state->graph_state=vmwSetupSVMWGraph(VMW_SDLTARGET,
+						 640,480,
+						 0,scale,fullscreen,1))==NULL) {   
+       fprintf(stderr,"ERROR: Couldn't get display set up properly.\n");
+       return VMW_ERROR_DISPLAY;
+       }
     }
      
        /* Load the tom bombem font */
@@ -200,7 +216,7 @@ int main(int argc,char **argv)
     tb1_font=game_state->graph_state->default_font;
 
     for (x=0;x<256;x++) vmwLoadPalette(game_state->graph_state,0,0,0,x); /* 0=black */
-   
+
        /* Do the VMW Software Production Logo */
     for(x=0;x<=40;x++) {
        vmwLoadPalette(game_state->graph_state, ((x+20)*4),0,0,100+x);
@@ -211,6 +227,8 @@ int main(int argc,char **argv)
        /* Set the white color */
     vmwLoadPalette(game_state->graph_state,0xff,0xff,0xff,15);
     
+    vmwFlushPalette(game_state->graph_state);
+   
        /* Actually draw the stylized VMW */
     for(x=0;x<=40;x++){ 
        vmwDrawVLine(x+40,45,2*x,100+x,virtual_1);
@@ -230,14 +248,16 @@ int main(int argc,char **argv)
     vmwTextXY("A VMW SOFTWARE PRODUCTION",60,140,
 	      15,15,0,tb1_font,virtual_1);   
     
-    if (game_state->sound_enabled) playSound();
+    if ((game_state->sound_possible) && (game_state->music_enabled))
+       playSound();
    
     vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
     pauseawhile(5);
-
-    stopSound();
-    loadSound(tb1_data_file("music/weave1.mod",game_state->path_to_data));
-
+    
+    if (game_state->sound_possible) {
+       stopSound();
+       loadSound(tb1_data_file("music/weave1.mod",game_state->path_to_data));
+    }
    
        /* Clear the Screen and get ready for the Menu */
     vmwClearScreen(virtual_1,0); 
@@ -271,7 +291,8 @@ int main(int argc,char **argv)
        }
        
        vmwFlipVirtual(virtual_1,virtual_3,320,200);
-       if (game_state->sound_enabled) playSound();
+       if ((game_state->sound_possible) &&(game_state->music_enabled)) 
+	  playSound();
        vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
 
        while (!vmwGetInput()) usleep(300);
@@ -309,7 +330,7 @@ int main(int argc,char **argv)
 	     usleep(10);
              gettimeofday(&time_info,&dontcare);
 	     if (time_info.tv_sec-time_sec>40) {
-		stopSound();
+		if (game_state->sound_possible) stopSound();
 		credits(game_state);
 		ch=VMW_ENTER;
 		barpos=9;
@@ -337,7 +358,7 @@ int main(int argc,char **argv)
           if(barpos==7) barpos=0;
           if(barpos<0) barpos=6;
        }
-       stopSound();
+       if (game_state->sound_possible) stopSound();
        
           /* Run whatever it was that the person pressed */
        switch (barpos) {

@@ -451,7 +451,7 @@ void levelone(tb1_state *game_state) {
 	        if (bullet[itemp].out) 
                    if (collision(bullet[itemp].x,bullet[itemp].y,10,10,
                        enemy[i].x,enemy[i].y,9,9)) {
-                      if (game_state->sound_enabled) 
+                      if ((game_state->sound_possible)&&(game_state->sound_enabled)) 
 			 playGameFX(SND_KAPOW);
                       enemy[i].hitsneeded--;
                       if (enemy[i].hitsneeded<1) enemy[i].dead=1;
@@ -524,7 +524,7 @@ void levelone(tb1_state *game_state) {
 	     }
              if (enemy[i].y>140) {
                 if (collision(shipx,165,24,15,enemy[i].x,enemy[i].y,9,9)) {
-                   if (game_state->sound_enabled) 
+                   if ((game_state->sound_possible)&&(game_state->sound_enabled)) 
 		      playGameFX(SND_BONK);
                    enemy[i].hitsneeded--;
                    if (enemy[i].hitsneeded==0) enemy[i].dead=1;
@@ -571,7 +571,7 @@ void levelone(tb1_state *game_state) {
 	               break;
            case ' ':  for(j=0;j<2;j++)
 	                if (!bullet[j].out) {
-                           if (game_state->sound_enabled) 
+                           if ((game_state->sound_possible)&&(game_state->sound_enabled)) 
 			      playGameFX(SND_CC);
                            bullet[j].out=1;
                            bullet[j].x=shipx+15;

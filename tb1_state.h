@@ -9,6 +9,7 @@ typedef struct {
    vmwVisual *virtual_2;          /* 320x400x8 */
    vmwVisual *virtual_3;          /* 320x200x8 */
    vmwSVMWGraphState *graph_state; /* Graphics state */
+   int sound_possible;            /* Sound even possible? */
    int sound_enabled;             /* Sound on or off */
    int music_enabled;             /* Music on or off */
    int sound_volume;              /* Sound volume */
