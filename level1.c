@@ -6,12 +6,11 @@
 #include <stdio.h>
 #include <sys/time.h>
 #include <unistd.h>
-#include <ggi/libggi.h>
+#include <ggi/ggi.h>
 #include <stdlib.h>
 #include "svmwgrap.h"
 #include "levels.h"
 #include "tblib.h"
-#include "gtblib.h"
 #include "soundIt.h"
 
     /* Define this to get a frames per second readout */
@@ -31,9 +30,9 @@ extern ggi_visual_t vaddr;
 extern ggi_visual_t vaddr2;
 extern ggi_color eight_bit_pal[256];
 extern ggi_pixel tb1_pal[256];
-extern ggi_directbuffer_t dbuf_vis;
+/*extern ggi_directbuffer_t dbuf_vis;
 extern ggi_directbuffer_t dbuf_vaddr;
-extern ggi_directbuffer_t dbuf_vaddr2;
+extern ggi_directbuffer_t dbuf_vaddr2;*/
 extern ggi_pixellinearbuffer *plb_vis;
 extern ggi_pixellinearbuffer *plb_vaddr;
 extern ggi_pixellinearbuffer *plb_vaddr2;
@@ -245,7 +244,7 @@ void beforeboss()
 		     (ggi_pixel *)&tb1_pal,color_depth);
     ggiSetGCForeground(vis,0);
     ggiDrawBox(vis,0,0,320,200);
-    vmwArbitraryCrossBlit(plb_vaddr->read,0,5,58,37,
+/*    vmwArbitraryCrossBlit(plb_vaddr->read,0,5,58,37,
 			  plb_vis->write,10,10,plb_vis->stride,stride_factor);
     VMWsmalltextxy("HUMAN!",70,10,tb1_pal[2],tb1_pal[0],1,tb1_font,vis);
     VMWsmalltextxy("WHAT ARE YOU DOING?!",70,20,tb1_pal[2],
@@ -275,7 +274,7 @@ void beforeboss()
 		                     tb1_pal[2],tb1_pal[0],1,tb1_font,vis);
     VMWsmalltextxy("TO DESTROY MY SHIP!  DIE EARTH SCUM!!!!",70,140,
 		                     tb1_pal[2],tb1_pal[0],1,tb1_font,vis);
-    pauseawhile(5);
+    pauseawhile(5);*/
 }
 
     /* The Sequence After You Defeat (hopefully) the Boss */
@@ -283,7 +282,7 @@ void afterboss()
 {
     char *tempst[300];
    
-    GGILoadPicPacked(0,0,vaddr,0,1,
+    /*GGILoadPicPacked(0,0,vaddr,0,1,
 		     tb1_data_file("viewscr.tb1",(char *)tempst),
 		     (ggi_color *)&eight_bit_pal,
 		     (ggi_pixel *)&tb1_pal,color_depth);
@@ -325,7 +324,7 @@ void afterboss()
 		          tb1_pal[9],tb1_pal[0],1,tb1_font,vis);
     VMWsmalltextxy("WELL AT LEAST I HAVE SOME SMALLER SPARES.",70,160,
 		          tb1_pal[9],tb1_pal[0],1,tb1_font,vis);
-    pauseawhile(5);
+    pauseawhile(5);*/
 }
 
     /* The Main Level One */
@@ -397,7 +396,7 @@ void levelone(int *level,int *shields,int *score)
        /* Setup and draw the sidebar */
     setupsidebar(*score,0,*shields);
     ggiSetGCForeground(vis,tb1_pal[0]);
-    vmwCrossBlit(plb_vaddr->write,plb_vaddr2->read,plb_vaddr->stride,200);
+/*    vmwCrossBlit(plb_vaddr->write,plb_vaddr2->read,plb_vaddr->stride,200);*/
     sprintf(tempst,"%d",*level);
     ggiDrawBox(vaddr2,251,52,63,7);
     VMWtextxy(tempst,307,51,tb1_pal[12],tb1_pal[0],0,tb1_font,vaddr2);
@@ -406,12 +405,12 @@ void levelone(int *level,int *shields,int *score)
     ggiSetGCForeground(vaddr2,tb1_pal[0]);
     ggiDrawBox(vaddr2,0,0,320,400);
     for(i=0;i<100;i++) {
-       vmwPutSprite(shapetable[11],18,18,stride_factor,
+       /*vmwPutSprite(shapetable[11],18,18,stride_factor,
 		    plb_vaddr2->write,rand()%238,
 		    rand()%400,plb_vaddr2->stride);
        vmwPutSprite(shapetable[12],18,18,stride_factor,
 		    plb_vaddr2->write,rand()%238,
-		    rand()%400,plb_vaddr2->stride);
+		    rand()%400,plb_vaddr2->stride);*/
     }
     change_shields(shields);
 
@@ -435,6 +434,7 @@ void levelone(int *level,int *shields,int *score)
        if (speed_factor>1) howmuchscroll-=speed_factor; 
        else howmuchscroll--; 
        if (howmuchscroll<0) howmuchscroll=399;
+#if 0
        if (howmuchscroll>199) {
 	  vmwArbitraryCrossBlit(plb_vaddr2->read,0,howmuchscroll,240,
 				400-howmuchscroll,
@@ -450,7 +450,7 @@ void levelone(int *level,int *shields,int *score)
 				plb_vaddr->write,0,0,plb_vaddr->stride,
 				stride_factor);
        }
-       
+#endif  
 	 
           /* Check for Collisions */
        for(i=0;i<5;i++) {
@@ -478,10 +478,10 @@ void levelone(int *level,int *shields,int *score)
           if (enemy[i].exploding) {
              enemy[i].explodeprogress++;
              if (enemy[i].explodeprogress<=5)
-	        vmwPutSprite(shapetable[enemy[i].explodeprogress+14],
+/*	        vmwPutSprite(shapetable[enemy[i].explodeprogress+14],
 			     18,18,stride_factor,
 			     plb_vaddr->write,enemy[i].x,enemy[i].y,
-			     plb_vaddr->stride);
+			     plb_vaddr->stride)*/;
 	     else if (enemy[i].dead) {
                 enemy[i].out=0;
                 enemy[i].exploding=0;
@@ -496,18 +496,18 @@ void levelone(int *level,int *shields,int *score)
              if (speed_factor>1) bullet[i].y-=(5*speed_factor); 
 	     else bullet[i].y-=5;
              if (bullet[i].y<5) bullet[i].out=0;
-             else vmwPutSprite(shapetable[0],18,18,stride_factor,
+             else /*vmwPutSprite(shapetable[0],18,18,stride_factor,
 			       plb_vaddr->write,bullet[i].x,bullet[i].y,
-			       plb_vaddr->stride);
+			       plb_vaddr->stride)*/;
 	  }
        }
        
           /* MOVE ENEMIES */
        for(i=0;i<5;i++) {
           if ((enemy[i].out) && (!enemy[i].dead)) {
-	     vmwPutSprite(shapetable[enemy[i].kind-1],18,18,stride_factor,
+	     /*vmwPutSprite(shapetable[enemy[i].kind-1],18,18,stride_factor,
 		          plb_vaddr->write,enemy[i].x,enemy[i].y,
-			  plb_vaddr->stride);
+			  plb_vaddr->stride)*/;
 	     if (speed_factor==1) enemy[i].x+=enemy[i].xspeed;
 	     else enemy[i].x+=(enemy[i].xspeed*speed_factor);
                 /* Check Position */
@@ -578,9 +578,9 @@ void levelone(int *level,int *shields,int *score)
                            bullet[j].out=1;
                            bullet[j].x=shipx+15;
                            bullet[j].y=165;
-		           vmwPutSprite(shapetable[0],18,18,stride_factor,
+		           /*vmwPutSprite(shapetable[0],18,18,stride_factor,
 				        plb_vaddr->write,bullet[j].x,
-					bullet[j].y,plb_vaddr->stride);
+					bullet[j].y,plb_vaddr->stride);*/
 		           j=3;
 			}
 	  }
@@ -592,22 +592,22 @@ void levelone(int *level,int *shields,int *score)
        if (shipx<1) shipx=1;
        if (shipx>190) shipx=190;
        switch(shipframe) {
-        case 1: vmwPutSprite(bigship1,48,30,stride_factor,
+        case 1: /*vmwPutSprite(bigship1,48,30,stride_factor,
 			     plb_vaddr->write,shipx,165,
-		             plb_vaddr->stride); break;
-        case 3: vmwPutSprite(bigship2,48,30,stride_factor,
+		             plb_vaddr->stride);*/ break;
+        case 3: /*vmwPutSprite(bigship2,48,30,stride_factor,
 			     plb_vaddr->write,shipx,165,
-			     plb_vaddr->stride); break;
+			     plb_vaddr->stride); */ break;
 	case 2:
-	case 4: vmwPutSprite(bigship3,48,30,stride_factor,
+	case 4: /*vmwPutSprite(bigship3,48,30,stride_factor,
 			     plb_vaddr->write,shipx,165,
-			     plb_vaddr->stride); break;
+			     plb_vaddr->stride);*/ break;
        }
        shipframe++;
        if (shipframe==5) shipframe=1;
        
           /* Flip Pages */
-       vmwCrossBlit(plb_vis->write,plb_vaddr->read,plb_vis->stride,200);
+       /*vmwCrossBlit(plb_vis->write,plb_vaddr->read,plb_vis->stride,200);*/
        ggiFlush(vis);
        
           /* Calculate how much time has passed */
@@ -660,21 +660,21 @@ void littleopener()
     vmwGetSprite(vaddr,30,178,15,18,ship2);
     ggiSetGCForeground(vis,tb1_pal[0]);
     ggiDrawBox(vaddr,0,178,319,21);
-    vmwCrossBlit(plb_vis->write,plb_vaddr->read,plb_vis->stride,200);
-    vmwCrossBlit(plb_vaddr2->write,plb_vaddr->read,plb_vaddr->stride,200);
+    /*vmwCrossBlit(plb_vis->write,plb_vaddr->read,plb_vis->stride,200);
+    vmwCrossBlit(plb_vaddr2->write,plb_vaddr->read,plb_vaddr->stride,200);*/
     for(i=100;i>0;i--) {
-       vmwArbitraryCrossBlit(plb_vaddr2->read,0,95,320,40,
+/*       vmwArbitraryCrossBlit(plb_vaddr2->read,0,95,320,40,
 			     plb_vaddr->write,0,95,
 			     plb_vaddr->stride,stride_factor);
        vmwPutSprite(ship2,15,18,stride_factor,
 		    plb_vaddr->write,i*2,100,plb_vaddr->stride);
        vmwArbitraryCrossBlit(plb_vaddr->read,0,95,320,40,
 			     plb_vis->write,0,95,plb_vaddr->stride,
-			     stride_factor);
+			     stride_factor);*/
        usleep(30000);
        if (get_input()!=0) break;       
     }
-    vmwCrossBlit(plb_vis->write,plb_vaddr2->read,plb_vis->stride,200);
+/*    vmwCrossBlit(plb_vis->write,plb_vaddr2->read,plb_vis->stride,200);*/
     VMWtextxy(">KCHK< TOM! WHERE ARE YOU GOING?",5,180,tb1_pal[15],tb1_pal[0],1,tb1_font,vis);
     ggiFlush(vis); 
     pauseawhile(3); 
@@ -682,18 +682,18 @@ void littleopener()
     VMWtextxy("Ooops. ",5,180,tb1_pal[24],tb1_pal[0],1,tb1_font,vis);
     pauseawhile(3);
     for(i=0;i<151;i++) {
-       vmwArbitraryCrossBlit(plb_vaddr2->read,0,95,320,40,
+       /*vmwArbitraryCrossBlit(plb_vaddr2->read,0,95,320,40,
 			     plb_vaddr->write,0,95,plb_vaddr->stride,
 			     stride_factor);
        vmwPutSprite(ship1,15,18,stride_factor,
 		    plb_vaddr->write,i*2,100,plb_vaddr->stride);
        vmwArbitraryCrossBlit(plb_vaddr->read,0,95,320,40,
 			     plb_vis->write,0,95,plb_vaddr->stride,
-			     stride_factor);
+			     stride_factor);*/
        usleep(30000);
        if (get_input()!=0) break;
     }
-    vmwCrossBlit(plb_vis->write,plb_vaddr2->read,plb_vis->stride,200);
+/*    vmwCrossBlit(plb_vis->write,plb_vaddr2->read,plb_vis->stride,200);*/
     ggiSetGCForeground(vis,tb1_pal[0]);
     ggiDrawBox(vis,0,0,320,200);
     GGILoadPicPacked(0,0,vis,1,0,

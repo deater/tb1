@@ -5,7 +5,8 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <sys/stat.h>
-#include <ggi/libggi.h>
+#include <ggi/gii.h>
+#include <ggi/ggi.h>
 #include "soundIt.h"
 #include "svmwgrap.h"
 #include "levels.h"
@@ -14,9 +15,9 @@ extern vmw_font *tb1_font;
 extern ggi_visual_t vis;
 extern ggi_visual_t vaddr;
 extern ggi_visual_t vaddr2;
-extern ggi_directbuffer_t dbuf_vis;
+/*extern ggi_directbuffer_t dbuf_vis;
 extern ggi_directbuffer_t dbuf_vaddr;
-extern ggi_directbuffer_t dbuf_vaddr2;
+extern ggi_directbuffer_t dbuf_vaddr2;*/
 extern ggi_pixellinearbuffer *plb_vis;
 extern ggi_pixellinearbuffer *plb_vaddr;
 extern ggi_pixellinearbuffer *plb_vaddr2;
@@ -28,8 +29,6 @@ extern int read_only_mode;
 extern ggi_color eight_bit_pal[256];
 extern ggi_pixel tb1_pal[256];
 extern int color_depth;
-
-Sample sound_effects[1];
 
 #define TB_ESC   27
 #define TB_ENTER 1024
@@ -56,7 +55,7 @@ int change_shields(int *shields)
             tb1_pal[254]=ggiMapColor(vis,&eight_bit_pal[254]);
        else {
 	         tb1_pal[254]=254;
-	         ggiSetPaletteVec(vis,254,1,&eight_bit_pal[254]);
+	         /*ggiSetPaletteVec(vis,254,1,&eight_bit_pal[254]);*/
        }
        ggiSetGCForeground(vaddr,tb1_pal[0]);
        ggiDrawBox(vaddr,250,71,64,8);
@@ -99,6 +98,122 @@ char *tb1_data_file(char *name, char *store)
 {
     sprintf(store,"%s/%s",path_to_data,name);
     return store;
+}
+
+int get_input() {
+
+    int evmask;
+    ggi_event event;
+    struct timeval t={0,0};
+   
+    /*evmask=emKeyPress|emKeyRelease|emPointer;*/
+
+    if (ggiEventPoll(vis,emKey,&t)) {
+       ggiEventRead(vis,&event,emKey);
+       if (event.any.type==evKeyPress) {
+	  switch(event.key.sym) { 
+		case GIIK_Up: /* CrSr up */
+		case GIIK_P8: /* Keypad 8 */
+		     return TB_UP;break;
+		case GIIK_Down: /* CrSr down */
+		case GIIK_P2: /* Keypad 2 */
+	  	     return TB_DOWN;break;
+		case GIIK_Right: /* CrSr right */
+		case GIIK_P6: /* CrSr right */
+		     return TB_RIGHT;break;
+		case GIIK_Left: /* CrSr left */
+		case GIIK_P4: /* CrSr left */
+	  	     return TB_LEFT;break;
+	      case GIIK_F1:
+		return TB_F1;break;
+	      case GIIK_F2:
+		return TB_F2;break;
+		case GIIK_Enter: /* enter */
+		     return TB_ENTER;break;
+		default:
+	             return event.key.sym;
+		/*printf("sym=%4x code=%4x\n",ev.key.sym,ev.key.code);*/break;
+	  }
+       }
+    }
+   return 0;
+}
+
+
+void clear_keyboard_buffer()
+{
+       while (get_input()!=0) ;
+}
+
+void drawsquare(int x1,int y1,int x2,int y2,int col,ggi_visual_t page)
+{
+   ggiSetGCForeground(page,tb1_pal[col]);
+   /*ggiDrawHLine(page,x1,y1,(x2-x1));
+   ggiDrawHLine(page,x1,y2,(x2-x1));
+   ggiDrawVLine(page,x1,y1,(y2-y1));
+   ggiDrawVLine(page,x2,y1,(y2-y1));*/
+   ggiDrawLine(page,x1,y1,x1,y2);
+   ggiDrawLine(page,x2,y1,x2,y2);
+   ggiDrawLine(page,x1,y1,x2,y1);
+   ggiDrawLine(page,x1,y2,x2,y2);
+}
+
+void coolbox(int x1,int y1,int x2,int y2,int fill,ggi_visual_t page)
+{
+    int i;
+   
+    for(i=0;i<5;i++) {
+       /*ggiSetGCForeground(page,31-i);
+       ggiDrawBox(page,x1+i,y1+i,(x2-x1-i-i),(y2-y1-i-i));*/
+       drawsquare(x1+i,y1+i,x2-i,y2-i,31-i,page);
+    }
+    if (fill) {
+       ggiSetGCForeground(page,tb1_pal[7]);
+       for(i=y1+5;i<y2-4;i++) ggiDrawHLine(page,x1+5,i,(x2-x1-9));
+     }  
+}
+
+
+
+int close_graphics()
+{
+    int err=0;
+   
+    err=ggiClose(vis);
+    err+=ggiClose(vaddr);
+    err+=ggiClose(vaddr2);
+    if(err) fprintf(stderr,"Probelms shutting down GGI!\n");
+    else fprintf(stderr,"Shutting down GGI...\n");
+    ggiExit();
+    return 0;
+}
+
+
+int quit()
+{
+   int barpos=0,ch=0,ch2;
+   
+    coolbox(90,75,230,125,1,vis);
+    VMWtextxy("QUIT??? ARE YOU",97,82,tb1_pal[9],tb1_pal[7],0,tb1_font,vis);
+    VMWtextxy("ABSOLUTELY SURE?",97,90,tb1_pal[9],tb1_pal[7],0,tb1_font,vis);
+    while (ch!=TB_ENTER){
+       if (barpos==0) VMWtextxy("YES-RIGHT NOW!",97,98,tb1_pal[150],tb1_pal[0],1,tb1_font,vis);
+       else VMWtextxy("YES-RIGHT NOW!",97,98,tb1_pal[150],tb1_pal[7],1,tb1_font,vis);
+       if (barpos==1) VMWtextxy("NO--NOT YET.",97,106,tb1_pal[150],tb1_pal[0],1,tb1_font,vis);
+       else VMWtextxy("NO--NOT YET.",97,106,tb1_pal[150],tb1_pal[7],1,tb1_font,vis);
+       while ( (ch=get_input())==0);
+       ch2=toupper(ch);
+       if ((ch==TB_UP)||(ch==TB_DOWN)||(ch==TB_LEFT)||(ch==TB_RIGHT)) barpos++;
+       if (ch2=='Y') barpos=0;
+       if (ch2=='N') barpos=1;
+       if (barpos==2) barpos=0;
+    }
+    if (barpos==0){ 
+       close_graphics();
+       exit(1);
+    }
+    else return 6;
+   /*move(imagedata,screen,4000); textcolor(7);*/ 
 }
 
 
@@ -282,6 +397,25 @@ void setupsidebar(int score,int hiscore,int shields)
     VMWtextxy("S-SOUND ",251,165,tb1_pal[10],tb1_pal[0],0,tb1_font,vaddr2);
 }
 
+
+
+
+
+void pauseawhile(int howlong)
+{
+    struct timeval bob;
+    struct timezone mree;
+    long begin_s,begin_u;
+   
+    clear_keyboard_buffer();
+    gettimeofday(&bob,&mree);
+    begin_s=bob.tv_sec; begin_u=bob.tv_usec;
+    while(( (bob.tv_sec-begin_s)<howlong) && (get_input()==0)) {
+       usleep(30);
+       gettimeofday(&bob,&mree);
+    }
+}
+
 void savegame(int level,int begin_score,int begin_shields)
 {
     char ch;
@@ -376,6 +510,13 @@ void savegame(int level,int begin_score,int begin_shields)
     }
     VMWtextxy("PRESS ANY KEY...",80,180,tb1_pal[4],tb1_pal[0],0,tb1_font,vis);
     while( (ch=get_input())==0) usleep(30);
+}
+
+void shadowrite(char *st,int x5,int y5,int forecol,int backcol,
+		ggi_visual_t vis)
+{
+    VMWtextxy(st,x5+1,y5+1,tb1_pal[backcol],0,0,tb1_font,vis);
+    VMWtextxy(st,x5,y5,tb1_pal[forecol],0,0,tb1_font,vis);
 }
 
 void options()
@@ -486,17 +627,15 @@ void loadgame()
 
 void story()
 {
-    int error,yzrrp;
+    int error;
     int xtemp,ytemp;
     int thrustcol;
     float thrust;
     char tempch;
     int alienchar;
     int cycles;
-    int explo1[325],explo2[325],bigflame1[600],bigflame2[600];
-    int rent[125],sflame1[25],sflame2[25],barge[310];
-    int truck1[60],truck2[60];
     char *tempst[300]; 
+#if 0
 /*
 procedure doflames;
 begin
@@ -534,151 +673,135 @@ begin
 end;
 */
 
-    GGILoadPicPacked(0,0,vaddr,0,1,
+    GGILoadPicPacked(0,0,vaddr,1,1,
 		     tb1_data_file("tbsobj.tb1",(char *)tempst),
 		     (ggi_color *)&eight_bit_pal,
 		     (ggi_pixel *)&tb1_pal,color_depth);
-   
-    vmwGetSprite(vaddr,0,2,26,18,bigflame1);
-    vmwGetSprite(vaddr,0,21,26,18,bigflame2);   
-    vmwGetSprite(vaddr,127,100,15,18,explo1);
-    vmwGetSprite(vaddr,148,100,15,18,explo2);
-    vmwGetSprite(vaddr,168,100,15,6,rent);
-    vmwGetSprite(vaddr,0,43,3,4,sflame1);
-    vmwGetSprite(vaddr,0,47,3,4,sflame2);
-    vmwGetSprite(vaddr,65,100,18,15,barge);
-    vmwGetSprite(vaddr,85,100,5,8,truck1);
-    vmwGetSprite(vaddr,95,100,5,8,truck2);
+  /*
+   for ytemp:=0 to 18 do
+      for xtemp:=0 to 26 do begin
+          ShapeTable1^[((ytemp*27)+xtemp)+bigflame1off]:=getpixel(xtemp,ytemp+2,vaddr);
+          ShapeTable1^[((ytemp*27)+xtemp)+bigflame2off]:=getpixel(xtemp,ytemp+21,vaddr);
+      end;
+  for ytemp:=0 to 18 do
+      for xtemp:=0 to 15 do begin
+          ShapeTable1^[((ytemp*16)+xtemp)+explo1off]:=getpixel(127+xtemp,ytemp+100,vaddr);
+          ShapeTable1^[((ytemp*16)+xtemp)+explo2off]:=getpixel(148+xtemp,ytemp+100,vaddr);
+  end;
+  for ytemp:=0 to 6 do
+      for xtemp:=0 to 15 do
+          ShapeTable1^[((ytemp*16)+xtemp)+rent1off]:=getpixel(168+xtemp,ytemp+100,vaddr);
+
+  for ytemp:=0 to 4 do
+      for xtemp:=0 to 3 do begin
+          ShapeTable1^[((ytemp*4)+xtemp)+sflame1off]:=getpixel(xtemp,ytemp+43,vaddr);
+          ShapeTable1^[((ytemp*4)+xtemp)+sflame2off]:=getpixel(xtemp,ytemp+47,vaddr);
+      end;
+
+  for ytemp:=0 to 18 do
+      for xtemp:=0 to 15 do
+          ShapeTable1^[((ytemp*16)+xtemp)+bargeoff]:=getpixel(xtemp+65,ytemp+100,vaddr);
+
+  for ytemp:=0 to 8 do
+      for xtemp:=0 to 5 do begin
+          ShapeTable1^[((ytemp*6)+xtemp)+truck1off]:=getpixel(xtemp+85,ytemp+100,vaddr);
+          ShapeTable1^[((ytemp*6)+xtemp)+truck2off]:=getpixel(xtemp+95,ytemp+100,vaddr);
+      end;
+*/
    
        /******FIRST MESSAGE********/
     ggiSetGCForeground(vis,tb1_pal[0]);
     ggiDrawBox(vis,0,0,320,200);
 
-    VMWtextxy("THE STORY SO FAR...",
-	      20,20,tb1_pal[4],tb1_pal[0],0,tb1_font,vis);
-    if (pauseawhile(7)==TB_ESC) goto end;
+   VMWtextxy("THE STORY SO FAR...",20,20,tb1_pal[4],tb1_pal[0],0,tb1_font,vis);
+    pauseawhile(7);
    
     ggiSetGCForeground(vis,tb1_pal[0]);
     ggiDrawBox(vis,0,0,320,200);
    
-    GGILoadPicPacked(0,0,vaddr2,0,1,
+/*    GGILoadPicPacked(0,0,vaddr2,1,1,
 		     tb1_data_file("tbcobj.tb1",(char *)tempst),
 		     (ggi_color *)&eight_bit_pal,
 		     (ggi_pixel *)&tb1_pal,color_depth);
     vmwArbitraryCrossBlit(plb_vaddr2->read,129,56,49,132,
-			  plb_vis->write,10,10,plb_vaddr2->stride,
-			  stride_factor);
-  
-    VMWtextxy("YOU ARE TOM BOMBEM,  A STRANGE",
-	      80,10,tb1_pal[1],tb1_pal[0],0,tb1_font,vis);
-    VMWtextxy("    BUT EFFICIENT MEMBER OF",
-	      80,20,tb1_pal[1],tb1_pal[0],0,tb1_font,vis);
-    VMWtextxy("    THE LUNAR SPACE FORCE.",
-	      80,30,tb1_pal[1],tb1_pal[0],0,tb1_font,vis);
-    VMWtextxy("YOU NEVER SAY MUCH AND YOU ARE",
-	      80,50,tb1_pal[4],tb1_pal[0],0,tb1_font,vis);
-    VMWtextxy("    RARELY SEEN OUTSIDE OF",
-	      80,60,tb1_pal[4],tb1_pal[0],0,tb1_font,vis);
-    VMWtextxy("    YOUR BLUE SPACESUIT.",
-	      80,70,tb1_pal[4],tb1_pal[0],0,tb1_font,vis);
-    VMWtextxy("YOU OFTEN GET YOURSELF IN ",
-	      80,90,tb1_pal[2],tb1_pal[0],0,tb1_font,vis);
-    VMWtextxy("    TROUBLE BY SCRATCHING",
-	      80,100,tb1_pal[2],tb1_pal[0],0,tb1_font,vis);
-    VMWtextxy("    YOUR HEAD AT INAPPROPRIATE",
-	      80,110,tb1_pal[2],tb1_pal[0],0,tb1_font,vis);
-    VMWtextxy("    TIMES.",
-	      80,120,tb1_pal[2],tb1_pal[0],0,tb1_font,vis);
-    VMWtextxy("PRESS ANY KEY....",
-	      96,185,tb1_pal[15],tb1_pal[0],0,tb1_font,vis);
-    if (pauseawhile(12)==TB_ESC) goto end;
+			  plb_vis->write,10,10,plb_vis->stride,
+			  stride_factor);*/
+  VMWtextxy("YOU ARE TOM BOMBEM,  A STRANGE",80,10,tb1_pal[1],tb1_pal[0],0,tb1_font,vis);
+  VMWtextxy("    BUT EFFICIENT MEMBER OF",80,20,tb1_pal[1],tb1_pal[0],0,tb1_font,vis);
+  VMWtextxy("    THE LUNAR SPACE FORCE.",80,30,tb1_pal[1],tb1_pal[0],0,tb1_font,vis);
+  VMWtextxy("YOU NEVER SAY MUCH AND YOU ARE",80,50,tb1_pal[4],tb1_pal[0],0,tb1_font,vis);
+  VMWtextxy("    RARELY SEEN OUTSIDE OF",80,60,tb1_pal[4],tb1_pal[0],0,tb1_font,vis);
+  VMWtextxy("    YOUR BLUE SPACESUIT.",80,70,tb1_pal[4],tb1_pal[0],0,tb1_font,vis);
+  VMWtextxy("YOU OFTEN GET YOURSELF IN ",80,90,tb1_pal[2],tb1_pal[0],0,tb1_font,vis);
+  VMWtextxy("    TROUBLE BY SCRATCHING",80,100,tb1_pal[2],tb1_pal[0],0,tb1_font,vis);
+  VMWtextxy("    YOUR HEAD AT INAPPROPRIATE",80,110,tb1_pal[2],tb1_pal[0],0,tb1_font,vis);
+  VMWtextxy("    TIMES.",80,120,tb1_pal[2],tb1_pal[0],0,tb1_font,vis);
+  VMWtextxy("PRESS ANY KEY....",96,185,tb1_pal[15],tb1_pal[0],0,tb1_font,vis);
+  pauseawhile(12);
    
-    ggiSetGCForeground(vis,tb1_pal[0]);
-    ggiDrawBox(vis,0,0,320,200);
+  ggiSetGCForeground(vis,tb1_pal[0]);
+  ggiDrawBox(vis,0,0,320,200);
    
-    vmwArbitraryCrossBlit(plb_vaddr2->read,129,56,49,132,
-		          plb_vis->write,260,10,plb_vis->stride,
-			  stride_factor);
-    vmwArbitraryCrossBlit(plb_vaddr2->read,99,104,29,81,
-  			  plb_vis->write,287,13,plb_vis->stride,
-			  stride_factor);
-
-    VMWtextxy("IT IS THE YEAR 2028.",
-	      10,10,tb1_pal[1],tb1_pal[0],0,tb1_font,vis);
-    VMWtextxy("YOU HAVE BEEN SUMMONED BY",
-	      10,30,tb1_pal[3],tb1_pal[0],0,tb1_font,vis);
-    VMWtextxy("    LUNAR DICTATOR-IN-CHIEF",
-	      10,40,tb1_pal[3],tb1_pal[0],0,tb1_font,vis);
-    VMWtextxy("    VINCENT WEAVER ABOUT A",
-	      10,50,tb1_pal[3],tb1_pal[0],0,tb1_font,vis);
-    VMWtextxy("    TOP SECRET THREAT TO ",
-	      10,60,tb1_pal[3],tb1_pal[0],0,tb1_font,vis);
-    VMWtextxy("    INTERPLANETARY SECURITY.",
-	      10,70,tb1_pal[3],tb1_pal[0],0,tb1_font,vis);
-    VMWtextxy("YOU ATTEND THE BRIEFING WITH",
-	      10,90,tb1_pal[5],tb1_pal[0],0,tb1_font,vis);
-    VMWtextxy("    YOUR USUAL CONFUSED",
-	      10,100,tb1_pal[5],tb1_pal[0],0,tb1_font,vis);
-    VMWtextxy("    QUIETNESS.  YOU STILL DO",
-	      10,110,tb1_pal[5],tb1_pal[0],0,tb1_font,vis);  
-    VMWtextxy("    NOT UNDERSTAND YOUR OWN",
-	      10,120,tb1_pal[5],tb1_pal[0],0,tb1_font,vis);
-    VMWtextxy("    SUCCESSFULNESS.",
-	      10,130,tb1_pal[5],tb1_pal[0],0,tb1_font,vis);
+/*  vmwArbitraryCrossBlit(plb_vaddr2->read,129,56,49,132,
+		        plb_vis->write,260,10,plb_vis->stride,
+			stride_factor);
+  vmwArbitraryCrossBlit(plb_vaddr2->read,99,104,29,81,
+			plb_vis->write,287,13,plb_vis->stride,
+			stride_factor);
+*/
+    VMWtextxy("IT IS THE YEAR 2028.",10,10,tb1_pal[1],tb1_pal[0],0,tb1_font,vis);
+    VMWtextxy("YOU HAVE BEEN SUMMONED BY",10,30,tb1_pal[3],tb1_pal[0],0,tb1_font,vis);
+    VMWtextxy("    LUNAR DICTATOR-IN-CHIEF",10,40,tb1_pal[3],tb1_pal[0],0,tb1_font,vis);
+    VMWtextxy("    VINCENT WEAVER ABOUT A",10,50,tb1_pal[3],tb1_pal[0],0,tb1_font,vis);
+    VMWtextxy("    TOP SECRET THREAT TO ",10,60,tb1_pal[3],tb1_pal[0],0,tb1_font,vis);
+    VMWtextxy("    INTERPLANETARY SECURITY.",10,70,tb1_pal[3],tb1_pal[0],0,tb1_font,vis);
+    VMWtextxy("YOU ATTEND THE BRIEFING WITH",10,90,tb1_pal[5],tb1_pal[0],0,tb1_font,vis);
+    VMWtextxy("    YOUR USUAL CONFUSED",10,100,tb1_pal[5],tb1_pal[0],0,tb1_font,vis);
+    VMWtextxy("    QUIETNESS.  YOU STILL DO",10,110,tb1_pal[5],tb1_pal[0],0,tb1_font,vis);  
+    VMWtextxy("    NOT UNDERSTAND YOUR OWN",10,120,tb1_pal[5],tb1_pal[0],0,tb1_font,vis);
+    VMWtextxy("    SUCCESSFULNESS.",10,130,tb1_pal[5],tb1_pal[0],0,tb1_font,vis);
     VMWtextxy("PRESS ANY KEY....",96,185,tb1_pal[15],tb1_pal[0],0,tb1_font,vis);
-    if (pauseawhile(10)==TB_ESC) goto end;
+    pauseawhile(10);
    
-    GGILoadPicPacked(0,0,vis,0,1,
+   GGILoadPicPacked(0,0,vis,1,1,
 		    tb1_data_file("tbchief.tb1",(char *)tempst),
 		    (ggi_color *)&eight_bit_pal,
 		    (ggi_pixel *)&tb1_pal,color_depth);
 
-    vmwArbitraryCrossBlit(plb_vis->read,115,55,91,59,
+/*    vmwArbitraryCrossBlit(plb_vis->read,115,55,91,59,
 		          plb_vaddr->write,115,55,plb_vis->stride,
 		          stride_factor);
-     
-    if (pauseawhile(6)==TB_ESC) goto end;
-   
+  */   
+    pauseawhile(6);
     VMWtextxy("Ahhh.... Mr. Bombem.... ",1,1,tb1_pal[15],tb1_pal[0],0,tb1_font,vis);  
   
-       /* Load The Sound */
-    if (sound_possible) {
-       Snd_loadRawSample(tb1_data_file("tbahh.raw",(char *)&tempst),
-				       &sound_effects[0],0);
-          /* Initialize Sound, if Possible */
-       if (Snd_init( 1,sound_effects,22050,4,
-			                   "/dev/dsp")==EXIT_FAILURE) {
-	  printf("ERROR! Cannot init sound.\n");
-	  sound_enabled=0;
-       }
-    }
-       /* Play "Ahhhhhhh Mr. Bombem.....  */
-    if (sound_enabled) Snd_effect(0,1);
-    pauseawhile(2);
-      
-    vmwArbitraryCrossBlit(plb_vaddr2->read,188,14,91,59,
-			  plb_vis->write,115,55,plb_vaddr2->stride,
+  /* if sbeffects then startsound(sound[1],0,false);*/
+  pauseawhile(2);
+   
+  /*if sbeffects then startsound(sound[3],0,false);*/
+    /*vmwArbitraryCrossBlit(plb_vaddr2->read,188,14,91,59,
+			  plb_vis->write,115,55,plb_vis->stride,
 			  stride_factor);
    
-    if (pauseawhile(6)==TB_ESC) goto end;
-   
+    pauseawhile(6);
     vmwArbitraryCrossBlit(plb_vaddr->read,115,55,91,59,
-			  plb_vis->write,115,55,plb_vaddr2->stride,
+			  plb_vis->write,115,55,plb_vis->stride,
 			  stride_factor);
- 
-    VMWtextxy("I'll be brief.                       ",
-	      1,1,tb1_pal[15],tb1_pal[0],1,tb1_font,vis);
-    if (pauseawhile(5)==TB_ESC) goto end;
-    VMWtextxy("Do you know how this base was founded?",
-	      1,1,tb1_pal[15],tb1_pal[0],1,tb1_font,vis);
-    if (pauseawhile(5)==TB_ESC) goto end;
+ */
+    VMWtextxy("I'll be brief.                       ",1,1,tb1_pal[15],tb1_pal[0],1,tb1_font,vis);
+    pauseawhile(5);
+    VMWtextxy("Do you know how this base was founded?",1,1,tb1_pal[15],tb1_pal[0],1,tb1_font,vis);
+    pauseawhile(5);
     VMWtextxy("No?  Well watch the screen.             ",1,1,tb1_pal[15],tb1_pal[0],1,tb1_font,vis);
-    if (pauseawhile(5)==TB_ESC) goto end; 
-    vmwArbitraryCrossBlit(plb_vaddr2->read,210,75,85,60,
+    pauseawhile(5); 
+   /* vmwArbitraryCrossBlit(plb_vaddr2->read,210,75,85,60,
 			  plb_vis->write,210,136,plb_vis->stride,
 			  stride_factor);
-    if (pauseawhile(4)==TB_ESC) goto end;
+    pauseawhile(4);
+   */
+    /*pal(250,0,0,0);*/
    
+
        /******BARGE TAKING OFF***********/
    
     GGILoadPicPacked(0,0,vaddr2,1,1,
@@ -686,71 +809,36 @@ end;
 		     (ggi_color *)&eight_bit_pal,
 		     (ggi_pixel *)&tb1_pal,color_depth);
  
-    VMWsmalltextxy("MY WIFE AND I FOUNDED",
-		   212,3,tb1_pal[14],tb1_pal[0],0,tb1_font,vaddr2);
-    VMWsmalltextxy("THIS BASE IN 2008.",
-		   212,9,tb1_pal[14],tb1_pal[0],0,tb1_font,vaddr2);
-    VMWsmalltextxy("THE ONLY WAY TO ",
-		   212,16,tb1_pal[13],tb1_pal[0],0,tb1_font,vaddr2);
-    VMWsmalltextxy("FINANCE IT WAS TO",
-		   212,22,tb1_pal[13],tb1_pal[0],0,tb1_font,vaddr2);
-    VMWsmalltextxy("ENGAGE IN A DUBIOUS",
-		   212,28,tb1_pal[13],tb1_pal[0],0,tb1_font,vaddr2);
-    VMWsmalltextxy("BUSINESS.",
-		   212,34,tb1_pal[13],tb1_pal[0],0,tb1_font,vaddr2);
-    VMWsmalltextxy("WE LAUNCHED EARTH'S",
-		   212,41,tb1_pal[12],tb1_pal[0],0,tb1_font,vaddr2);
-    VMWsmalltextxy("TRASH INTO SPACE",
-		   212,47,tb1_pal[12],tb1_pal[0],0,tb1_font,vaddr2);
-    VMWsmalltextxy("FOR A PROFIT.",
-		   212,53,tb1_pal[12],tb1_pal[0],0,tb1_font,vaddr2);
-    VMWsmalltextxy("HERE IS FOOTAGE FROM",
-		   212,60,tb1_pal[11],tb1_pal[0],0,tb1_font,vaddr2);
-    VMWsmalltextxy("THE LAST LAUNCH EIGHT",
-		   212,66,tb1_pal[11],tb1_pal[0],0,tb1_font,vaddr2);
-    VMWsmalltextxy("YEARS AGO.",
-		   212,72,tb1_pal[11],tb1_pal[0],0,tb1_font,vaddr2);
+    VMWsmalltextxy("MY WIFE AND I FOUNDED",212,3,tb1_pal[14],tb1_pal[0],0,tb1_font,vaddr2);
+    VMWsmalltextxy("THIS BASE IN 2008.",212,9,tb1_pal[14],tb1_pal[0],0,tb1_font,vaddr2);
+    VMWsmalltextxy("THE ONLY WAY TO ",212,16,tb1_pal[13],tb1_pal[0],0,tb1_font,vaddr2);
+    VMWsmalltextxy("FINANCE IT WAS TO",212,22,tb1_pal[13],tb1_pal[0],0,tb1_font,vaddr2);
+    VMWsmalltextxy("ENGAGE IN A DUBIOUS",212,28,tb1_pal[13],tb1_pal[0],0,tb1_font,vaddr2);
+    VMWsmalltextxy("BUSINESS.",212,34,tb1_pal[13],tb1_pal[0],0,tb1_font,vaddr2);
+    VMWsmalltextxy("WE LAUNCHED EARTH'S",212,41,tb1_pal[12],tb1_pal[0],0,tb1_font,vaddr2);
+    VMWsmalltextxy("TRASH INTO SPACE",212,47,tb1_pal[12],tb1_pal[0],0,tb1_font,vaddr2);
+    VMWsmalltextxy("FOR A PROFIT.",212,53,tb1_pal[12],tb1_pal[0],0,tb1_font,vaddr2);
+    VMWsmalltextxy("HERE IS FOOTAGE FROM",212,60,tb1_pal[11],tb1_pal[0],0,tb1_font,vaddr2);
+    VMWsmalltextxy("THE LAST LAUNCH EIGHT",212,66,tb1_pal[11],tb1_pal[0],0,tb1_font,vaddr2);
+    VMWsmalltextxy("YEARS AGO.",212,72,tb1_pal[11],tb1_pal[0],0,tb1_font,vaddr2);
  
-    vmwCrossBlit(plb_vaddr->write,plb_vaddr2->read,plb_vis->stride,200);
+/*    vmwCrossBlit(plb_vaddr->write,plb_vaddr2->read,plb_vis->stride,200);
+*/
+/*  putshape(bargeoff,vaddr,16,18,141,157);*/
+  
+  /*  vmwCrossBlit(plb_vis->write,plb_vaddr->read,plb_vis->stride,200);
+    pauseawhile(7);*/
+/*   
 
-    vmwPutSprite(barge,18,15,stride_factor,
-		 plb_vaddr->write,141,157,plb_vaddr->stride);
-      
-    vmwCrossBlit(plb_vis->write,plb_vaddr->read,plb_vis->stride,200);
-    if (pauseawhile(7)==TB_ESC) goto end;
+  for ytemp:=191 downto 164 do begin
+      if ytemp>=172 then blockmove(145,ytemp,152,ytemp+10,vaddr2,145,ytemp,vaddr)
+                    else blockmove(145,172,152,182,vaddr2,145,172,vaddr);
+      puttruck(145,ytemp,ytemp mod 2,vaddr);
+      pauseawhile(7);
+      if keypressed then if readkey=#27 then exit;
+      flipd320(vaddr,vga);
+  end;
 
-    for(ytemp=191;ytemp>163;ytemp--) {
-       if (ytemp>=172) vmwArbitraryCrossBlit(plb_vaddr2->read,145,ytemp,
-			                    7,9,plb_vaddr->write,145,ytemp,
-					    plb_vaddr->stride,stride_factor);
-       
-	  /*blockmove(145,ytemp,152,ytemp+10,vaddr2,145,ytemp,vaddr)*/
-       else vmwArbitraryCrossBlit(plb_vaddr2->read,145,172,
-				  7,9,plb_vaddr->write,145,172,
-				  plb_vaddr->stride,stride_factor);
-       
-	 
-       /*blockmove(145,172,152,182,vaddr2,145,172,vaddr);*/
-
-       yzrrp=ytemp-172;
-       if (yzrrp<0) yzrrp=-yzrrp;
-       else yzrrp=0;
-       if (ytemp%2) vmwPutPartialSprite(truck1,5,8,stride_factor,
-		                        plb_vaddr->write,145,ytemp,
-					plb_vaddr->stride,0,5,yzrrp,8);
-       
-      else vmwPutPartialSprite(truck2,5,8,stride_factor,
-	                       plb_vaddr->write,145,ytemp,
-	                       plb_vaddr->stride,0,5,yzrrp,8);
-       
-      /* truck1,truck2
-       puttruck(145,ytemp,ytemp mod 2,vaddr);*/
-       /*if (pauseawhile(1)==TB_ESC) break;*/
-       usleep(30000);
-       vmwCrossBlit(plb_vis->write,plb_vaddr->read,plb_vis->stride,200);
-       
-    }
-/*
   pauseawhile(20);
   flipd320(vaddr2,vaddr);
   putshape(bargeoff,vaddr,16,18,141,157);
@@ -771,7 +859,7 @@ end;
       ytemp:=ytemp-round(thrust);
   end;
 */
-  if (pauseawhile(5)==TB_ESC) goto end;
+  pauseawhile(5);
   
 
        /****SECOND CHIEF*******/
@@ -785,10 +873,10 @@ end;
 		    tb1_data_file("tbchief.tb1",(char *)tempst),
 		    (ggi_color *)&eight_bit_pal,
 		    (ggi_pixel *)&tb1_pal,color_depth);
-    vmwArbitraryCrossBlit(plb_vaddr2->read,7,104,90,21,
+/*    vmwArbitraryCrossBlit(plb_vaddr2->read,7,104,90,21,
 		    plb_vis->write,6,174,plb_vis->stride,
 		    stride_factor);
-   
+  */ 
     VMWtextxy("You might wonder why this is important.",1,1,tb1_pal[15],tb1_pal[0],1,tb1_font,vis); 
     pauseawhile(6);
     VMWtextxy("Last week we received a message.       ",1,1,tb1_pal[15],tb1_pal[0],1,tb1_font,vis);
@@ -797,9 +885,9 @@ end;
     pauseawhile(6);
     VMWtextxy("Watch the screen.                      ",1,1,tb1_pal[15],tb1_pal[0],1,tb1_font,vis);
     
-    vmwArbitraryCrossBlit(plb_vaddr2->read,210,136,85,59,
+    /*vmwArbitraryCrossBlit(plb_vaddr2->read,210,136,85,59,
 			  plb_vis->write,210,136,plb_vis->stride,
-			  stride_factor);
+			  stride_factor);*/
     pauseawhile(4);
    
        /******ALIEN DELEGATION*****/
@@ -911,12 +999,7 @@ end;
     pauseawhile(6);
     VMWtextxy("<Huh?>                             ",1,1,tb1_pal[9],tb1_pal[0],1,tb1_font,vis);
     pauseawhile(10);
-   
-   end:
-    /* All Done.  Close up sound */
-       Snd_restore();
-   
-   
+#endif
 }
 
 void credits()
@@ -937,7 +1020,7 @@ void credits()
     VMWtextxy("             SOUND EFFECTS",0,340,tb1_pal[11],tb1_pal[0],1,tb1_font,vaddr2);
     VMWtextxy("            VINCENT M WEAVER",0,360,tb1_pal[11],tb1_pal[0],1,tb1_font,vaddr2);
     VMWtextxy("          GRAPHICS INSPIRATION",0,390,tb1_pal[12],tb1_pal[0],1,tb1_font,vaddr2);
-   
+#if 0   
     for(i=0;i<200;i++){ 
        vmwArbitraryCrossBlit(plb_vaddr2->read,0,i,320,200,
 		             plb_vis->write,0,0,
@@ -1051,13 +1134,14 @@ void credits()
   vmwArbitraryCrossBlit(plb_vaddr2->read,0,200,320,200,
                         plb_vaddr2->write,0,0,
 			plb_vaddr2->stride,stride_factor);
+#endif
 }
 
 void about()
 {
     int pagenum=1,firstime=0,oldpagenum=0,numpages=4,ch=0;
     char tempst[300];
-    
+#if 0    
 
    ggiSetGCForeground(vaddr,tb1_pal[0]);
    ggiFillscreen(vaddr);
@@ -1155,7 +1239,7 @@ void about()
 		     tb1_data_file("tbgorg.tb1",(char *)&tempst),
 		     (ggi_color *)&eight_bit_pal,
 		     (ggi_pixel *)&tb1_pal,color_depth);
-   
+#endif   
 }
 
 

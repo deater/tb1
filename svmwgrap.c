@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
-#include <ggi/libggi.h>
+#include <ggi/ggi.h>
 
 
 /*var unfadered:array[0..255] of byte;
@@ -66,7 +66,6 @@ int vmwArbitraryCrossBlit(char *src,int x1,int y1,int w,int h,
    return 0;   
     
 }
-
 int vmwPutSprite(int *src,int w,int h,int stride_factor,
 		 char *dest,int x,int y,int dest_stride)
 {
@@ -82,25 +81,6 @@ int vmwPutSprite(int *src,int w,int h,int stride_factor,
   return 0;
    
 }
-
-int vmwPutPartialSprite(int *src,int w,int h,int stride_factor,
-		        char *dest,int x,int y,int dest_stride,
-			int x_start,int x_stop,int y_start,int y_stop)
-{                          /* x_start/stop not implemented yet */
-    int xx,yy;
-    dest+=(dest_stride*y);
-    for(yy=0;yy<h;yy++){ 
-       for(xx=0;xx<w;xx++) 
-          if ((*(src+xx)) && ((yy>=y_start) && (yy<=y_stop)) )
-	     memcpy(dest+(stride_factor*(xx+x)),(src+xx),stride_factor);
-	 /**(dest+xx+x)=15;*/
-   src+=w;
-   dest+=dest_stride;
-    }
-  return 0;
-   
-}
-
 
 int vmwGetSprite(ggi_visual_t visual,int x,int y,int w,int h,
 		                  int *sprite)
@@ -287,7 +267,7 @@ int GGILoadPicPacked(int x1,int y1,ggi_visual_t vis
        }
        else {
 	 for(i=0;i<256;i++) tb1_pal[i]=(ggi_pixel)i;
-	 ggiSetPaletteVec(vis,0,256,eight_bit_pal);
+	 /*ggiSetPaletteVec(vis,0,256,eight_bit_pal);*/
        }
     }
     x=x1;

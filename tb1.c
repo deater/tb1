@@ -18,9 +18,9 @@
 #include <unistd.h>
 #include <sys/time.h>
 
-#include <ggi/libggi.h>
+#include <ggi/ggi.h> 
+
 #include "svmwgrap.h"
-#include "gtblib.h"
 #include "tblib.h"
 
     /* Exported Global Variables */
@@ -30,7 +30,7 @@ uint white;
 ggi_color eight_bit_pal[256];     
 ggi_pixel tb1_pal[256];
 int color_depth;
-ggi_directbuffer_t      dbuf_vis,dbuf_vaddr,dbuf_vaddr2;
+ggi_directbuffer      *dbuf_vis,*dbuf_vaddr,*dbuf_vaddr2;
 ggi_pixellinearbuffer   *plb_vis = NULL,*plb_vaddr= NULL,*plb_vaddr2=NULL;
 int stride_factor=1;
 int sound_enabled=1,sound_possible=1,read_only_mode=0;
@@ -46,9 +46,20 @@ int setup_graphics(int force_8bpp)
     ggi_mode mode;
     int vx,vy,sx,sy;
    
-    ggiInit();
+    if (ggiInit()) {
+       fprintf(stderr,"Cannot initialize libGGI!\n");
+       return 1;
+    }
+   
     vis=ggiOpen(NULL);
-       
+    if(!vis) {
+       fprintf(stderr,"Cannot open default visual!\n");
+       ggiExit();
+       return 1;
+    }
+       /* Do I really want to do this? */
+    ggiSetFlags(vis, GGIFLAG_ASYNC);
+   
     if (force_8bpp)
        err=ggiSetGraphMode(vis,320,200,320,200,GT_8BIT);
     else
@@ -56,9 +67,16 @@ int setup_graphics(int force_8bpp)
     if (err) {
        fprintf(stderr,"ERROR!  Problem opening 320x200 vis\n\n");
        return 2;
-    } 
+    }
+    mode.frames=3;
     
-    ggiGetMode(vis,&mode);
+    if (ggiGetMode(vis,&mode)) {
+       fprintf(stderr,"Cannot set mode!\n");
+       ggiClose(vis);
+       ggiExit();
+       return 1;
+    }
+   
     vx=mode.virt.x;   vy=mode.virt.y;
     sx=mode.visible.x;sy=mode.visible.y;
     switch (mode.graphtype) {
@@ -74,36 +92,39 @@ int setup_graphics(int force_8bpp)
     printf("  + Opened a %d x %d (%d x %d) mode with %d bpp\n",
 	      sx,sy,vx,vy,color_depth);
     
-    err = ggiDBGetBuffer (vis, &dbuf_vis);
-    if (err) { 
+    /*dbuf_vis=ggiDBGetBuffer(vis,0);*/
+    /*err = ggiDBGetBuffer (vis, &dbuf_vis);*/
+    /*if (!(dbuf_vis=ggiDBGetBuffer(vis,0)) ) { 
        printf("Error! Could not get directbuffer\n"); 
        return 2;
     }
-    if (!(ggiDBGetLayout (dbuf_vis) == blPixelLinearBuffer)) {
+    */
+    /*if (!(ggiDBGetLayout (dbuf_vis) == blPixelLinearBuffer)) {
        printf("Error! Nonlinear Display Buffer.\n");
        return 2;
-    }
-    if (!(plb_vis = ggiDBGetPLB (dbuf_vis)) ) {
+    }*/
+    /*if (!(plb_vis = ggiDBGetPLB (dbuf_vis)) ) {
        printf("Error! Problem getting pixel linear buffer.\n");
        return 2;
     }
-   
+   */
     vaddr=ggiOpen("display-memory",NULL);
     err=ggiSetGraphMode(vaddr,320,200,320,200,mode.graphtype);
     if (err) {
        printf("ERROR! Problem opening 320x200x%d vaddr\n",color_depth);
        return 2;
     }
-    err = ggiDBGetBuffer (vaddr, &dbuf_vaddr);
+    /*err = ggiDBGetBuffer (vaddr, &dbuf_vaddr);
     if (err) {
        printf("Error! Could not get directbuffer\n");
        return 2;
-    }
-    if (!(ggiDBGetLayout (dbuf_vaddr) == blPixelLinearBuffer)) {
+    }*/
+    /*if (!(ggiDBGetLayout (dbuf_vaddr) == blPixelLinearBuffer)) {
        printf("Error! Nonlinear Display Buffer.\n");
        return 2;
     }
-    if (!(plb_vaddr = ggiDBGetPLB (dbuf_vaddr)) ) {
+     */
+    /*if (!(plb_vaddr = ggiDBGetPLB (dbuf_vaddr)) ) {
        printf("Error! Problem getting pixel linear buffer.\n");
        return 2;
     }
@@ -128,6 +149,7 @@ int setup_graphics(int force_8bpp)
        return 2;
     }
     stride_factor=(plb_vis->stride)/320;
+    */
     printf("  + Using a stride factor of %d\n",stride_factor);
     printf("  + GGI Graphics Initialization successful...\n");
     printf("  + Running TB1 in %dbpp Mode...\n",color_depth);
@@ -269,11 +291,11 @@ int main(int argc,char **argv)
     eight_bit_pal[15].b=255*0x100;
     
        /* Finalize Pallette Stuff */
-    if (color_depth!=8) {
+    /*if (color_depth!=8) {
        tb1_pal[15]=ggiMapColor(vis,&eight_bit_pal[15]);
     }
     else ggiSetPaletteVec(vis,0,256,eight_bit_pal);
-         
+      */   
        /* Actually draw the stylized VMW */
     for(x=0;x<=40;x++){ 
        ggiSetGCForeground(vis,tb1_pal[100+x]);   
@@ -329,9 +351,9 @@ int main(int argc,char **argv)
           ggiFlush(vaddr2);
 	  reloadpic=0;
        }
-       vmwCrossBlit(plb_vis->write,plb_vaddr2->read,plb_vis->stride,200);
+       /*vmwCrossBlit(plb_vis->write,plb_vaddr2->read,plb_vis->stride,200);*/
        ggiFlush(vis);
-              
+            
        barpos=0;
        VMWtextxy("F1 HELP",0,190,tb1_pal[9],tb1_pal[7],0,tb1_font,vis);   
        coolbox(117,61,199,140,1,vis);
