@@ -132,6 +132,12 @@ void vmwUnFade(vmwSVMWGraphState *state,vmwVisual *source);
 
  
     /* From vmw_pcx.c */
+
+#define PCX_UNKNOWN 0
+#define PCX_8BITPAL 1
+#define PCX_24BIT   2
+
+int vmwGetPCXInfo(char *FileName, int *xsize, int *ysize, int *type);
 int vmwLoadPCX(int x1,int y1,vmwVisual *target,
 		     int LoadPal,int LoadPic,char *FileName,
 		     vmwSVMWGraphState *graph_state);

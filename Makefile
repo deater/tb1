@@ -74,3 +74,4 @@ tblib.o:	tblib.c
 clean:
 	rm -f tb1 *.o *~
 	cd svmwgraph && make clean
+	cd tools && make clean

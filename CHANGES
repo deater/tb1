@@ -1,3 +1,10 @@
+27 October 2004
++ Of course instead of finishing things up, used the library to display
+  pcx files so I can give presentations using an old 486 laptop.
+  (Convert pdf's which are slow to display to 8-bit 640x480 .pcx files
+   which render plenty fast on a 75MHz 486).
+   
+
 29 Septemer 2004
 + Backed out the half-baked "generalized level 2" changes.  They made
   things 10 times as complicated for no good reason.  Pre-mature
