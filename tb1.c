@@ -1,6 +1,6 @@
 /****************************************************************\
 \*    TOM BOMBEM AND THE INVASION OF THE INANIMATE_OBJECTS      */
-/*                    version 2.9.5      16 September 2000	*\
+/*                    version 2.9.9      23 September 2000	*\
 \*        by Vince Weaver       weave@eng.umd.edu               */
 /*                                                              *\
 \*  Originally written in Pascal and x86 assembly for DOS       */
@@ -10,7 +10,7 @@
 \*          This source is released under the GPL               */
 /****************************************************************/
 
-#define TB1_VERSION "2.9.7"
+#define TB1_VERSION "2.9.9"
 
 #include <stdio.h>
 #include <stdlib.h>   /* for calloc */
@@ -36,13 +36,11 @@
 int command_line_help(int show_version,char *runas)
 {
     if (!show_version) {   
-       printf("Usage:  %s [-8bpp] [-double] [-fullscreen] [-nosound] [-readonly]"
+       printf("Usage:  %s [-double] [-fullscreen] [-nosound]"
 	                  " [-version] [-?]\n\n",runas);
-       printf("  -8bpp       : force to run in 8bpp mode\n");
        printf("  -double     : play in 640x480 mode\n");
        printf("  -fullscreen : play in fullscreen mode (if available)\n");
        printf("  -nosound    : disables sound within game\n");
-       printf("  -readonly   : don't try to write files to disk\n");
        printf("  -version    : print version\n");
        printf("  -?          : print this help message\n");
        printf("\n");
@@ -51,10 +49,55 @@ int command_line_help(int show_version,char *runas)
 }
 
 
+void vmw_opener(tb1_state *game_state, vmwVisual *virtual_1) {
+
+    int x;
+   
+    for (x=0;x<256;x++) vmwLoadPalette(game_state->graph_state,0,0,0,x); /* 0=black */
+
+       /* Do the VMW Software Production Logo */
+    for(x=0;x<=40;x++) {
+       vmwLoadPalette(game_state->graph_state, ((x+20)*4),0,0,100+x);
+       vmwLoadPalette(game_state->graph_state,0,0, ( (x+20)*4 ),141+x);
+       vmwLoadPalette(game_state->graph_state,0, ( (x+20)*4),0,182+x);
+    }
+
+       /* Set the white color */
+    vmwLoadPalette(game_state->graph_state,0xff,0xff,0xff,15);
+    
+    vmwFlushPalette(game_state->graph_state);
+   
+       /* Actually draw the stylized VMW */
+    for(x=0;x<=40;x++){ 
+       vmwDrawVLine(x+40,45,2*x,100+x,virtual_1);
+       vmwDrawVLine(x+120,45,2*x,141+x,virtual_1);
+       vmwDrawVLine(x+200,45,2*x,141+x,virtual_1);
+       vmwDrawVLine(x+80,125-(2*x),2*x,182+x,virtual_1);
+       vmwDrawVLine(x+160,125-(2*x),2*x,182+x,virtual_1);
+    }
+    for(x=40;x>0;x--){
+       vmwDrawVLine(x+80,45,80-(2*x),140-x,virtual_1);
+       vmwDrawVLine(x+160,45,80-(2*x),181-x,virtual_1);
+       vmwDrawVLine(x+240,45,80-(2*x),181-x,virtual_1);
+       vmwDrawVLine(x+120,45+(2*x),80-(2*x),222-x,virtual_1);
+       vmwDrawVLine(x+200,45+(2*x),80-(2*x),222-x,virtual_1);
+    }
+   
+    vmwTextXY("A VMW SOFTWARE PRODUCTION",60,140,
+	      15,15,0,game_state->graph_state->default_font,virtual_1);   
+    
+    if ((game_state->sound_possible) && (game_state->music_enabled))
+       playSound();
+   
+    vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
+    pauseawhile(5);
+    vmwFadeToBlack(game_state->graph_state,virtual_1,0);
+}
+
 int main(int argc,char **argv)
 {
     int i,grapherror,reloadpic=0;
-    int ch,x,barpos,time_sec;
+    int ch,barpos,time_sec;
     int scale=1,fullscreen=0;
     FILE *fff;
     vmwVisual *virtual_1,*virtual_2,*virtual_3; 
@@ -70,11 +113,11 @@ int main(int argc,char **argv)
     printf("         http://www.glue.umd.edu/~weave/tb1\n\n");
    
        /* Setup the game state */
-   
     if ( (game_state=calloc(1,sizeof(tb1_state)))==NULL) {
        printf("You are seriously low on RAM!\n");
        return 3;
     }
+   
        /* Some sane defaults */
     game_state->level=0;
     game_state->shields=0;
@@ -100,12 +143,8 @@ int main(int argc,char **argv)
 	   case 'd':
 	     scale=2; break;
 	   case 'n': 
-	     game_state->sound_enabled=0;
+	     game_state->sound_possible=0;
 	     printf("  + Sound totally disabled\n");
-	     break;
-	   case 'r': 
-//	     read_only_mode=1;
-	     printf("  + Read Only mode enabled\n");
 	     break;
 	   default : command_line_help(0,argv[0]);
 	             printf("Unknown Option: %s\n\n",argv[i]);
@@ -144,24 +183,29 @@ int main(int argc,char **argv)
        }
     }
     printf("  + Found tb1 data in %s\n",game_state->path_to_data);
-   
-/* FIXME : find where writing info out to */
+
+    /* FIXME -- read in options */
    
   
-       /* REMNANT OPERATION BOTTLECAP STUFF--->                *\
-       \* No 9-22-94    Back to yes 10-6-94     uh_oh 2-21-95  */
-       /* gone for real long time 10-12-95                     *\
-       \* 11-95 not Amy anymore, but Gus                       */
-       /* 3-96 oh well... gave up on Gus finally               *\
-       \* 5-11-96 Now Marie... what fun life is                */
+/* LEGACY OPERATION BOTTLECAP STUFF--->                 *\
+\*      --> You are not meant to understand this <--    */
+/* No 9-22-94    Back to yes 10-6-94     uh_oh 2-21-95  *\
+\* gone for real long time 10-12-95                     */
+/* 11-95 not Amy anymore, but Gus                       *\
+\* 3-96 oh well... gave up on Gus finally               */
+/* 5-11-96 Now Marie...                                 *\
+\* 9-22-2000 :(                                         */  
       
+   
        /* Randomize random number generator */
     srandom(time(NULL));
     printf("  + Seeding random number generator...\n");
    
-       /* Load sounds */
-    if (initSound(game_state->path_to_data)<0) game_state->sound_possible=0;
-    
+       /* Load/Detect sound */
+    if (game_state->sound_possible) 
+       if (initSound(game_state->path_to_data)<0) game_state->sound_possible=0;
+   
+       /* Load fanfare Music */
     if (game_state->sound_possible) {  
        loadSound(tb1_data_file("music/vmwfan.mod",game_state->path_to_data));
     }
@@ -171,20 +215,21 @@ int main(int argc,char **argv)
        /* Setup Graphics */
     
     if (scale==1) {
-   
-    if ( (game_state->graph_state=vmwSetupSVMWGraph(VMW_SDLTARGET,
-						 320,200,
-						 0,scale,fullscreen,1))==NULL) {   
-       fprintf(stderr,"ERROR: Couldn't get display set up properly.\n");
-       return VMW_ERROR_DISPLAY;
+       if ( (game_state->graph_state=
+	                 vmwSetupSVMWGraph(VMW_SDLTARGET,
+					   320,200,
+					   0,scale,fullscreen,1))==NULL) {   
+          fprintf(stderr,"ERROR: Couldn't get display set up properly.\n");
+          return VMW_ERROR_DISPLAY;
+       }
     }
-    }
-    else {
-       if ( (game_state->graph_state=vmwSetupSVMWGraph(VMW_SDLTARGET,
-						 640,480,
-						 0,scale,fullscreen,1))==NULL) {   
-       fprintf(stderr,"ERROR: Couldn't get display set up properly.\n");
-       return VMW_ERROR_DISPLAY;
+    else { /* We are double-sized */
+       if ( (game_state->graph_state=
+	                 vmwSetupSVMWGraph(VMW_SDLTARGET,
+				           640,480,
+					   0,scale,fullscreen,1))==NULL) {   
+          fprintf(stderr,"ERROR: Couldn't get display set up properly.\n");
+          return VMW_ERROR_DISPLAY;
        }
     }
      
@@ -194,6 +239,7 @@ int main(int argc,char **argv)
 					  game_state->path_to_data),8,16,256);
     printf("  + Loaded tb1 font...\n");
 
+       /* Allocate the 3 virtual screens */
     if ((game_state->virtual_1=vmwSetupVisual(320,200))==NULL) {
        fprintf(stderr,"ERROR: Couldn't get RAM for virtual screen 1!\n");
        return VMW_ERROR_MEM;
@@ -214,88 +260,53 @@ int main(int argc,char **argv)
     virtual_2=game_state->virtual_2;
     virtual_3=game_state->virtual_3;
     tb1_font=game_state->graph_state->default_font;
-
-    for (x=0;x<256;x++) vmwLoadPalette(game_state->graph_state,0,0,0,x); /* 0=black */
-
-       /* Do the VMW Software Production Logo */
-    for(x=0;x<=40;x++) {
-       vmwLoadPalette(game_state->graph_state, ((x+20)*4),0,0,100+x);
-       vmwLoadPalette(game_state->graph_state,0,0, ( (x+20)*4 ),141+x);
-       vmwLoadPalette(game_state->graph_state,0, ( (x+20)*4),0,182+x);
-    }
-
-       /* Set the white color */
-    vmwLoadPalette(game_state->graph_state,0xff,0xff,0xff,15);
     
-    vmwFlushPalette(game_state->graph_state);
+       /* The "fancy" opener */
+    vmw_opener(game_state,virtual_1);
    
-       /* Actually draw the stylized VMW */
-    for(x=0;x<=40;x++){ 
-       vmwDrawVLine(x+40,45,2*x,100+x,virtual_1);
-       vmwDrawVLine(x+120,45,2*x,141+x,virtual_1);
-       vmwDrawVLine(x+200,45,2*x,141+x,virtual_1);
-       vmwDrawVLine(x+80,125-(2*x),2*x,182+x,virtual_1);
-       vmwDrawVLine(x+160,125-(2*x),2*x,182+x,virtual_1);
-    }
-    for(x=40;x>0;x--){
-       vmwDrawVLine(x+80,45,80-(2*x),140-x,virtual_1);
-       vmwDrawVLine(x+160,45,80-(2*x),181-x,virtual_1);
-       vmwDrawVLine(x+240,45,80-(2*x),181-x,virtual_1);
-       vmwDrawVLine(x+120,45+(2*x),80-(2*x),222-x,virtual_1);
-       vmwDrawVLine(x+200,45+(2*x),80-(2*x),222-x,virtual_1);
-    }
-   
-    vmwTextXY("A VMW SOFTWARE PRODUCTION",60,140,
-	      15,15,0,tb1_font,virtual_1);   
-    
-    if ((game_state->sound_possible) && (game_state->music_enabled))
-       playSound();
-   
-    vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
-    pauseawhile(5);
-    
+       /* Load menu music */
     if (game_state->sound_possible) {
        stopSound();
        loadSound(tb1_data_file("music/weave1.mod",game_state->path_to_data));
     }
-   
-       /* Clear the Screen and get ready for the Menu */
-    vmwClearScreen(virtual_1,0); 
+       
+       /* Load palette */
+    grapherror=vmwLoadPicPacked(0,0,virtual_1,1,0,
+				tb1_data_file("tbomb1.tb1",game_state->path_to_data),
+				game_state->graph_state);
+       /* Bit of a hack to load proper unfade colors */
+    vmwFadeToBlack(game_state->graph_state,virtual_1,1);
     
-       /* Load the title screen */
-       /* this is a bit of overkill.  vmwflip() ? */
+       /* Load Title Picture */
     grapherror=vmwLoadPicPacked(0,0,virtual_1,1,1,
 				tb1_data_file("tbomb1.tb1",game_state->path_to_data),
-				game_state->graph_state); 
-    
-    grapherror=vmwLoadPicPacked(0,0,virtual_2,1,1,
-				tb1_data_file("tbomb1.tb1",game_state->path_to_data),
 				game_state->graph_state);
     
-    grapherror=vmwLoadPicPacked(0,0,game_state->virtual_3,1,1,
-				tb1_data_file("tbomb1.tb1",game_state->path_to_data),
-				game_state->graph_state);
+       /* Copy the picture over */
+    vmwFlipVirtual(virtual_3,virtual_1,320,200);
    
-    vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
+    vmwUnFade(game_state->graph_state,virtual_1);
     
        /* Main Menu Loop */
     while (1) {
+          /* If virtual_3 was over-written, re-load it */
        if (reloadpic) {
           grapherror=vmwLoadPicPacked(0,0,virtual_3,1,1,
-				    tb1_data_file("tbomb1.tb1",game_state->path_to_data),
-				    game_state->graph_state);
-//	  grapherror=vmwLoadPicPacked(0,0,virtual_1,1,0,
-//				    tb1_data_file("tbomb1.tb1",game_state->path_to_data));
-	  
+				      tb1_data_file("tbomb1.tb1",
+						    game_state->path_to_data),
+				      game_state->graph_state);
 	  reloadpic=0;
        }
        
        vmwFlipVirtual(virtual_1,virtual_3,320,200);
-       if ((game_state->sound_possible) &&(game_state->music_enabled)) 
+       
+          /* Play the menu-music */
+       if ((game_state->sound_possible) && (game_state->music_enabled)) 
 	  playSound();
        vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
 
-       while (!vmwGetInput()) usleep(300);
+          /* Don't show the menu until keypress/15s */
+       pauseawhile(15);
                    
        barpos=0;
        vmwTextXY("F1 HELP",0,190,9,7,0,tb1_font,virtual_1);   
@@ -327,7 +338,7 @@ int main(int argc,char **argv)
           time_sec=time_info.tv_sec;  	  
 	  
 	  while( ((ch=vmwGetInput())==0)) {
-	     usleep(10);
+	     usleep(30);
              gettimeofday(&time_info,&dontcare);
 	     if (time_info.tv_sec-time_sec>40) {
 		if (game_state->sound_possible) stopSound();
@@ -335,8 +346,7 @@ int main(int argc,char **argv)
 		ch=VMW_ENTER;
 		barpos=9;
 		reloadpic=1;
-		gettimeofday(&time_info,&dontcare);
-		time_sec=time_info.tv_sec;
+		break;
 	     }
 	  }
 	  

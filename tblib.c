@@ -32,11 +32,17 @@ int collision(int x1,int y1,int xsize,int ysize,
        return 0;
 }
 
+    
+    /* Now memory-leak friendly */
 char *tb1_data_file(char *name,char *path)
-{
+{   
+    static int initialized=0;
+    static char *tempst;
    
-    char tempst[BUFSIZ];
-   
-    sprintf(tempst,"%s/%s",path,name);
-    return strdup(tempst);
+   if (!initialized) {
+       tempst=(char *)calloc(BUFSIZ,sizeof(char));
+       initialized=1;
+    }
+    snprintf(tempst,BUFSIZ,"%s/%s",path,name);
+    return tempst;
 }

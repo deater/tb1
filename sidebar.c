@@ -88,8 +88,7 @@ void setupsidebar(tb1_state *game_state,vmwVisual *vaddr2)
     vmwTextXY(it,250+(8*(8-strlen(it))),11,12,0,1,tb1_font,vaddr2);
 
     hiscore=showhiscore(game_state,0,1);
-    printf("show high done\n"); fflush(stdout);
-   
+
     vmwTextXY("HI-SCORE",241,21,127,0,0,tb1_font,vaddr2);
     vmwTextXY("HI-SCORE",242,22,143,0,0,tb1_font,vaddr2);
     sprintf(it,"%d",hiscore);

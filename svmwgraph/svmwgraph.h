@@ -22,6 +22,17 @@ typedef struct {
    unsigned char *spritedata;
 } vmwSprite;
 
+typedef struct {
+   char ppro_string[8];
+   char version[4];
+   int xsize;
+   int ysize;
+   int num_colors;
+} vmwPaintProHeader;
+
+typedef struct {
+   char r,g,b;
+} vmw24BitPal;
 
 typedef struct {
    int xsize;
@@ -30,6 +41,7 @@ typedef struct {
    int scale;
    int *palette;
    int palette_size;
+   vmw24BitPal *actual_pal;
    void *output_screen;
    vmwFont *default_font;
 } vmwSVMWGraphState;
@@ -45,6 +57,7 @@ typedef struct {
 #define VMW_ERROR_FILE    2
 #define VMW_ERROR_SIZE    3
 #define VMW_ERROR_MEM     4
+#define VMW_ERROR_INVALID 5
 
     /* Keypress Constants */
 #define VMW_BACKSPACE 1024
@@ -92,19 +105,23 @@ void vmwSmallTextXY(char *st,int x,int y,int col,int background,int overwrite,
 
     /* From vmw_paintpro.c */
 
+vmwPaintProHeader *vmwGetPaintProHeader(char *filename);
+   
 int vmwLoadPicPacked(int x1,int y1,vmwVisual *target,
 		     int LoadPal,int LoadPic,char *FileName,
 		     vmwSVMWGraphState *graph_state);
 
 int vmwSavePicPacked(int x1,int y1,int xsize,int ysize,
-		     vmwVisual *source,char *FileName);
-
+		                          vmwVisual *source,
+		                          int num_colors,
+		                          vmw24BitPal *palette,
+		                          char *FileName);
 
     /* From vmw_palette.c */
 void vmwLoadPalette(vmwSVMWGraphState *state,unsigned char r,
 		    unsigned char g,unsigned char b,int color); 
-void vmwFadeToBlack(vmwVisual *source);
-void vmwUnFade(vmwVisual *source);
+void vmwFadeToBlack(vmwSVMWGraphState *state,vmwVisual *source,int justLoadPal);
+void vmwUnFade(vmwSVMWGraphState *state,vmwVisual *source);
 
     /* From vmw_setup.c */
 
@@ -125,6 +142,7 @@ vmwVisual *vmwSetupVisual(int xsize,int ysize);
 vmwSprite *vmwGetSprite(int x, int y,
 			int xsize, int ysize,vmwVisual *screen);
 
+void vmwFreeSprite(vmwSprite *sprite);
 void vmwPutSprite(vmwSprite *sprite,int x,int y,
 		  vmwVisual *screen);
 

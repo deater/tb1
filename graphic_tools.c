@@ -37,12 +37,16 @@ char *check_for_tb1_directory(tb1_state *game_state,int try_to_create)
  
     char ch;
     struct stat buf;
-    char *dir_name;
     vmwFont *tb1_font;
     vmwVisual *vis;   
+    static int initialized=0;
+    static char *dir_name;
    
-    dir_name=calloc(300,sizeof(char)); /* Hope their home directory path */
-                                       /* is not huge */
+       /* Plug up a memory leak */
+    if (!initialized) {
+       dir_name=calloc(BUFSIZ,sizeof(char));
+       initialized=1;
+    }
    
     tb1_font=game_state->graph_state->default_font;
     vis=game_state->virtual_3;

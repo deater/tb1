@@ -44,6 +44,11 @@ vmwSVMWGraphState *vmwSetupSVMWGraph(int display_type,int xsize,int ysize,
        return NULL;
     }
 
+    if ( (temp_state->actual_pal=calloc(temp_state->palette_size,sizeof(vmw24BitPal)) )==NULL) {
+       printf("Error allocating actual palette of size %i!\n",temp_state->palette_size);
+       return NULL;
+    }
+
 
        /* Attempt to get desired graphics state */
     temp_state->output_screen=vmwSetupGraphics(&temp_state->xsize,

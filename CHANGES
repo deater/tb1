@@ -1,3 +1,18 @@
+6 October 2000
++ Fixed off-by-one error in paintpro 6.0 format, making a new 6.1 release
++ Made sure backwards compatability available
+
+30 September 2000
++ Rewrote vmw_paintpro.c vmwLoadPicPacked from scratch just about
++ Implemented vmwSavePicPacked
++ Wrote "ppro_view" in tools directory
+
+25 September 2000
++ Closed most of the memory leaks
+
+18 September 2000
++ Just about everything works now.
+
 16 September 2000
 + Re-wrote completely libsvmwgraph... making it an actual lib,
   removing all sdl dependencies, added hooks so that any arbitrary

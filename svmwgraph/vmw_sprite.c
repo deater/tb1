@@ -24,6 +24,13 @@ vmwSprite *vmwGetSprite(int x, int y,
    return temp_sprite;
 }
 
+void vmwFreeSprite(vmwSprite *sprite) {
+   
+   free(sprite->spritedata);
+   free(sprite);
+   
+}
+
 void vmwPutSprite(vmwSprite *sprite,int x,int y,
 		  vmwVisual *screen) {
       

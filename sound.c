@@ -29,10 +29,8 @@ void loadFX(char *path_to_data) {
 
   for(i = 0; i < NUM_GAME_FX; i++) {
     path=tb1_data_file(game_fx_names[i],path_to_data);
-     
     if(path) {
       game_fx[i] = Mix_LoadWAV(path);
-      free(path);
     }
   }
 }

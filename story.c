@@ -44,7 +44,7 @@ void story(tb1_state *game_state)
 {
     int i;
     int xtemp,ytemp;
-    int thrustcol;
+    int thrustcol=0;
     float thrust;
     char tempch;
     int cycles,to_clear;
@@ -162,7 +162,7 @@ void story(tb1_state *game_state)
     vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
     pauseawhile(5);
    
-    vmwTextXY("No?  Well watch the screen.             ",1,1,15,0,1,tb1_font,game_state->virtual_1);
+    vmwTextXY("No?  Well watch the screen.           ",1,1,15,0,1,tb1_font,game_state->virtual_1);
     vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
     pauseawhile(5); 
    
@@ -194,6 +194,8 @@ void story(tb1_state *game_state)
  
   
     vmwFlipVirtual(game_state->virtual_1,game_state->virtual_2,320,200);
+
+    vmwLoadPalette(game_state->graph_state,thrustcol*4,0,0,250);
 
     vmwPutSprite(barge,141,157,game_state->virtual_1);
 
@@ -232,7 +234,6 @@ void story(tb1_state *game_state)
     vmwFlipVirtual(game_state->virtual_1,game_state->virtual_2,320,200);
    
     vmwPutSprite(barge,141,157,game_state->virtual_1);
-    thrustcol=0;
     ytemp=157;
     to_clear=0;
     thrust=0;
@@ -301,6 +302,7 @@ void story(tb1_state *game_state)
                                game_state->path_to_data),game_state->graph_state);
    
    
+    vmwLoadPalette(game_state->graph_state,thrustcol*4,0,0,250);
     vmwFlipVirtual(game_state->virtual_2,game_state->virtual_1,320,200);
 //  flipd320(vaddr,vga);
     vmwPutSprite(barge,97,180,game_state->virtual_1);
@@ -345,11 +347,11 @@ void story(tb1_state *game_state)
     vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
    
     cycles=0;
-    while ( ((tempch=vmwGetInput())==0) && cycles<12) {
+    while ( ((tempch=vmwGetInput())==0) && cycles<120) {
        doflames(game_state);
        vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
        cycles++;
-       usleep(500000);
+       usleep(80000);
     }
 
        /****ALIEN MESSAGE*****/
@@ -421,5 +423,17 @@ void story(tb1_state *game_state)
     vmwTextXY("<Huh?>                             ",1,1,9,0,1,tb1_font,game_state->virtual_1);
     vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
     pauseawhile(10);
+   
+       /* Free the sprites!  End memory leaks! */
+    vmwFreeSprite(bigFlame1);
+    vmwFreeSprite(bigFlame2);
+    vmwFreeSprite(smallFlame1);
+    vmwFreeSprite(smallFlame2);
+    vmwFreeSprite(rent);
+    vmwFreeSprite(truck1);
+    vmwFreeSprite(truck2);
+    vmwFreeSprite(barge);
+    vmwFreeSprite(explosion1);
+    vmwFreeSprite(explosion2);
 
 }

@@ -4,9 +4,9 @@ Requires:
   Finish Story
 
 Other aspirations:
+   Audit all the code
+   Better Options Menu
    Free RAM instead of leaking it.
-   8bpp, 24bpp, 32bpp displays
-   Double and Quad sized displays
    Re-implement fading in/out
    Implement level editor
    
