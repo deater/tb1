@@ -11,12 +11,13 @@ void *SDL_setupGraphics(int *xsize,int *ysize,int *bpp,
 {
     SDL_Surface *sdl_screen=NULL;
     int mode;
+    SDL_Joystick *joy;
    
     mode=SDL_SWSURFACE|SDL_HWPALETTE|SDL_HWSURFACE;
     if (fullscreen) mode|=SDL_FULLSCREEN;
       
        /* Initialize the SDL library */
-    if ( SDL_Init(SDL_INIT_VIDEO) < 0 ) {
+    if ( SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0 ) {
        fprintf(stderr,
 	       "Couldn't initialize SDL: %s\n", SDL_GetError());
        return NULL;
@@ -24,6 +25,18 @@ void *SDL_setupGraphics(int *xsize,int *ysize,int *bpp,
    
        /* Clean up on exit */
     atexit(SDL_Quit);
+   
+       /* Detect Joystick */
+    if (SDL_NumJoysticks()>0){
+       /* Open joystick */
+       joy=SDL_JoystickOpen(0);
+       if (joy) {
+	  printf("Opened Joystick 0\n");
+	  printf("Name: %s\n", SDL_JoystickName(0));
+          SDL_JoystickEventState(SDL_ENABLE);
+       }
+    }
+   
    
     if (*bpp!=0) {
    
@@ -253,11 +266,52 @@ void SDL_clearKeyboardBuffer() {
 int SDL_getInput() {
    
    SDL_Event event;
-   int keypressed;
+   int keypressed,button;
+   int axis,direction;
+   
+   static int going_right=0;
+   static int going_left=0;
    
    while ( SDL_PollEvent(&event)) {
       
        switch(event.type) {
+	case SDL_JOYBUTTONDOWN:
+	     button=event.jbutton.button;
+//	     printf("BUTTON %i\n",button);
+             switch(button) {
+	      case 0: return ' ';
+	      case 1: return VMW_ENTER;
+	     }
+	     break;
+	case SDL_JOYAXISMOTION:
+	     axis=event.jaxis.axis;
+	     direction=event.jaxis.value;
+//	     printf("%i %i\n",axis,direction);
+	     if (axis==0) { /* X */
+		
+	        if (direction>5000) {
+		   if (!going_right) {
+		      going_right=1;
+		      return VMW_RIGHT;
+		   }
+		}
+		else if (direction<-5000) {
+		   if (!going_left) {
+		      going_left=1;
+		      return VMW_LEFT;
+		   }
+		}
+		else {
+		   going_left=0;
+		   going_right=0;
+		}
+	     }
+//	     if (axis==1) { /* Y */
+//		if (direction>0) return VMW_UP;
+//		if (direction<0) return VMW_DOWN;
+//	     }
+	  
+	     break;
 	case SDL_KEYDOWN:
 	     keypressed=event.key.keysym.sym;
 	     switch (keypressed) {
@@ -272,6 +326,10 @@ int SDL_getInput() {
 	      case SDLK_F2       : return VMW_F2;
 	      case SDLK_PAGEUP   : return VMW_PGUP;
 	      case SDLK_PAGEDOWN : return VMW_PGDN;
+	      case SDLK_HOME     : return VMW_HOME;
+	      case SDLK_END      : return VMW_END;
+	      case SDLK_INSERT   : return VMW_INS;
+	      case SDLK_DELETE   : return VMW_DEL;
 	      default: if ((keypressed>='a') && (keypressed<='z')  
 		          && (event.key.keysym.mod & KMOD_SHIFT) )
 		          return keypressed-32;

@@ -5,13 +5,16 @@ LIBS= $(LIBS_GLOBAL)
 
 all:	libsvmwgraph.a
 	
-libsvmwgraph.a:	vmw_core.o vmw_flip.o vmw_font.o vmw_paintpro.o vmw_palette.o vmw_pcx.o vmw_setup.o vmw_sprite.o $(CURSES_TARGET) null_svmwgraph.o $(OPENGL_TARGET) $(SDL_TARGET)
-	ar cru libsvmwgraph.a vmw_core.o vmw_flip.o vmw_font.o vmw_paintpro.o vmw_palette.o vmw_pcx.o vmw_setup.o vmw_sprite.o $(CURSES_TARGET) null_svmwgraph.o $(OPENGL_TARGET) $(SDL_TARGET)
+libsvmwgraph.a:	vmw_core.o vmw_dialogs.o vmw_flip.o vmw_font.o vmw_paintpro.o vmw_palette.o vmw_pcx.o vmw_setup.o vmw_sprite.o $(CURSES_TARGET) null_svmwgraph.o $(OPENGL_TARGET) $(SDL_TARGET)
+	ar cru libsvmwgraph.a vmw_core.o vmw_dialogs.o vmw_flip.o vmw_font.o vmw_paintpro.o vmw_palette.o vmw_pcx.o vmw_setup.o vmw_sprite.o $(CURSES_TARGET) null_svmwgraph.o $(OPENGL_TARGET) $(SDL_TARGET)
 	ranlib libsvmwgraph.a
 
 vmw_core.o:	vmw_core.c
 	$(CC) $(INCLUDE) -c vmw_core.c
-	
+
+vmw_dialogs.o:	vmw_dialogs.c
+	$(CC) $(INCLUDE) -c vmw_dialogs.c
+
 vmw_flip.o:	vmw_flip.c
 	$(CC) $(INCLUDE) -c vmw_flip.c
 

@@ -56,32 +56,13 @@ int are_you_sure(tb1_state *game_state,
 		 char *no_option) {
 
 
-    int barpos=0,ch=0;
+    return vmwAreYouSure(game_state->graph_state,
+		  game_state->graph_state->default_font,
+		  game_state->virtual_1,
+		  warning_1,
+		  warning_2,
+		  yes_option,
+		  no_option);
+   
     
-    vmwFont *tb1_font;
-    vmwVisual *target;
-   
-    tb1_font=game_state->graph_state->default_font;
-    target=game_state->virtual_1;
-   
-    coolbox(90,75,230,125,1,target);
-    vmwTextXY(warning_1,97,82,9,7,0,tb1_font,target);
-    vmwTextXY(warning_2,97,90,9,7,0,tb1_font,target);
-   
-    while (ch!=VMW_ENTER){
-       if (barpos==0) vmwTextXY(yes_option,97,98,150,0,1,tb1_font,target);
-       else vmwTextXY(yes_option,97,98,150,7,1,tb1_font,target);
-       if (barpos==1) vmwTextXY(no_option,97,106,150,0,1,tb1_font,target);
-       else vmwTextXY(no_option,97,106,150,7,1,tb1_font,target);
-       vmwBlitMemToDisplay(game_state->graph_state,target);
-       
-       while ( !(ch=vmwGetInput()) ) {
-	  usleep(30);
-       }
-       if ((ch==VMW_UP)||(ch==VMW_DOWN)||(ch==VMW_LEFT)||(ch==VMW_RIGHT)) barpos++;
-       if (ch=='y') barpos=0;
-       if (ch=='n') barpos=1;
-       if (barpos==2) barpos=0;
-    }
-    return !barpos;
 }

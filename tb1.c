@@ -1,7 +1,7 @@
 /****************************************************************\
 \*    TOM BOMBEM AND THE INVASION OF THE INANIMATE_OBJECTS      */
-/*                    version 2.9.12      3 November 2000	*\
-\*        by Vince Weaver       weave@eng.umd.edu               */
+/*                    version 2.9.14      3 June 2001    	*\
+\*        by Vince Weaver       vince@deater.net                */
 /*                                                              *\
 \*  Originally written in Pascal and x86 assembly for DOS       */
 /*          using the PCGPE code as an example in 1994          *\
@@ -10,7 +10,7 @@
 \*          This source is released under the GPL               */
 /****************************************************************/
 
-#define TB1_VERSION "2.9.13"
+#define TB1_VERSION "2.9.14"
 
 #include <stdio.h>
 #include <stdlib.h>   /* for calloc */
@@ -112,8 +112,8 @@ int main(int argc,char **argv)
     struct timeval time_info;
     struct timezone dontcare;
    
-    printf("\nTom Bombem v%s by Vince Weaver weave@eng.umd.edu\n",TB1_VERSION);
-    printf("         http://www.glue.umd.edu/~weave/tb1\n\n");
+    printf("\nTom Bombem v%s by Vince Weaver vince@deater.net\n",TB1_VERSION);
+    printf("        http://www.deater.net/weave/tb1\n\n");
    
        /* Setup the game state */
     if ( (game_state=calloc(1,sizeof(tb1_state)))==NULL) {

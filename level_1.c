@@ -24,7 +24,7 @@
 #include "graphic_tools.h"
 
     /* Define this to get a frames per second readout */
-#define DEBUG_ON 
+/*#define DEBUG_ON */
 
     /* The sounds */
   
@@ -88,6 +88,7 @@ typedef struct {
 }level_one_behavior_t;
 
     /* This seemed like a good idea to modularize things */
+    /* Should make it a file read from disk */
 level_one_behavior_t level_one_wave_behavior[]=
     {{STANDARD,5},
      {STANDARD,5},

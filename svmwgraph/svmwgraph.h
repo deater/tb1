@@ -75,7 +75,10 @@ typedef struct {
 #define VMW_F3        1032
 #define VMW_PGUP      1050
 #define VMW_PGDN      1051
-
+#define VMW_HOME      1052
+#define VMW_END       1053
+#define VMW_INS       1054
+#define VMW_DEL       1055
 
 /* Function declarations */
 
@@ -173,3 +176,12 @@ void vmwPutPartialSprite(vmwVisual *destination,
 			 int x_start,int x_stop,
 			 int y_start,int y_stop);
 
+/* vmw_dialogs.c */
+void vmwCoolBox(int x1,int y1,int x2,int y2,int fill,vmwVisual *target);
+int vmwAreYouSure(vmwSVMWGraphState *graph_state,
+		  vmwFont *tb1_font,
+		  vmwVisual *target,
+		  char *warning_1,
+		  char *warning_2,
+		  char *yes_option,
+		  char *no_option);

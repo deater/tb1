@@ -1,3 +1,11 @@
+2 June 2001
++ Made a super fancy level2 level editor.  it's in the ./tools directory.
++ Verified that tb1 will in fact compile and run under windows with
+  the cygwin utils.
+
+? April 2001
++ Added some minimal joypad support
+
 11 November 2000
 + Got opengl sorta working, when I should be working on my 
   OS project involving semaphores.  Oops.
