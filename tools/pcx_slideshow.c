@@ -45,7 +45,7 @@ int main(int argc,char **argv)
     while( ( temp_string2=strtok(NULL,"."))!=NULL) 
          extension=temp_string2;
       
-    if (!strncmp(extension,"pcx",4)) {
+//    if (!strncmp(extension,"pcx",4)) {
        vmwGetPCXInfo(argv[whichfile],&xsize,&ysize,&type);
        if (type!=PCX_8BITPAL) {
 	  printf("Unsupported PCX type!  Must be 256 colors!\n");
@@ -56,7 +56,8 @@ int main(int argc,char **argv)
 	      argv[whichfile],xsize,ysize);
 
        is_pcx=1;
-    }
+  //  }
+#if 0
     else { /* We assume paintpro file */
        ppro_header=vmwGetPaintProHeader(argv[whichfile]);
        printf("\nLoading file: %s\n",argv[whichfile]);
@@ -82,7 +83,7 @@ int main(int argc,char **argv)
        xsize=ppro_header->xsize;
        ysize=ppro_header->ysize;
     }
-	
+#endif	
        /* Setup Graphics */
 
     if ( (graph_state=vmwSetupSVMWGraph(target,

@@ -167,9 +167,9 @@ int vmwLoadPCX(int x1,int y1,vmwVisual *target,
 	     x++;
           }
 	   /* why is this needed? */
-          if (x%xsize==0) {
-	     pointer++;
-	  }
+//          if (x%xsize==0) {
+//	     pointer++;
+//	  }
 	  
 	     //printf("WARNING!  X=%i\n",x);
 //	     x=0;

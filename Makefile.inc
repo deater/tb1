@@ -26,9 +26,9 @@ SDL_INCLUDE= `sdl-config --cflags`
 #
 # Uncomment the following for ncurses
 #
-CURSES_TARGET= curses_svmwgraph.o
-CURSES_FLAGS= -DCURSES_TARGET=1
-CURSES_LIBS= -lncurses
+#CURSES_TARGET= curses_svmwgraph.o
+#CURSES_FLAGS= -DCURSES_TARGET=1
+#CURSES_LIBS= -lncurses
 
 #
 # On machines w/ curses instead of ncurses [i.e. solaris, Irix, etc] 
@@ -42,9 +42,9 @@ CURSES_LIBS= -lncurses
 #
 # Uncomment the following for opengGL
 #
-OPENGL_TARGET= opengl_svmwgraph.o
-OPENGL_FLAGS=-DOPENGL_TARGET
-OPENGL_LIBS= -L/usr/X11R6/lib -lX11 -lICE -lXmu -lGL -lGLU
+#OPENGL_TARGET= opengl_svmwgraph.o
+#OPENGL_FLAGS=-DOPENGL_TARGET
+#OPENGL_LIBS= -L/usr/X11R6/lib -lX11 -lICE -lXmu -lGL -lGLU
 
 
 ##############################
