@@ -11,6 +11,7 @@
 #include "svmwgrap.h"
 #include "levels.h"
 #include "tblib.h"
+#include "gtblib.h"
 #include "soundIt.h"
 
     /* Define this to get a frames per second readout */

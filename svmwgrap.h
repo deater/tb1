@@ -21,6 +21,9 @@ int vmwArbitraryCrossBlit(char *src,int x1,int y1,int w,int h,
 int vmwPutSprite(int *src,int w,int h,int stride_factor,
 		                  char *dest,int x,int y,int dest_stride);
 
+int vmwPutPartialSprite(int *src,int w,int h,int stride_factor,
+			char *dest,int x,int y,int dest_stride,
+		       int x_start,int x_stop,int y_start,int y_stop);
 
 int vmwGetSprite(ggi_visual_t visual,int x,int y,int w,int h,
 		                                   int *sprite);

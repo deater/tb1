@@ -1,12 +1,13 @@
 First you have to get the ggi graphics library.
   * for newest updates/info check out http://www.ggi-project.org
   * Get a new snapshot from ftp://synergy.caltech.edu/pub/ggi/ggi-snapshots
-  * Get a newer one --> I developed it with ggi-980226.tar.gz
+  * Get a newer one --> I developed it with ggi-980403.tar.gz
   * save it
   * uncompress it "tar -xzvf ggi-980226.tar.gz"
   * "cd ggi" "cd lib" "cd libggi" "make"
-  * this brings up a menu.  be sure to choose "xserv","svga" and "mem"
-    you can choose others if you wish, but these are all needed.
+  * Select the "TARGETS" option on the menu
+  * this brings up a menu.  be sure to choose "xserv","xlib", "svga","multi"
+    and "mem" you can choose others if you wish, but these are the ones I use.
   * exit the menu
   * "make"
   * should compile w/o problems [hopefully]

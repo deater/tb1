@@ -66,6 +66,7 @@ int vmwArbitraryCrossBlit(char *src,int x1,int y1,int w,int h,
    return 0;   
     
 }
+
 int vmwPutSprite(int *src,int w,int h,int stride_factor,
 		 char *dest,int x,int y,int dest_stride)
 {
@@ -81,6 +82,25 @@ int vmwPutSprite(int *src,int w,int h,int stride_factor,
   return 0;
    
 }
+
+int vmwPutPartialSprite(int *src,int w,int h,int stride_factor,
+		        char *dest,int x,int y,int dest_stride,
+			int x_start,int x_stop,int y_start,int y_stop)
+{                          /* x_start/stop not implemented yet */
+    int xx,yy;
+    dest+=(dest_stride*y);
+    for(yy=0;yy<h;yy++){ 
+       for(xx=0;xx<w;xx++) 
+          if ((*(src+xx)) && ((yy>=y_start) && (yy<=y_stop)) )
+	     memcpy(dest+(stride_factor*(xx+x)),(src+xx),stride_factor);
+	 /**(dest+xx+x)=15;*/
+   src+=w;
+   dest+=dest_stride;
+    }
+  return 0;
+   
+}
+
 
 int vmwGetSprite(ggi_visual_t visual,int x,int y,int w,int h,
 		                  int *sprite)

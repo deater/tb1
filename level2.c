@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include "svmwgrap.h"
 #include "levels.h"
+#include "gtblib.h"
 #include "tblib.h"
 #include "soundIt.h"
 

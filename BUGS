@@ -1,4 +1,5 @@
 Known Bugs:
+% sound sounds wrong on linux > 2.1.95 or so
 % svgalib needs -force8bpp option
 % weird colors at times in 8bpp X mode
 % Enlightenment window manager screws up 8bpp colors

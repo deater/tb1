@@ -1,5 +1,5 @@
 ##############################################################
-#  Makefile for Tom Bombem     -- by Vince Weaver            #
+#  Makefile for TbLevelEdit    -- by Vince Weaver            #
 #                                                            #
 #  Written on Linux 2.1.35                                   #
 #                                                            #
@@ -21,34 +21,29 @@ L_OPTS = -lggi
 #         THERE IS NO NEED TO EDIT ANYTHING BELOW THIS LINE          #
 ######################################################################
 
-all:	tb1 
+all:	lev2edit view_ppro
 
 clean:
 	rm -f *.o
-	rm -f tb1
+	rm -f lev2edit
 	rm -f *~
 
-tb1:	tb1.o svmwgrap.o gtblib.o tblib.o level1.o level2.o soundIt.o
-	$(CC) $(C_OPTS) -o tb1 tb1.o svmwgrap.o gtblib.o tblib.o level1.o level2.o soundIt.o $(L_OPTS)
-	@strip tb1
-
-soundIt.o:	soundIt.c
-	$(CC) $(C_OPTS) -c soundIt.c
-
-tb1.o:	tb1.c
-	$(CC) $(C_OPTS) -c tb1.c 
-
-gtblib.o:	gtblib.c
-	$(CC) $(C_OPTS) -c gtblib.c
+lev2edit:	lev2edit.o ../svmwgrap.o 
+	$(CC) $(C_OPTS) -o lev2edit lev2edit.o ../svmwgrap.o ../gtblib.o $(L_OPTS)
+	@strip lev2edit
 	
-tblib.o:	tblib.c
-	$(CC) $(C_OPTS) -c tblib.c
-
-level1.o:	level1.c
-	$(CC) $(C_OPTS) -c level1.c
-
-level2.o:	level2.c
-	$(CC) $(C_OPTS) -c level2.c
+view_ppro:	view_ppro.o ../svmwgrap.o
+	$(CC) $(C_OPTS) -o view_ppro view_ppro.o ../svmwgrap.o $(L_OPTS)
+	@strip view_ppro
 	
-svmwgrap.o:	svmwgrap.c
-	$(CC) $(C_OPTS) -c svmwgrap.c 
+view_ppro.o:	view_ppro.c
+	$(CC) $(C_OPTS) -c view_ppro.c
+	
+lev2edit.o:	lev2edit.c
+	$(CC) $(C_OPTS) -c lev2edit.c 
+	
+../svmwgrap.o:	../svmwgrap.c
+	$(CC) $(C_OPTS) -c ../svmwgrap.c 
+	
+../gtblib.o:	../gtblib.c
+	$(CC) $(C_OPTS) -c ../gtblib.c
