@@ -1,0 +1,5 @@
+Known Bugs:
+% svgalib needs -force8bpp option
+% weird colors at times in 8bpp X mode
+% Enlightenment window manager screws up 8bpp colors
+% game is not finished

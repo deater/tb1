@@ -1,0 +1,44 @@
+7 March 1998
+* Added Level 2, mostly working
+
+6 March 1998
+* Added load game support
+
+5 March 1998
+* Fixed typo in credits [Yes I had "linux torvalds" by mistake].  Thanks
+  to my friend John C. for catching that one.
+* Added save game support.
+
+3 March 1998
+* Really cleaned up level1.c  Mostly cleaned
+* Modularized and actually re-wrote some code, instead of translating it.
+* Lots of really minor tweaks trying to up performance.
+
+1 March 1998
+* Got little opener slowed down
+* Got credits working
+* Got pause to work
+* Got sidebar reporting hiscore.
+
+29 February 1998
+* OK, there was no 29th.  But I did more work later and it felt 
+  like a new day.
+* Cleaned up the tb1.c majorly
+* Added support for having the data files searched for in many directories.
+* Cleaned out the directory structure and removed cruft.
+* Got sound support working!
+* added -force8bpp option so SVGA target works
+* Other miscelaneous things
+
+28 February 1998
+* AWESOME!! WORKING BETTER THAN IT WAS BEFORE!
+* Moved over to fast DirectBuffer Calls.  FAST!
+* Got gameplay working, GETTING SCROLLING STARS
+* added vmwCrossBlit functions.  FAST! Thanks to andy at the ggi-list
+* Fixed lots of minor bugs
+
+27 February 1998
+* Started this file
+* Today converted from 320x600 virtual to 3 320x200s [2 are in memory]
+* Added support so it can (almost) run in both 8bpp and 16bpp mode.
+* Broke a lot more than I fixed.
