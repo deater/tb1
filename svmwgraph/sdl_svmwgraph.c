@@ -82,6 +82,106 @@ void SDL_flushPalette(vmwSVMWGraphState *state) {
    }
 }
 
+void SDL_NoScale32bpp_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
+   
+   int x,y,color;
+   
+   unsigned char *s_pointer,*t_pointer;
+   
+   SDL_Surface *target;
+   
+   target=(SDL_Surface *)target_p->output_screen;
+   
+   if ( SDL_MUSTLOCK(target) ) {
+      if ( SDL_LockSurface(target) < 0 )
+      return;
+   }
+   
+   s_pointer=source->memory;
+   t_pointer=((Uint8 *)target->pixels);
+
+//   printf("%i %i\n",source->xsize,source->ysize);
+   
+   for (x=0;x<source->xsize;x++)
+       for (y=0;y<source->ysize;y++) {
+	  
+	   color=( (target_p->actual_pal[*(s_pointer)].r<<24)+
+		   (target_p->actual_pal[*(s_pointer)].g<<16)+
+		   (target_p->actual_pal[*(s_pointer)].b<<8)+
+		  255);
+	  
+           *((Uint32 *)(t_pointer))=color;
+           s_pointer++; t_pointer+=4;
+       }
+   
+   
+     /* Update the display */
+      if ( SDL_MUSTLOCK(target) ) {
+	 SDL_UnlockSurface(target);
+      }
+   
+      /* Write this out to the screen */
+   SDL_UpdateRect(target, 0, 0, source->xsize, source->ysize);
+   
+}
+
+   /* I should make this generic, but it makes it really slow */
+void SDL_Double32bpp_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
+   
+   int x,y,scale,color;
+   
+   unsigned char *s_pointer,*t_pointer;
+   
+   SDL_Surface *target;
+   
+   target=(SDL_Surface *)target_p->output_screen;
+   
+   scale=target_p->scale;
+   
+   if ( SDL_MUSTLOCK(target) ) {
+      if ( SDL_LockSurface(target) < 0 )
+      return;
+   }
+   
+   s_pointer=source->memory;
+   t_pointer=((Uint8 *)target->pixels);
+
+   for (y=0;y<source->ysize;y++) {
+       for (x=0;x<source->xsize;x++) {
+	   	   
+	  color=( (target_p->actual_pal[*(s_pointer)].r<<24)+
+		   (target_p->actual_pal[*(s_pointer)].g<<16)+
+		   (target_p->actual_pal[*(s_pointer)].b<<8)+
+		  255);
+	  
+	   /* i=0, j=0 */
+	   *((Uint16 *) ( (t_pointer)))=color;
+	  
+	   /* i=1, j=0 */
+	   *((Uint16 *) ( (t_pointer+(2*target_p->xsize)  )))=color;
+	  
+	   /* i=0, j=1 */
+	   *((Uint16 *) ( (t_pointer+2) ))=color;
+	  
+           /* i=1 j=1 */
+	    *((Uint16 *) ( (t_pointer+2+(2*target_p->xsize)  )))=color;
+	  
+	  
+           s_pointer++; t_pointer+=4;
+       }
+       t_pointer+=2*target_p->xsize;
+   }
+   
+   
+     /* Update the display */
+      if ( SDL_MUSTLOCK(target) ) {
+	 SDL_UnlockSurface(target);
+      }
+   
+      /* Write this out to the screen */
+   SDL_UpdateRect(target, 0, 0, target_p->xsize, target_p->ysize);
+   
+}
 
 void SDL_NoScale16bpp_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
    
@@ -162,7 +262,7 @@ void SDL_Double16bpp_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
 	  
            s_pointer++; t_pointer+=4;
        }
-       t_pointer+=2*target_p->xsize;
+       t_pointer+=4*target_p->xsize;
    }
    
    

@@ -112,11 +112,27 @@ vmwSVMWGraphState *vmwSetupSVMWGraph(int display_type,int xsize,int ysize,
 		     vmwBlitMemToDisplay=SDL_Double8bpp_BlitMem;
 		  }
 	       }
-               if (temp_state->bpp>=16) {
+               if (temp_state->bpp==16) {
 		  if (scale==1) {
                      vmwBlitMemToDisplay=SDL_NoScale16bpp_BlitMem;
                   } else { 
 	            vmwBlitMemToDisplay=SDL_Double16bpp_BlitMem;
+		  }
+	       }
+               if (temp_state->bpp==24) {
+		  printf("ERROR! 24bpp not supported!\n");
+		  if (scale==1) {
+                     vmwBlitMemToDisplay=SDL_NoScale16bpp_BlitMem;
+                  } else { 
+	            vmwBlitMemToDisplay=SDL_Double16bpp_BlitMem;
+		  }
+	       }
+       
+               if (temp_state->bpp>=32) {
+		  if (scale==1) {
+                     vmwBlitMemToDisplay=SDL_NoScale32bpp_BlitMem;
+                  } else { 
+	            vmwBlitMemToDisplay=SDL_Double32bpp_BlitMem;
 		  }
 	       }
                vmwFlushPalette=SDL_flushPalette;
