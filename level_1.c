@@ -564,7 +564,7 @@ void levelone(tb1_state *game_state) {
 	             break;
 	   case '-': whatdelay--; if (whatdelay<1) whatdelay=1; break;
 	   case 'S': 
-	   case 's': if (game_state->sound_enabled) 
+	   case 's': if (game_state->sound_possible) 
 	                game_state->sound_enabled=!(game_state->sound_enabled); break;
            case VMW_F2: game_paused=1; 
 	                savegame(game_state);

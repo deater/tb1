@@ -16,6 +16,9 @@ typedef struct {
 
 our_color_t our_colors[256];
 
+int our_lines_stride=25,our_cols_stride=80;
+int our_LINES=80,our_COLS=25;
+
     /* Setup the Graphics */
     /* Pass '0' to auto-detect bpp */
 void *curses_setupGraphics(int *xsize,int *ysize,int *bpp, int fullscreen,int verbose)
@@ -43,67 +46,291 @@ void *curses_setupGraphics(int *xsize,int *ysize,int *bpp, int fullscreen,int ve
     init_pair(13,COLOR_BLACK,COLOR_MAGENTA);
     init_pair(14,COLOR_BLACK,COLOR_YELLOW);
     init_pair(15,COLOR_BLACK,COLOR_WHITE);
+    
+       /* Calculate how many rows and columns to use that         */
+       /* Maximize size, but don't cut off too much of the screen */
+    
+    if (LINES>200) {
+       our_lines_stride=1;
+       our_LINES=200;
+    }
+    else if ( (200%LINES)==0) {
+       our_lines_stride=200/LINES;
+       our_LINES=LINES;
+    }
+    else {
+       our_lines_stride=(200/LINES)+1;
+       our_LINES=(200/our_lines_stride);
+    }
+   
+    if (COLS>320) {
+       our_cols_stride=1;
+       our_COLS=320;
+    }
+    else if ( (320%COLS)==0) {
+       our_cols_stride=320/COLS;
+       our_COLS=COLS;
+    }
+    else {
+       our_cols_stride=(320/COLS)+1;
+       our_COLS=(320/our_cols_stride);
+    }
+       
     return NULL;
 }
-
 
 
 void lookup_color(int r,int g,int b,int i) {
 
 
     int bitmask;
-   
-   if ((r<64) && (g<64) && (b<64)) {
-      our_colors[i].color=0;
-      our_colors[i].bold=0;
-      our_colors[i].character=' ';
-      return;
+    FILE *fff;
+     
+      /* Black */
+   if ((r<85) && (g<85) && (b<85)) {
+      if (r<64) {
+	 our_colors[i].color=0;
+         our_colors[i].bold=0;
+         our_colors[i].character=' ';
+         return;
+      }
+      else {
+	 our_colors[i].color=8;
+	 our_colors[i].bold=0;
+	 our_colors[i].character='.';
+	 return;
+      }
    }
    
-   if ((r>64) && (g<64) && (b<64)) {
-      our_colors[i].color=12;
-      our_colors[i].bold=0;
-      our_colors[i].character=' ';
-      return;
+      /* Mostly Red */
+   if ((g<85) && (b<85)) {
+      if (r<120) {
+	 our_colors[i].color=4;
+	 our_colors[i].bold=0;
+	 our_colors[i].character='+';
+	 return;
+      }
+      if (r<160) {
+	 our_colors[i].color=4;
+	 our_colors[i].bold=1;
+	 our_colors[i].character='%';
+	 return;
+      }
+      if (r<200) {
+         our_colors[i].color=4;
+         our_colors[i].bold=1;
+         our_colors[i].character='@';
+         return;
+      }
+      else {
+	 our_colors[i].color=12;
+	 our_colors[i].bold=0;
+	 our_colors[i].character=' ';
+	 return;
+      }
    }
-   if ((g>64) && (r<64) && (b<64)) {
-      our_colors[i].color=10;
-      our_colors[i].bold=0;
-      our_colors[i].character=' ';
-      return;
+   
+      /* Mostly Green */
+   if ((r<85) && (b<85)) {
+      if (g<120) {
+	 our_colors[i].color=2;
+	 our_colors[i].bold=0;
+	 our_colors[i].character='+';
+	 return;
+      }
+      if (g<160) {
+	 our_colors[i].color=2;
+	 our_colors[i].bold=1;
+	 our_colors[i].character='%';
+	 return;
+      }
+      if (g<200) {
+         our_colors[i].color=2;
+         our_colors[i].bold=1;
+         our_colors[i].character='@';
+         return;
+      }
+      else {
+	 our_colors[i].color=10;
+	 our_colors[i].bold=0;
+	 our_colors[i].character=' ';
+	 return;
+      }
    }
-   if ((b>64) && (r<64) && (g<64)) {
-      our_colors[i].color=9;
-      our_colors[i].bold=0;
-      our_colors[i].character=' ';
-      return;
+      /* Mostly Blue */
+   if ((r<85) && (g<85)) {
+      if (b<120) {
+         our_colors[i].color=1;
+         our_colors[i].bold=0;
+         our_colors[i].character='+';
+         return;
+      }
+      if (b<160) {
+	 our_colors[i].color=1;
+	 our_colors[i].bold=1;
+	 our_colors[i].character='%';
+	 return;
+      }
+      if (b<192) {
+	 our_colors[i].color=1;
+	 our_colors[i].bold=1;
+	 our_colors[i].character='@';
+	 return;
+      }
+      else {
+	 our_colors[i].color=9;
+	 our_colors[i].bold=0;
+	 our_colors[i].character=' ';
+	 return;
+      }	
    }
-   if ((r>64) && (g>64) && (b<64)) {
-      our_colors[i].color=14;
-      our_colors[i].bold=0;
-      our_colors[i].character=' ';
-      return;
+      
+      /* Mostly Yellow */
+   if ( (abs(r-g)<32) && (r-b)>64) {
+      if (r<64) {
+	 our_colors[i].color=6;
+	 our_colors[i].bold=0;
+	 our_colors[i].character='+';
+	 return;
+      }
+      if (r<128) {
+	 our_colors[i].color=14;
+	 our_colors[i].bold=0;
+	 our_colors[i].character=' ';
+	 return;
+      }
+      if (r<200) {
+	 our_colors[i].color=6;
+	 our_colors[i].bold=1;
+	 our_colors[i].character='$';
+	 return;
+      }
+      else {
+	 our_colors[i].color=6;
+         our_colors[i].bold=1;
+         our_colors[i].character='@';
+         return;
+      }
    }
-   if ((r>64) && (b>64) && (g<64)) {
-      our_colors[i].color=13;
-      our_colors[i].bold=0;
-      our_colors[i].character=' ';
-      return;
+      /* Mostly Brown */
+   if ((abs(r-g)<100) && ((r-b)>64)) {
+        if (r<100) {
+	 our_colors[i].color=6;
+	 our_colors[i].bold=0;
+	 our_colors[i].character='+';
+	 return;
+      }
+      if (r<192) {
+	 our_colors[i].color=14;
+	 our_colors[i].bold=0;
+	 our_colors[i].character=' ';
+	 return;
+      }
+      if (r<220) {
+	 our_colors[i].color=6;
+	 our_colors[i].bold=1;
+	 our_colors[i].character='$';
+	 return;
+      }
+      else {
+	 our_colors[i].color=6;
+         our_colors[i].bold=1;
+         our_colors[i].character='@';
+         return;
+      }
    }
-   if ((g>64) && (b>64) && (r<64)) {
-      our_colors[i].color=11;
-      our_colors[i].bold=0;
-      our_colors[i].character=' ';
-      return;
+   
+      /* Mostly Magenta */
+   if ( (abs(r-b)<64) && (r-g>64)) {
+      if (r<64) {
+	 our_colors[i].color=4;
+	 our_colors[i].bold=0;
+	 our_colors[i].character='+';
+	 return;
+      }
+      if (r<128) {
+	 our_colors[i].color=4;
+	 our_colors[i].bold=1;
+	 our_colors[i].character='@';
+	 return;
+      }
+      else {
+         our_colors[i].color=13;
+         our_colors[i].bold=0;
+         our_colors[i].character=' ';
+         return;
+      }
    }
+      /* Mostly Cyan */
+   if ( (abs(g-b)<64) && (b-r>64)) {
+      if (b<64) {
+	 our_colors[i].color=3;
+	 our_colors[i].bold=0;
+	 our_colors[i].character='+';
+	 return;
+      }
+      if (b<128) {
+	 our_colors[i].color=3;
+	 our_colors[i].bold=1;
+	 our_colors[i].character='@';
+	 return;
+      }
+      else {
+         our_colors[i].color=11;
+         our_colors[i].bold=0;
+         our_colors[i].character=' ';
+         return;
+      }
+   }
+   
+         /* Mostly White */
+   if ( (abs(r-g)<48) && (abs(r-b)<48) && (abs(b-g)<48)) {
+      if (r<92) {
+	 our_colors[i].color=0;
+	 our_colors[i].bold=1;
+	 our_colors[i].character='+';
+	 return;
+      }
+      if (r<120) {
+	 our_colors[i].color=0;
+	 our_colors[i].bold=1;
+	 our_colors[i].character='$';
+	 return;
+      }
+      if (r<150) {
+	 our_colors[i].color=7;
+	 our_colors[i].bold=0;
+	 our_colors[i].character='+';
+	 return;
+      }
+      if (r<200) {
+	 our_colors[i].color=7;
+	 our_colors[i].bold=1;
+	 our_colors[i].character='@';
+	 return;
+      }
+      else {
+	 our_colors[i].color=15;
+	 our_colors[i].bold=0;
+	 our_colors[i].character=' ';
+	 return;
+      }
+   }
+      
 
+   fff=fopen("temp.temp","a");
+   fprintf(fff,"%i: %i %i %i\n",i,r,g,b);
+   fclose(fff);
+
+      /* When we aren't sure what we are */
    bitmask=0;
    if (r>64) bitmask|=0x4; 
    if (g>64) bitmask|=0x2;
    if (b>64) bitmask|=0x1;
    our_colors[i].color=bitmask;
-   if ((r>128) &&
-       (g>128) &&
+   
+   if ((r>128) ||
+       (g>128) ||
        (b>128)) our_colors[i].bold=1;
    else our_colors[i].bold=0;
    our_colors[i].character='#';
@@ -142,10 +369,10 @@ void curses_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
    }
 */   
    move(0,0);
-   for (y=0;y<25;y++) {
-       s_pointer=source->memory+(y*8*320);
-       for(x=0;x<80;x++) {   
-	  //move(y,x);
+   for (y=0;y<our_LINES;y++) {
+       s_pointer=source->memory+(y*(our_lines_stride)*320);
+       for(x=0;x<our_COLS;x++) {   
+	  move(y,x);
  
 	  temp_color=*(s_pointer);
 	  if (our_colors[temp_color].bold)
@@ -154,14 +381,14 @@ void curses_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
 	     attrset(COLOR_PAIR(our_colors[temp_color].color)|A_NORMAL);
 	  addch(our_colors[temp_color].character);
 //	  printf("#");
-	   s_pointer+=4;
+	   s_pointer+=(our_cols_stride);
        }
    }
 }
 
 void curses_clearKeyboardBuffer() {
-
-//   while(getch()!=ERR) usleep(100);
+   
+   while(getch()!=ERR);
 }
 
 int curses_getInput() {

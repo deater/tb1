@@ -1,6 +1,37 @@
-For now, just compiling info.
 
-You need the SDL game development library, 1.1.3 or newer:
+#####| #####| #|  #|     ####|  #####| #|  #| ####|  #####| #|  #|
+  #|   #|  #| ##|##|     #|  #| #|  #| ##|##| #|  #| #|     ##|##|
+  #|   #|  #| #|#|#|     ####|  #|  #| #|#|#| ####|  ####|  #|#|#|
+  #|   #|  #| #|  #|     #|  #| #|  #| #|  #| #|  #| #|     #|  #|
+  #|   #####| #|  #|     ####|  #####| #|  #| ####|  #####| #|  #|
+  
+              AND THE INVASION OF THE INANIMATE OBJECTS
+
+                                by
+              
+                            Vince Weaver
+
+Version 2.9.10
+---------------------------------------------------------------------
+
+Contents
+--------
+ 1.0  COMPILING INSTRUCTIONS
+ 2.0  SYSTEM REQUIREMENTS
+ 3.0  THE STORY
+ 4.0  GAME PLAY
+ 5.0  SAVING/LOADING GAMES
+ 6.0  HISTORY
+ 7.0  ACKNOWLEDGEMENTS
+ 8.0  PRAISE/ACCOMPLISHMENTS
+
+
+ 1.0  Compiling Instructions
+---------------------------------------------------------------------
+
+Sorry, there is no "configure" file as of yet.
+
+You need the SDL game development library, 1.1.4 or newer:
    http://www.libsdl.org/download-1.1.html   
    
 You also need the "SDL_mixer library" from   
@@ -9,6 +40,209 @@ You also need the "SDL_mixer library" from
 To compile SDL_Mixer you need the smpeg library:
    http://www.lokigames.com/development/smpeg.php3
 
+You also need a recent ncurses library, but that should come with
+   your distribution hopefully.
+
 Then a "make" should compile it.
+
+
+ 2.0  System Requirements
+---------------------------------------------------------------------
+      Reccommended Minimum:
+           486 66Mhz/ 8MB Ram, 1Meg disk space
+	   
+      The game was originally written on a 386 33Mhz under DOS.
+      It has been tested to run fine on my 486 75Mhz laptop
+         w 12Mb ram and 8bpp display.
+	 
+      The game has not been verified to run on 64 bit or big-endian machines.
+
+
+ 3.0  THE STORY
+---------------------------------------------------------------------
+
+      To understand the game, pick the "Story" option off of the
+      main menu.  This part of the game took a lot of time in
+      itself, and is fun to read.
+
+      The "Audio Error!" is not a real error.  I just saved myself
+      the trouble of recording a voice-track for the game.  As many
+      friends have said, "That's cheating!" but anyway unless I had
+      a lot of time and a CD-ROM, it is not practical.
+
+      Anyway in the story, any key will speed up most scenes, and
+      escape will quit the whole thing.
+
+ 4.0  GAME PLAY
+ --------------------------------------------------------------------
+      To begin the game, select "NEW GAME" at the main menu.
+
+      A little humorous movie will show; press <esc> to skip.
+
+      The game itself is pretty simplistic as of yet.  Basically
+      shoot the things coming at you.  The arrow keys manuever...
+      the manuevering takes a little bit of practice to master.
+      Space shoots.  You can shoot up to two missiles at once.
+      "S" toggles sound.  "P" pauses.  If the game play is too fast,
+      try the "+" and "-" keys to adjust.  Sorry, if it runs too
+      slow at the onset, then your computer is too slow.
+
+      The first level culminates with a "boss" character.  Read the
+      story and see what happens.  The dialog will clue you into 
+      what's happening.
+
+      The second level is now totally finished.  Be sure to save 
+      your games whenever you start a new level!
+
+      Levels three and four are currently under development.  In
+      level three, use the arrow keys to "walk" around.  The space
+      bar will fire a weapon if you've picked one up.  To activate/
+      pick up things, walk into them.
+
+      Level four is similar to level two.  (Actually they are based
+      on the same game engine).  They will be finished by version 2.5.
+
+      An undocumented featue: when your score reaches a multiple of
+      400 your shields are increased by one.
+
+   Basic Summary of Keyboard Commands:
+
+      ARROWS Manuever
+      SPACE  Fires
+      <ESC>  Exits
+      P      Pauses
+      S      Toggles sound on/off
+      +      Slows down game speed
+      -      Increases game speed
+      F1     Shows help message
+      F2     Saves the Game (see "SAVING/LOADING GAMES")
+
+ 5.0  SAVING/ LOADING GAMES
+---------------------------------------------------------------------
+      You can save games.  However the only part that is saved is
+      how you begin the level.  Therefore there is no real purpose
+      to saving your game until you reach level two.
+
+      This might seem annoying, but at this point it is the only
+      practical way to implement saved games.
+      
+ 
+ 6.0  HISTORY
+---------------------------------------------------------------------
+
+      Ever since I have had a computer, starting with an Apple IIe
+      I've always been attempting to write video games.
+      
+      Starting around the beginning of high school I actually started
+      creating ones that were actuallys semi-fun to play.  The first
+      was "s3fight", a space game in CGA mode in gwbasic.  Then I
+      moved on to QBASIC.  And then to Turbo Pascal.  I wrote a game
+      called "Under Water Trouble" which was a submarine game
+      using the .BGI interface.  It never ran fast enough [though it
+      is great fun on a modern machine].  My next game was a 
+      "spacewars" clone, but it too ran a bit too slow, as well as
+      another game AITAS [Adventures in Time and Space]
+      
+      About this time, in 1993, I was an exchange student in 
+      Hildesheim, Germany.  And the nice people there showed be
+      Turbo Pascal 6.0 [which had in-line assembly] and a series
+      of text files called the PCGPE [PC Game Programmer Encyclopedia].
+      
+      With this new found source of Pascal graphics routines, I started
+      modifying the "flying toaster" demo to instead draw a spaceship.
+      And thus was born TB1.
+      
+      From the look of the game you can see it is heavily modified after
+      early-90s share-ware games.  I wrote some of the ugliest 
+      Pascal and ix86 assembly you ever saw.  But it usually worked.
+      
+      During this time I hadn't found the internet yet.  I was still
+      hanging out at local BBS's.  But then, my Dad got an e-mail account
+      and with it access to lynx, and I found the WWW.  I found
+      a Pascal SoundBlaster library written by Ethan Brodsky, who was
+      close to my age, and suddenly TB1 had sound.  By the time I graduated
+      from high schoool in 1996 the game is much as you see it now
+      [levels 1-3].
+      
+      Unfortunately, once I got to college things changed.  I finally
+      got my own computer, and gradually I used Linux more and more.
+      Despite my initial work on the Free Pascal Compiler, I became
+      convinced the C was the one true language, and Linux the one
+      true platform.  Working on TB1 under dosemu was a pain, 
+      and development stopped.
+      
+      In 1998 I gradually ported the game to GGI, but the interface
+      was ever-changing, and again I ran out of time.
+      
+      But finally, in the year 2000, I decided that I would port tb1
+      so I could play w it under linux.  And so I have.  And 
+      hopefully I will finish all 10 levels, and people will play 
+      it for ages to come ;)
+        
+
+ 7.0  ACKNOWLEDGEMENTS
+---------------------------------------------------------------------
+
+    The following are for the DOS version.  I'll add linux ones later.
+
+      I would like to thank many people who helped on this project.
+
+      Ethan Brodsky for his excelent sound blaster routines.
+      Get them at http://www.pobox.com/~ebrodsky/smix/smix.html
+      There would be no sound blaster sound without them.
+
+      The authors of PCGPE.  This program started out as a
+      "flying toaster" demonstration from the Asphixia
+      VGA tutorials.  I gradually replaced most of their code,
+      but I still use their putpixel, waitretrace, setmcga and
+      settext routines.
+
+      I would also like to thank all my friends who have supported
+      me, especially Gus Thompson, because she went to Spain and
+      gave me time to work on this.  Also Marie Prosser for
+      inspiration, and she also went away for three weeks
+      allowing me to work on this.  Thanks to Nick Attanasio 
+      who actually plays this game a lot, and whose comments 
+      have hastened work on level 3.
+
+8.0  PRAISE/ACCOMPLISHMENTS OF TOM BOMBEM
+___________________________________________________________________
+
+     Supposedly it will be on one of Pacific Hi-Tech's
+     "Gamehead" CD's.  We'll see.
+
+     A German book company has offered to put it in a CD included
+     with a Shareware Games book.
+
+     Now Praise:
+
+
+        "I just like it when it says 'Ahhh... Mr. Bombem.'"
+                           ----Greg Grabowski, Bel Air, MD
+
+        "It's simplicity reminded me of the early computer
+         shooters... Kind of nostalgic... But the nice
+         side [is] the very clever cinematic text."
+                           ---->> Delance <<
+
+        "The game is well designed but does not fit
+         our current product line." 
+                           ----Apogee Software Productions
+
+
+Remember:  Watch for the newest version of Tom Bombem... and have fun.
+
+           Vince Weaver         16 October 2000 23:05:59 EDT
+
+
+
+
+
+
+
+
+
+
+
 
 

@@ -1,14 +1,14 @@
 Begin3
 Title: tb1
-Version: 2.9.9
-Entered-date: 23SEP00
+Version: 2.9.10
+Entered-date: 16OCT00
 Description: A 2d, sci-fi arcade game.
              Shoot the aliens, save the world.
-Keywords: tom bombem alien game arcade ggi    
+Keywords: tom bombem alien game arcade SDL curses
 Author: weave@eng.umd.edu (Vince Weaver)
 Maintained-by: weave@eng.umd.edu (Vince Weaver)
 Primary-site: metalab.unc.edu /pub/Linux/games/arcade
-              350kB tb1-2.9.9.tar.gz
+              350kB tb1-2.9.10.tar.gz
 Alternate-site: http://www.glue.umd.edu/~weave/tb1
 Original-site:  
 Platforms: Linux

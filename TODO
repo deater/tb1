@@ -1,12 +1,15 @@
-Finish the game [or at least get it on-par with the dos version]
+Finish the game:
 Requires:
-  Levels3-4
-  Finish Story
+  Levels3-10.  Level 3 is semi-done in pascal.
 
 Other aspirations:
-   Audit all the code
-   Better Options Menu
-   Free RAM instead of leaking it.
-   Re-implement fading in/out
+   Some sort of "configure" type file
+   Audit all the code.
+   Finish plugging mem leaks [still need to fix level_1 and level_2].
+   Change all screen-shifts to fades like in original?
    Implement level editor
+
+SVMWGraph todo:
+   Color Averaging in the curses target?
+   Implement non 320x200x8 PCX loading?
    

@@ -14,5 +14,7 @@ typedef struct {
    int music_enabled;             /* Music on or off */
    int sound_volume;              /* Sound volume */
    int music_volume;              /* Music volume */
+   int default_double_size;       /* Start in Double-Size Mode */
+   int default_fullscreen;        /* Start in Full Screen Mode */
    char path_to_data[BUFSIZ];     /* Where our data is */
 } tb1_state;

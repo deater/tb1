@@ -2,7 +2,10 @@
 
 #include "sound.h"
 #include <stdlib.h>
-#include "tblib.h"
+
+  /* Function definition */
+char *tb1_data_file(char *name,char *path);
+
 
 /* linux only, at the moment */
 

@@ -36,8 +36,9 @@
 int command_line_help(int show_version,char *runas)
 {
     if (!show_version) {   
-       printf("Usage:  %s [-double] [-fullscreen] [-nosound]"
+       printf("Usage:  %s [-curses] [-double] [-fullscreen] [-nosound]"
 	                  " [-version] [-?]\n\n",runas);
+       printf("  -curses     : play in color text-mode\n");
        printf("  -double     : play in 640x480 mode\n");
        printf("  -fullscreen : play in fullscreen mode (if available)\n");
        printf("  -nosound    : disables sound within game\n");
@@ -98,8 +99,9 @@ int main(int argc,char **argv)
 {
     int i,grapherror,reloadpic=0;
     int ch,barpos,time_sec;
-    int scale=1,fullscreen=0;
+    int graphics_target=VMW_SDLTARGET;
     FILE *fff;
+    char *dir_name,options_file[BUFSIZ];
     vmwVisual *virtual_1,*virtual_2,*virtual_3; 
    
     tb1_state *game_state;
@@ -128,6 +130,34 @@ int main(int argc,char **argv)
     game_state->sound_possible=1;
     game_state->music_enabled=1;
     game_state->sound_enabled=1;
+    game_state->default_double_size=0;
+    game_state->default_fullscreen=0;
+ 
+       /* Load saved defaults, if any */
+   
+    dir_name=check_for_tb1_directory(game_state,0);
+    if (dir_name==NULL) {
+       printf("  + No ~/.tb1 directory.  Using default options.\n");
+    }
+    else {
+       sprintf(options_file,"%s/options.tb1",dir_name);
+       fff=fopen(options_file,"r");
+       if (fff==NULL) {
+	  printf("  + No ~/.tb1/options.tb1 file.  Using defaults.\n");
+       }
+       else {
+          printf("  + Reading options from ~/.tb1/options.tb1\n");
+	  fscanf(fff,"%i %i %i %i %i %i",
+		 &game_state->sound_enabled,
+		 &game_state->music_enabled,
+		 &game_state->sound_volume,
+		 &game_state->music_volume,
+		 &game_state->default_double_size,
+		 &game_state->default_fullscreen);
+	  fclose(fff);
+       }
+    }
+   
    
        /* Parse Command Line Arguments */
     i=1;
@@ -139,9 +169,11 @@ int main(int argc,char **argv)
 	   case 'v':
 	     command_line_help(1,argv[0]); return 5; break;
 	   case 'f':
-	     fullscreen=1; break;
+	     game_state->default_fullscreen=1; break;
+	   case 'c':
+	     graphics_target=VMW_CURSESTARGET; break;
 	   case 'd':
-	     scale=2; break;
+	     game_state->default_double_size=1; break;
 	   case 'n': 
 	     game_state->sound_possible=0;
 	     printf("  + Sound totally disabled\n");
@@ -214,20 +246,24 @@ int main(int argc,char **argv)
    
        /* Setup Graphics */
     
-    if (scale==1) {
+    if (!game_state->default_double_size) {
        if ( (game_state->graph_state=
-	                 vmwSetupSVMWGraph(VMW_CURSESTARGET,
+	                 vmwSetupSVMWGraph(graphics_target,
 					   320,200,
-					   0,scale,fullscreen,1))==NULL) {   
+					   0,1,
+					   game_state->default_fullscreen,
+					   1))==NULL) {   
           fprintf(stderr,"ERROR: Couldn't get display set up properly.\n");
           return VMW_ERROR_DISPLAY;
        }
     }
     else { /* We are double-sized */
        if ( (game_state->graph_state=
-	                 vmwSetupSVMWGraph(VMW_SDLTARGET,
+	                 vmwSetupSVMWGraph(graphics_target,
 				           640,480,
-					   0,scale,fullscreen,1))==NULL) {   
+					   0,2,
+					   game_state->default_fullscreen,
+					   1))==NULL) {   
           fprintf(stderr,"ERROR: Couldn't get display set up properly.\n");
           return VMW_ERROR_DISPLAY;
        }
@@ -373,7 +409,7 @@ int main(int argc,char **argv)
           /* Run whatever it was that the person pressed */
        switch (barpos) {
         case 0:  playthegame(game_state); reloadpic=1; break;
-	case 1:  options(game_state); break;
+	case 1:  options(game_state); reloadpic=1; break;
         case 2:  about(game_state); reloadpic=1; break;
         case 3:  loadgame(game_state); reloadpic=1; break;
         case 4:  story(game_state); reloadpic=1; break;

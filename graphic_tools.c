@@ -37,8 +37,8 @@ char *check_for_tb1_directory(tb1_state *game_state,int try_to_create)
  
     char ch;
     struct stat buf;
-    vmwFont *tb1_font;
-    vmwVisual *vis;   
+    vmwFont *tb1_font=NULL;
+    vmwVisual *vis=NULL;   
     static int initialized=0;
     static char *dir_name;
    
@@ -48,19 +48,20 @@ char *check_for_tb1_directory(tb1_state *game_state,int try_to_create)
        initialized=1;
     }
    
-    tb1_font=game_state->graph_state->default_font;
-    vis=game_state->virtual_3;
+    if (try_to_create) {
+       tb1_font=game_state->graph_state->default_font;
+       vis=game_state->virtual_3;
    
-       /* First see if ~/.tb1 exists, and if it doesn't see if */
-       /* They want it to be created */
+          /* First see if ~/.tb1 exists, and if it doesn't see if */
+          /* They want it to be created */
    
-    coolbox(0,0,319,199,1,vis);
+       coolbox(0,0,319,199,1,vis);
  //   if (read_only_mode) {
  //      vmwTextXY("SORRY!  CANNOT SAVE GAME",40,40,4],0],0,tb1_font,vis);
  //      vmwTextXY("WHEN IN READ ONLY MODE",50,50,4],0],0,tb1_font,vis);
  //   }
 //    else {
-
+    }
   
     sprintf(dir_name,"%s/.tb1",getenv("HOME"));
     stat(dir_name,&buf);
