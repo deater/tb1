@@ -1,3 +1,7 @@
+11 November 2000
++ Got opengl sorta working, when I should be working on my 
+  OS project involving semaphores.  Oops.
+
 2 November 2000
 + Continued re-writing the level_1 engine that I started last week.
 + Re-wrote frame limiter.  Managed to make it a lot less jumpy.

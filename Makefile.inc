@@ -42,9 +42,9 @@ CURSES_LIBS= -lncurses
 #
 # Uncomment the following for opengGL
 #
-#OPENGL_TARGET= opengl_svmwgraph.o
-#OPENGL_FLAGS=-DOPENGL_TARGET
-#OPENGL_LIBS= -L/usr/X11R6/lib -lX11 -lICE -lXmu -lGL -lGLU -lglut
+OPENGL_TARGET= opengl_svmwgraph.o
+OPENGL_FLAGS=-DOPENGL_TARGET
+OPENGL_LIBS= -L/usr/X11R6/lib -lX11 -lICE -lXmu -lGL -lGLU
 
 
 ##############################

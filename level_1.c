@@ -590,6 +590,7 @@ void LevelOneEngine(tb1_state *game_state) {
 	  if (add_another_enemy(0,game_state)==LEVEL_OVER) {
 	     game_state->level=2;
 	     levelover=1;
+	     return;
 	  }
        }
        
@@ -782,8 +783,7 @@ void LevelOneEngine(tb1_state *game_state) {
 }
 
     /* The little opener before Level 1 */
-void LevelOneLittleOpener(tb1_state *game_state)
-{
+void LevelOneLittleOpener(tb1_state *game_state) {
 
     vmwSprite *ship1,*ship2;
     int i;

@@ -10,7 +10,7 @@
 \*          This source is released under the GPL               */
 /****************************************************************/
 
-#define TB1_VERSION "2.9.12"
+#define TB1_VERSION "2.9.13"
 
 #include <stdio.h>
 #include <stdlib.h>   /* for calloc */
@@ -42,6 +42,7 @@ int command_line_help(int show_version,char *runas)
        printf("  -double     : play in 640x480 mode\n");
        printf("  -fullscreen : play in fullscreen mode (if available)\n");
        printf("  -nosound    : disables sound within game\n");
+       printf("  -opengl     : play in openGL mode\n");
        printf("  -version    : print version\n");
        printf("  -?          : print this help message\n");
        printf("\n");
@@ -180,6 +181,8 @@ int main(int argc,char **argv)
 	     game_state->sound_possible=0;
 	     printf("  + Sound totally disabled\n");
 	     break;
+	   case 'o':
+	      graphics_target=VMW_OPENGLTARGET; break;
 	   default : command_line_help(0,argv[0]);
 	             printf("Unknown Option: %s\n\n",argv[i]);
 	             return 5;   

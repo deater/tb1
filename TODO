@@ -17,3 +17,5 @@ SVMWGraph todo:
 Known Bugs:
    8bpp palette switching not as smooth as it could be.
    Volume controls on option menu don't do anything yet
+   I get higher FPS on a 486 than my k6-2+!  Need to figure this out.
+   Frame limited code is limited.  Need to think about this some more.
