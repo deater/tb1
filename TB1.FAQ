@@ -7,7 +7,7 @@ A1).  Tom Bombem runs by default in a 320x200x16bpp display.  It may
       not work if you have an 8, 24, or 32bpp display.  This can
       be fixed, it just hasn't yet.
       
-Q2.)  Why is the picture 320x200 anyway?
+Q2.)  Why is the default resolution 320x200 anyway?
 
 A2).  Tom Bombem is internally rendered at 320x200 and 256colors.
       This is because the original game was for dos VGA Bios mode
@@ -33,3 +33,20 @@ A3).  No.  A long time ago I made my own graphics program.  I called it
       the internet and the GPL.
       
       See http://..... for more info.
+
+Q4).  The music for TB1 is (great/awful).  (Are you/You call yourself)
+      a musician?
+
+A4).  No.  I just play around with MOD trackers sometimes.  The results
+      aren't always pretty.
+      
+      
+Q5).  Can I get TB1 for Windows(tm)?
+
+A5).  You can get the old DOS version off my website, it will run on
+      win31/win95/win98.  I don't know about NT.
+      
+      In theory, since it is in standard C and SDL, this program 
+      can be compiled on a windows machine.  I don't have nor want
+      a windows box to try this on.  If someone does happen to
+      compile up a version, let me know.

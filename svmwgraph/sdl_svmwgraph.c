@@ -4,18 +4,26 @@
 #include "svmwgraph.h"
 #include <stdlib.h>  /* For atexit() */
 
+#define BPP_NUM_TO_TRY 2
+/* Should this be the following instead?
+int bpp_to_try[]={32,24,16,15,8
+};
+*/
+
+int bpp_to_try[]={16,8
+};
+
     /* Setup the Graphics */
-void *SDL_setupGraphics(int xsize,int ysize,int bpp,int scale,
+    /* Pass '0' to auto-detect bpp */
+void *SDL_setupGraphics(int *xsize,int *ysize,int *bpp,
 			int fullscreen,int verbose)
 {
-    SDL_Surface *sdl_screen;
-    int mode;
-   
+    SDL_Surface *sdl_screen=NULL;
+    int mode,i=0;
    
     mode=SDL_SWSURFACE;
     if (fullscreen) mode|=SDL_FULLSCREEN;
-   
-   
+      
        /* Initialize the SDL library */
     if ( SDL_Init(SDL_INIT_VIDEO) < 0 ) {
        fprintf(stderr,
@@ -26,25 +34,56 @@ void *SDL_setupGraphics(int xsize,int ysize,int bpp,int scale,
        /* Clean up on exit */
     atexit(SDL_Quit);
    
-       /* Initialize the display */
-    sdl_screen = SDL_SetVideoMode(xsize, ysize, 16, mode);
-    if ( sdl_screen == NULL ) {
-       fprintf(stderr, "Couldn't set %dx%dx%d video mode: %s\n",
-	       xsize*scale,ysize*scale,bpp,SDL_GetError());
-       exit(1);
+    if (*bpp!=0) {
+   
+          /* Initialize the display */
+       sdl_screen = SDL_SetVideoMode(*xsize, *ysize, *bpp, mode);
     }
+    else {
+       i=0;
+       while ((i<BPP_NUM_TO_TRY)&&(sdl_screen==NULL)) {
+	  i++;
+	  sdl_screen=SDL_SetVideoMode(*xsize,*ysize,bpp_to_try[i-1],mode);
+       }
+    }
+    
+    if ( sdl_screen == NULL ) {
+       fprintf(stderr, "ERROR!  Couldn't set %dx%d video mode: %s\n",
+	       *xsize,*ysize,SDL_GetError());
+       return NULL;
+    }
+    if (*bpp==0) *bpp=bpp_to_try[i-1];
     if (verbose) {
        printf("  + SDL Graphics Initialization successful...\n");
-       printf("  + Using %dx%dx%dbpp Visual...\n",xsize,ysize,bpp);
+       printf("  + Using %dx%dx%dbpp Visual...\n",*xsize,*ysize,*bpp);
     }
     return sdl_screen;
 }
 
 
+void SDL_WritePaletteColor(vmwSVMWGraphState *state,
+			   unsigned char r,
+			   unsigned char g,
+			   unsigned char b,
+			   int color) {
+ 
+   SDL_Surface *target;
+   SDL_Color temp_col;
+   
+   temp_col.r=r;
+   temp_col.g=g;
+   temp_col.b=b;
+   
+   target=(SDL_Surface *)state->output_screen;
+   
+   SDL_SetColors(target,&temp_col,color,1);
+   
+}
+
 
 void SDL_NoScale16bpp_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
    
-   int x,y,Bpp;
+   int x,y;
    
    unsigned char *s_pointer,*t_pointer;
    
@@ -57,8 +96,6 @@ void SDL_NoScale16bpp_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
       return;
    }
    
-   Bpp=target->format->BytesPerPixel;
-   
    s_pointer=source->memory;
    t_pointer=((Uint8 *)target->pixels);
 
@@ -66,7 +103,7 @@ void SDL_NoScale16bpp_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
    
    for (x=0;x<source->xsize;x++)
        for (y=0;y<source->ysize;y++) {
-           *((Uint16 *)(t_pointer))=source->palette[*(s_pointer)];
+           *((Uint16 *)(t_pointer))=target_p->palette[*(s_pointer)];
            s_pointer++; t_pointer+=2;
        }
    
@@ -84,7 +121,7 @@ void SDL_NoScale16bpp_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
    /* I should make this generic, but it makes it really slow */
 void SDL_Double16bpp_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
    
-   int x,y,Bpp,scale;
+   int x,y,scale;
    
    unsigned char *s_pointer,*t_pointer;
    
@@ -99,8 +136,6 @@ void SDL_Double16bpp_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
       return;
    }
    
-   Bpp=target->format->BytesPerPixel;
-   
    s_pointer=source->memory;
    t_pointer=((Uint8 *)target->pixels);
 
@@ -109,18 +144,18 @@ void SDL_Double16bpp_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
 	   
 	   /* i=0, j=0 */
 	   *((Uint16 *) ( (t_pointer)))=
-	                                  source->palette[*(s_pointer)];
+	                                  target_p->palette[*(s_pointer)];
 	  
 	   /* i=1, j=0 */
 	   *((Uint16 *) ( (t_pointer+(2*target_p->xsize)  )))=
-	                                  source->palette[*(s_pointer)];
+	                                  target_p->palette[*(s_pointer)];
 	   /* i=0, j=1 */
 	   *((Uint16 *) ( (t_pointer+2) ))=
-	                                  source->palette[*(s_pointer)];
+	                                  target_p->palette[*(s_pointer)];
 	  
            /* i=1 j=1 */
 	    *((Uint16 *) ( (t_pointer+2+(2*target_p->xsize)  )))=
-	                                  source->palette[*(s_pointer)];
+	                                  target_p->palette[*(s_pointer)];
 	  
 	  
            s_pointer++; t_pointer+=4;
@@ -136,6 +171,41 @@ void SDL_Double16bpp_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
    
       /* Write this out to the screen */
    SDL_UpdateRect(target, 0, 0, target_p->xsize, target_p->ysize);
+   
+}
+
+void SDL_NoScale8bpp_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
+   
+   int x,y;
+   
+   unsigned char *s_pointer,*t_pointer;
+   
+   SDL_Surface *target;
+   
+   target=(SDL_Surface *)target_p->output_screen;
+   
+   if ( SDL_MUSTLOCK(target) ) {
+      if ( SDL_LockSurface(target) < 0 )
+      return;
+   }
+   
+   s_pointer=source->memory;
+   t_pointer=((Uint8 *)target->pixels);
+   
+   for (x=0;x<source->xsize;x++)
+       for (y=0;y<source->ysize;y++) {
+           *((Uint8 *)(t_pointer))=*(s_pointer);
+           s_pointer++; t_pointer++;
+       }
+   
+   
+     /* Update the display */
+      if ( SDL_MUSTLOCK(target) ) {
+	 SDL_UnlockSurface(target);
+      }
+   
+      /* Write this out to the screen */
+   SDL_UpdateRect(target, 0, 0, source->xsize, source->ysize);
    
 }
 

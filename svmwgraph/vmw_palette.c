@@ -2,21 +2,23 @@
 
 #include "svmwgraph.h"
 
-
-   /* The "packing" method used by the 16 bit palette */
-int vmwPack3Bytes(int r, int g, int b) {
+void vmwLoadPalette(vmwSVMWGraphState *state,unsigned char r,
+		                             unsigned char g,
+		                             unsigned char b,int color) {
    
-         return  ( ( ( (r>>3)&0x1f) <<11)+
-		   ( ( (g>>2)&0x3f) <<5)+
-		   ( ( (b>>3)&0x1f) ) );
-}
-
-
-void vmwLoadCustomPalette(vmwVisual *source, int pal[256]) {
-   int i;
-   for (i=0;i<256;i++) {
-       source->palette[i]=pal[i];
+   if (state->bpp==8) {
+   
    }
+   if (state->bpp==16) {
+         /* 565 color cube */
+         /* which can be LESS colorful than 8bpp.  Imagine that */
+      state->palette[color]=  ( ((int)(r>>3)) <<11)+
+	                  ( ((int)(g>>2)) <<5)+
+	                  (b>>3);
+      
+   }
+   vmwWritePaletteColor(state,r,g,b,color);
+   
 }
 
    

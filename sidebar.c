@@ -15,7 +15,8 @@ int change_shields(tb1_state *game_state)
        int itemp,jtemp;
   
 //       game_state->shield_color=(game_state->shields)*0x1000;
-       game_state->virtual_1->palette[254]=(game_state->shields)*0x1000;
+//       game_state->virtual_1->palette[254]=(game_state->shields)*0x1000;
+       vmwLoadPalette(game_state->graph_state,game_state->shields*16,0,0,254);
    
        vmwDrawBox(250,71,64,8,0,game_state->virtual_1);
        for(itemp=0;itemp<(game_state->shields)*4;itemp+=4)

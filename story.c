@@ -55,7 +55,8 @@ void story(tb1_state *game_state)
 
 
     vmwLoadPicPacked(0,0,game_state->virtual_2,1,1,
-		     tb1_data_file("story/tbsobj.tb1",game_state->path_to_data));
+		     tb1_data_file("story/tbsobj.tb1",game_state->path_to_data),
+		     game_state->graph_state);
    
        /* Load up the sprites! */
     bigFlame1=vmwGetSprite(0,2,26,18,game_state->virtual_2);
@@ -80,7 +81,8 @@ void story(tb1_state *game_state)
     vmwClearScreen(game_state->virtual_1,0);
    
     vmwLoadPicPacked(0,0,game_state->virtual_2,1,1,
-		     tb1_data_file("story/tbcobj.tb1",game_state->path_to_data));
+		     tb1_data_file("story/tbcobj.tb1",game_state->path_to_data),
+		     game_state->graph_state);
 		     
     vmwArbitraryCrossBlit(game_state->virtual_2,129,56,49,132,
 			  game_state->virtual_1,10,10);
@@ -121,7 +123,8 @@ void story(tb1_state *game_state)
     pauseawhile(12);
 
     vmwLoadPicPacked(0,0,game_state->virtual_1,1,1,
-		    tb1_data_file("story/tbchief.tb1",game_state->path_to_data));
+		    tb1_data_file("story/tbchief.tb1",game_state->path_to_data),
+		    game_state->graph_state);
 
       /* Save the area where the error will go */
     vmwArbitraryCrossBlit(game_state->virtual_1,115,55,91,59,
@@ -168,7 +171,8 @@ void story(tb1_state *game_state)
    
     vmwClearScreen(game_state->virtual_2,0);
     vmwLoadPicPacked(0,0,game_state->virtual_2,1,1,
-		     tb1_data_file("story/tbma1.tb1",game_state->path_to_data));
+		     tb1_data_file("story/tbma1.tb1",game_state->path_to_data),
+		     game_state->graph_state);
  
     vmwSmallTextXY("MY WIFE AND I FOUNDED",212,3,14,0,0,tb1_font,game_state->virtual_2);
     vmwSmallTextXY("THIS BASE IN 2008.",212,9,14,0,0,tb1_font,game_state->virtual_2);
@@ -240,7 +244,7 @@ void story(tb1_state *game_state)
 			      0,319,0,199);
        }
        usleep(50000);
-       game_state->virtual_1->palette[250]=thrustcol*0x1000;
+       vmwLoadPalette(game_state->graph_state,thrustcol*4,0,0,250);
        ytemp=ytemp-(int)thrust;
        vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
     }
@@ -251,9 +255,11 @@ void story(tb1_state *game_state)
    
        /****SECOND CHIEF*******/
     vmwLoadPicPacked(0,0,game_state->virtual_2,1,1,
-		    tb1_data_file("story/tbcobj.tb1",game_state->path_to_data));
+		    tb1_data_file("story/tbcobj.tb1",game_state->path_to_data),
+		     game_state->graph_state);
     vmwLoadPicPacked(0,0,game_state->virtual_1,1,1,
-		    tb1_data_file("story/tbchief.tb1",game_state->path_to_data));
+		    tb1_data_file("story/tbchief.tb1",game_state->path_to_data),
+		     game_state->graph_state);
     vmwArbitraryCrossBlit(game_state->virtual_2,7,104,90,21,
 		    game_state->virtual_1,6,174);
     vmwTextXY("You might wonder why this is important.",
@@ -284,10 +290,10 @@ void story(tb1_state *game_state)
 //				  game_state->path_to_data));
     vmwLoadPicPacked(0,0,game_state->virtual_1,1,1,
 		     tb1_data_file("story/tbcrash.tb1", 
-				   game_state->path_to_data));
+				   game_state->path_to_data),game_state->graph_state);
     vmwLoadPicPacked(0,0,game_state->virtual_1,1,0,
        	                       tb1_data_file("tbomb1.tb1",
-                               game_state->path_to_data));
+                               game_state->path_to_data),game_state->graph_state);
    
    
     vmwFlipVirtual(game_state->virtual_2,game_state->virtual_1,320,200);
@@ -308,10 +314,10 @@ void story(tb1_state *game_state)
     }
     vmwArbitraryCrossBlit(game_state->virtual_2,xtemp,ytemp,30,30,
 			  game_state->virtual_1,xtemp,ytemp);
-    game_state->virtual_1->palette[0]=0xffffff;
+    vmwLoadPalette(game_state->graph_state,0xff,0xff,0xff,0);
     vmwPutSprite(explosion1,160,118,game_state->virtual_1);
     vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
-    game_state->virtual_1->palette[0]=0;
+    vmwLoadPalette(game_state->graph_state,0,0,0,0);
     usleep(80000);
     vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
    
@@ -341,7 +347,8 @@ void story(tb1_state *game_state)
 
        /****ALIEN MESSAGE*****/
     vmwLoadPicPacked(0,0,game_state->virtual_1,1,1,
-		     tb1_data_file("story/tbgorg.tb1",game_state->path_to_data));
+		     tb1_data_file("story/tbgorg.tb1",game_state->path_to_data),
+		     game_state->graph_state);
     vmwTextXY("GREETINGS EARTHLINGS.",0,162,12,0,0,tb1_font,game_state->virtual_1);  
     vmwTextXY("I AM GORGONZOLA THE REPULSIVE.",0,171,12,0,0,tb1_font,game_state->virtual_1);
     vmwTextXY("YOU HAVE MADE A BIG MISTAKE.",0,180,12,0,0,tb1_font,game_state->virtual_1);
@@ -362,9 +369,11 @@ void story(tb1_state *game_state)
  
        /****** THIRD CHIEF *******/
     vmwLoadPicPacked(0,0,game_state->virtual_2,1,1,
-		    tb1_data_file("story/tbcobj.tb1",game_state->path_to_data));
+		    tb1_data_file("story/tbcobj.tb1",game_state->path_to_data),
+		     game_state->graph_state);
     vmwLoadPicPacked(0,0,game_state->virtual_1,1,1,
-		    tb1_data_file("story/tbchief.tb1",game_state->path_to_data));
+		    tb1_data_file("story/tbchief.tb1",game_state->path_to_data),
+		     game_state->graph_state);
     vmwArbitraryCrossBlit(game_state->virtual_2,7,127,90,21,
 		          game_state->virtual_1,6,174);
    

@@ -7,8 +7,6 @@ typedef struct {
    int xsize;
    int ysize;
    unsigned char *memory;
-   int *palette;
-   int palette_size;
 } vmwVisual;
 
 typedef struct {
@@ -30,6 +28,8 @@ typedef struct {
    int ysize;
    int bpp;
    int scale;
+   int *palette;
+   int palette_size;
    void *output_screen;
    vmwFont *default_font;
 } vmwSVMWGraphState;
@@ -93,30 +93,33 @@ void vmwSmallTextXY(char *st,int x,int y,int col,int background,int overwrite,
     /* From vmw_paintpro.c */
 
 int vmwLoadPicPacked(int x1,int y1,vmwVisual *target,
-		     int LoadPal,int LoadPic,char *FileName);
+		     int LoadPal,int LoadPic,char *FileName,
+		     vmwSVMWGraphState *graph_state);
 
 int vmwSavePicPacked(int x1,int y1,int xsize,int ysize,
 		     vmwVisual *source,char *FileName);
 
 
     /* From vmw_palette.c */
-int vmwPack3Bytes(int r, int g, int b);
-void vmwLoadCustomPalette(vmwVisual *source, int pal[256]);
+void vmwLoadPalette(vmwSVMWGraphState *state,unsigned char r,
+		    unsigned char g,unsigned char b,int color); 
 void vmwFadeToBlack(vmwVisual *source);
 void vmwUnFade(vmwVisual *source);
 
     /* From vmw_setup.c */
 
 
-extern void *(*vmwSetupGraphics)(int xsize,int ysize, int bpp, int scale, 
+extern void *(*vmwSetupGraphics)(int *xsize,int *ysize, int *bpp, 
 				 int fullscreen,int verbose);
 extern void (*vmwBlitMemToDisplay)(vmwSVMWGraphState *display, vmwVisual *source);
+extern void (*vmwWritePaletteColor)(vmwSVMWGraphState *state,
+		   unsigned char r,unsigned char g,unsigned char b,int color);
 extern void (*vmwClearKeyboardBuffer)(void);
 extern int (*vmwGetInput)(void);
 vmwSVMWGraphState *vmwSetupSVMWGraph(int display_type,int xsize,int ysize,
 				     int bpp,int scale,int fullscreen,
 				     int verbose);
-vmwVisual *vmwSetupVisual(int xsize,int ysize,int palette_size);
+vmwVisual *vmwSetupVisual(int xsize,int ysize);
 
     /* From vmw_sprite.c */
 

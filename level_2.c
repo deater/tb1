@@ -96,7 +96,8 @@ void leveltwoengine(tb1_state *game_state)
           /* Load Sprites */
     grapherror=vmwLoadPicPacked(0,0,virtual_1,1,1,
 			        tb1_data_file("level1/ships.tb1",
-					      game_state->path_to_data));
+					      game_state->path_to_data),
+				game_state->graph_state);
    
     ship_shape[0]=vmwGetSprite(0,0,48,30,virtual_1);
     ship_shape[1]=vmwGetSprite(0,32,48,30,virtual_1);
@@ -104,9 +105,11 @@ void leveltwoengine(tb1_state *game_state)
 
    
     if (game_state->level==2) vmwLoadPicPacked(0,0,virtual_1,1,1,
-				 tb1_data_file("level2/tbaship.tb1",game_state->path_to_data));
+				 tb1_data_file("level2/tbaship.tb1",game_state->path_to_data),
+					       game_state->graph_state);
     if (game_state->level==4) vmwLoadPicPacked(0,0,virtual_1,1,1,
-				 tb1_data_file("level4/tbeerm.tb1",game_state->path_to_data));
+				 tb1_data_file("level4/tbeerm.tb1",game_state->path_to_data),
+					       game_state->graph_state);
       
     for(j=0;j<4;j++)
        for(i=0;i<10;i++) 
@@ -567,7 +570,8 @@ void littleopener2(tb1_state *game_state) {
    
     vmwDrawBox(0,0,319,199,0,game_state->virtual_1);
     vmwLoadPicPacked(0,0,game_state->virtual_1,1,1,
-		     tb1_data_file("level2/tbl2ship.tb1",game_state->path_to_data));
+		     tb1_data_file("level2/tbl2ship.tb1",game_state->path_to_data),
+		     game_state->graph_state);
     vmwTextXY("Hmmmm... ",10,10,4,0,0,game_state->graph_state->default_font,
 	      game_state->virtual_1);
     vmwTextXY("This Might Be Harder Than I Thought.",10,20,4,0,0,

@@ -113,7 +113,8 @@ void credits(tb1_state *game_state)
 		         game_state->virtual_2,0,0);
    
    vmwLoadPicPacked(0,200,game_state->virtual_2,1,1,
-		    tb1_data_file("tbomb1.tb1",game_state->path_to_data));
+		    tb1_data_file("tbomb1.tb1",game_state->path_to_data),
+		    game_state->graph_state);
   
    if (keypressed) {
       vmwDrawBox(0,0,320,200,0,game_state->virtual_2);

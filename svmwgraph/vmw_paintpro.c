@@ -12,7 +12,8 @@
     \*---------------------------------------------------------------*/
 
 int vmwLoadPicPacked(int x1,int y1,vmwVisual *target,
-		     int LoadPal,int LoadPic,char *FileName)
+		     int LoadPal,int LoadPic,char *FileName,
+		     vmwSVMWGraphState *graph_state)
 
   /* Retro comments */
 /*{ Loads a paintpro image, filename, at location x1,y1      *\
@@ -33,7 +34,6 @@ int vmwLoadPicPacked(int x1,int y1,vmwVisual *target,
     int ysize;
     int numcolors;
     int col,numacross;
-    int temp_palette[256];
    
        /* Open the file */                  
     fff=fopen(FileName,"rb");	/* Windows chokes if no "b" */
@@ -98,9 +98,11 @@ int vmwLoadPicPacked(int x1,int y1,vmwVisual *target,
        /* 565 packed 16bit RGB */
     
     for(i=0;i<256;i++) { 
-       temp_palette[i]= vmwPack3Bytes(buffer[buffpointer],
-				     buffer[buffpointer+1],
-				     buffer[buffpointer+2]);
+       if (LoadPal)
+          vmwLoadPalette(graph_state,
+			 buffer[buffpointer],
+			 buffer[buffpointer+1],
+			 buffer[buffpointer+2],i);
        buffpointer+=3;
        if (buffpointer>=errorlev) {
 	  if (errorlev==300) {
@@ -112,12 +114,7 @@ int vmwLoadPicPacked(int x1,int y1,vmwVisual *target,
 	  }
        }    
     }
-   
-    if (LoadPal) {
-       for (i=0;i<256;i++) target->palette[i]=temp_palette[i];
-    }
-   
-   
+      
     x=x1;
     y=y1;
    

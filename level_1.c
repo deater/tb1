@@ -78,8 +78,9 @@ void beforeboss(tb1_state *game_state)
 {
 
     vmwClearKeyboardBuffer();
-    vmwLoadPicPacked(0,0,game_state->virtual_3,0,1,
-		     tb1_data_file("level1/viewscr.tb1",game_state->path_to_data));
+    vmwLoadPicPacked(0,0,game_state->virtual_3,1,1,
+		     tb1_data_file("level1/viewscr.tb1",game_state->path_to_data),
+		     game_state->graph_state);
     vmwClearScreen(game_state->virtual_1,0);
     vmwArbitraryCrossBlit(game_state->virtual_3,0,5,58,37,
 			  game_state->virtual_1,10,10);
@@ -129,8 +130,9 @@ void afterboss(tb1_state *game_state)
    
     tb1_font=game_state->graph_state->default_font;
    
-    vmwLoadPicPacked(0,0,game_state->virtual_3,0,1,
-		     tb1_data_file("level1/viewscr.tb1",game_state->path_to_data));
+    vmwLoadPicPacked(0,0,game_state->virtual_3,1,1,
+		     tb1_data_file("level1/viewscr.tb1",game_state->path_to_data),
+		     game_state->graph_state);
     vmwDrawBox(0,0,320,200,0,game_state->virtual_1);
     vmwArbitraryCrossBlit(game_state->virtual_3,0,42,58,37,
 			  game_state->virtual_1,10,10);
@@ -362,14 +364,16 @@ void levelone(tb1_state *game_state) {
    
        /* Load Sprites */
     grapherror=vmwLoadPicPacked(0,0,virtual_1,1,1,
-	       tb1_data_file("level1/ships.tb1",game_state->path_to_data));
+	       tb1_data_file("level1/ships.tb1",game_state->path_to_data),
+	       game_state->graph_state);
 
     bigship1=vmwGetSprite(0,0,48,30,virtual_1);
     bigship2=vmwGetSprite(0,32,48,30,virtual_1);
     bigship3=vmwGetSprite(0,64,48,30,virtual_1);
    
-    grapherror=vmwLoadPicPacked(0,0,virtual_1,1,1,
-	       tb1_data_file("level1/tbshapes.tb1",game_state->path_to_data));
+    grapherror=vmwLoadPicPacked(0,0,virtual_1,0,1,
+	       tb1_data_file("level1/tbshapes.tb1",game_state->path_to_data),
+				game_state->graph_state);
    
     for(j=0;j<2;j++) 
        for(i=0;i<10;i++) 
@@ -641,9 +645,10 @@ void littleopener(tb1_state *game_state)
     vmwClearScreen(game_state->virtual_2,0);
    
     vmwLoadPicPacked(0,0,game_state->virtual_2,1,1,
-		     tb1_data_file("level1/moon2.tb1",game_state->path_to_data));
-    vmwLoadPicPacked(0,0,game_state->virtual_1,1,0,  /* Load palette */
-		     tb1_data_file("level1/moon2.tb1",game_state->path_to_data));
+		     tb1_data_file("level1/moon2.tb1",game_state->path_to_data),
+		     game_state->graph_state);
+//    vmwLoadPicPacked(0,0,game_state->virtual_1,1,0,  /* Load palette */
+//		     tb1_data_file("level1/moon2.tb1",game_state->path_to_data));
    
     ship1=vmwGetSprite(9,178,15,18,game_state->virtual_2);
     ship2=vmwGetSprite(30,178,15,18,game_state->virtual_2);
@@ -679,6 +684,7 @@ void littleopener(tb1_state *game_state)
       
     vmwDrawBox(0,0,320,200,0,game_state->virtual_1);
     vmwLoadPicPacked(0,0,game_state->virtual_1,1,0, /* Restore Palette */
-		     tb1_data_file("tbomb1.tb1",game_state->path_to_data));
+		     tb1_data_file("tbomb1.tb1",game_state->path_to_data),
+		     game_state->graph_state);
    
 }

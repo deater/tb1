@@ -54,7 +54,6 @@ int command_line_help(int show_version,char *runas)
 int main(int argc,char **argv)
 {
     int i,grapherror,reloadpic=0;
-    int custom_palette[256];
     int ch,x,barpos,time_sec;
     int scale=1,fullscreen=0;
     FILE *fff;
@@ -166,38 +165,28 @@ int main(int argc,char **argv)
    
        /* Setup Graphics */
      
-    if (scale==1) {
     if ( (game_state->graph_state=vmwSetupSVMWGraph(VMW_SDLTARGET,
 						 320,200,
-						 16,scale,fullscreen,1))==NULL) {   
+						 0,scale,fullscreen,1))==NULL) {   
        fprintf(stderr,"ERROR: Couldn't get display set up properly.\n");
        return VMW_ERROR_DISPLAY;
     }
-    }
-    else {
-        if ( (game_state->graph_state=vmwSetupSVMWGraph(VMW_SDLTARGET,
-						  640,480,
-						  16,scale,fullscreen,1))==NULL) {
-	          fprintf(stderr,"ERROR: Couldn't get display set up properly.\n");
-	          return VMW_ERROR_DISPLAY;
-	}
-    }
-  
+     
        /* Load the tom bombem font */
     game_state->graph_state->default_font=
                 vmwLoadFont(tb1_data_file("tbfont.tb1",
 					  game_state->path_to_data),8,16,256);
     printf("  + Loaded tb1 font...\n");
 
-    if ((game_state->virtual_1=vmwSetupVisual(320,200,256))==NULL) {
+    if ((game_state->virtual_1=vmwSetupVisual(320,200))==NULL) {
        fprintf(stderr,"ERROR: Couldn't get RAM for virtual screen 1!\n");
        return VMW_ERROR_MEM;
     }
-    if ((game_state->virtual_2=vmwSetupVisual(320,400,256))==NULL) {
+    if ((game_state->virtual_2=vmwSetupVisual(320,400))==NULL) {
        fprintf(stderr,"ERROR: Couldn't get RAM for virtual screen 2!\n");
        return VMW_ERROR_MEM;
     }
-    if ((game_state->virtual_3=vmwSetupVisual(320,200,256))==NULL) {
+    if ((game_state->virtual_3=vmwSetupVisual(320,200))==NULL) {
        fprintf(stderr,"ERROR: Couldn't get RAM for virtual screen 3!\n");
        return VMW_ERROR_MEM;
     }
@@ -210,20 +199,17 @@ int main(int argc,char **argv)
     virtual_3=game_state->virtual_3;
     tb1_font=game_state->graph_state->default_font;
 
-    for (x=0;x<256;x++) custom_palette[x]=vmwPack3Bytes(0,0,0); /* 0=black */
+    for (x=0;x<256;x++) vmwLoadPalette(game_state->graph_state,0,0,0,x); /* 0=black */
    
        /* Do the VMW Software Production Logo */
     for(x=0;x<=40;x++) {
-       custom_palette[100+x]=vmwPack3Bytes( ((x+20)*4),0,0);
-       custom_palette[141+x]=vmwPack3Bytes(0,0, ( (x+20)*4 ));
-       custom_palette[182+x]=vmwPack3Bytes(0, ( (x+20)*4),0);
+       vmwLoadPalette(game_state->graph_state, ((x+20)*4),0,0,100+x);
+       vmwLoadPalette(game_state->graph_state,0,0, ( (x+20)*4 ),141+x);
+       vmwLoadPalette(game_state->graph_state,0, ( (x+20)*4),0,182+x);
     }
 
        /* Set the white color */
-    custom_palette[15]=vmwPack3Bytes(0xff,0xff,0xff);
-   
-       /* Finalize Pallette Stuff */
-    vmwLoadCustomPalette(virtual_1,custom_palette);
+    vmwLoadPalette(game_state->graph_state,0xff,0xff,0xff,15);
     
        /* Actually draw the stylized VMW */
     for(x=0;x<=40;x++){ 
@@ -257,15 +243,18 @@ int main(int argc,char **argv)
     vmwClearScreen(virtual_1,0); 
     
        /* Load the title screen */
+       /* this is a bit of overkill.  vmwflip() ? */
     grapherror=vmwLoadPicPacked(0,0,virtual_1,1,1,
-				tb1_data_file("tbomb1.tb1",game_state->path_to_data)); 
+				tb1_data_file("tbomb1.tb1",game_state->path_to_data),
+				game_state->graph_state); 
     
-       /* Set up palettes */
     grapherror=vmwLoadPicPacked(0,0,virtual_2,1,1,
-				tb1_data_file("tbomb1.tb1",game_state->path_to_data));
+				tb1_data_file("tbomb1.tb1",game_state->path_to_data),
+				game_state->graph_state);
     
     grapherror=vmwLoadPicPacked(0,0,game_state->virtual_3,1,1,
-				tb1_data_file("tbomb1.tb1",game_state->path_to_data));
+				tb1_data_file("tbomb1.tb1",game_state->path_to_data),
+				game_state->graph_state);
    
     vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
     
@@ -273,9 +262,10 @@ int main(int argc,char **argv)
     while (1) {
        if (reloadpic) {
           grapherror=vmwLoadPicPacked(0,0,virtual_3,1,1,
-				    tb1_data_file("tbomb1.tb1",game_state->path_to_data));
-	  grapherror=vmwLoadPicPacked(0,0,virtual_1,1,0,
-				    tb1_data_file("tbomb1.tb1",game_state->path_to_data));
+				    tb1_data_file("tbomb1.tb1",game_state->path_to_data),
+				    game_state->graph_state);
+//	  grapherror=vmwLoadPicPacked(0,0,virtual_1,1,0,
+//				    tb1_data_file("tbomb1.tb1",game_state->path_to_data));
 	  
 	  reloadpic=0;
        }
