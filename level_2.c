@@ -59,7 +59,7 @@ void leveltwoengine(tb1_state *game_state)
     int ch,i;
     char tempst[BUFSIZ];
     int k,game_paused=0,speed_factor=1;
-    int shipx=36;
+    int shipx=36,shipy;
     int whatdelay=1;
     FILE *f=NULL;
     int levelover=0,j,backrow=0;
@@ -444,125 +444,146 @@ void leveltwoengine(tb1_state *game_state)
     /*printf("%i\n",rows_goneby);*/
     if (rows_goneby>1950) {
 //       printf("%i\n",rows_goneby);
-       coolbox(35,85,215,110,1,virtual_1);
-       vmwTextXY("TO BE CONTINUED...",55,95,4,7,0,tb1_font,virtual_1);
-       vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
-       pauseawhile(10);
+//       coolbox(35,85,215,110,1,virtual_1);
+//       vmwTextXY("TO BE CONTINUED...",55,95,4,7,0,tb1_font,virtual_1);
+//       vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
+//       pauseawhile(10);
        
 	 
-       /*
-     clearkeyboardbuffer;
-     pauseawhile(200);
-     fade;
-      grapherror:=Mode13LoadPicPacked(0,0,vaddr,false,true,'viewscr.tb1');
-      cls(0,vga);
-      blockmove(0,79,58,116,vaddr,10,10,vga);
-      clearkeyboardbuffer;
-      outsmalltextxy('UNIDENTIFIED SPACECRAFT!',70,10,2,0,vga,true);
-      outsmalltextxy('DO YOU WISH TO DEACTIVATE ',70,20,2,0,vga,true);
-      outsmalltextxy('THIS SHIP''S SECURITY SYSTEMS? (Y/N)',70,30,2,0,vga,true);
-     unfade;
-      clearkeyboardbuffer;
-      ch:='!';
-      repeat
-         if keypressed then ch:=readkey;
-      until (upcase(ch)='Y') or (upcase(ch)='N');
+  
+       vmwClearKeyboardBuffer();
+       pauseawhile(5);
+       vmwLoadPicPacked(0,0,game_state->virtual_3,0,1,
+			tb1_data_file("level1/viewscr.tb1",game_state->path_to_data),
+			game_state->graph_state);
+       vmwClearScreen(game_state->virtual_1,0);
+       vmwArbitraryCrossBlit(game_state->virtual_3,0,79,58,37,
+			     game_state->virtual_1,10,10);
+       vmwClearKeyboardBuffer();
+       vmwSmallTextXY("UNIDENTIFIED SPACECRAFT!",70,10,2,0,1,tb1_font,game_state->virtual_1);
+       vmwSmallTextXY("DO YOU WISH TO DEACTIVATE ",70,20,2,0,1,tb1_font,game_state->virtual_1);
+       vmwSmallTextXY("THIS SHIP'S SECURITY SYSTEMS? (Y/N)",70,30,2,0,1,tb1_font,game_state->virtual_1);
+       vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
+       vmwClearKeyboardBuffer();
+      
+       ch='!';
+       while ((ch!='Y') && (ch!='y') && (ch!='N') && (ch!='n')) {
+          while(!(ch=vmwGetInput())) usleep(1000);
+       }
+       
+       if ((ch=='N') || (ch=='n')) {
+	  vmwArbitraryCrossBlit(game_state->virtual_3,0,79,58,37,
+				game_state->virtual_1,10,50);
+          vmwSmallTextXY("NO?  AFFIRMATIVE. ",70,50,9,0,1,tb1_font,game_state->virtual_1);
+          vmwSmallTextXY("ARMING REMOTE DESTRUCTION RAY.",70,60,9,0,1,tb1_font,game_state->virtual_1);
+          vmwSmallTextXY("GOOD-BYE.",70,70,9,0,1,tb1_font,game_state->virtual_1);
+          vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
+	  pauseawhile(4);
+       }
+      
 
-      if upcase(ch)='N' then begin
-         blockmove(0,79,58,116,vaddr,10,50,vga);
-         outsmalltextxy('NO?  AFFIRMATIVE. ',70,50,9,0,vga,true);
-         outsmalltextxy('ARMING REMOTE DESTRUCTION RAY.',70,60,9,0,vga,true);
-         outsmalltextxy('GOOD-BYE.',70,70,9,0,vga,true);
-         pauseawhile(400);
-         fade;
-      end;
+       if ((ch=='Y') || (ch=='y')) {
+	  vmwArbitraryCrossBlit(game_state->virtual_3,0,79,58,37,
+				game_state->virtual_1,10,50);
+          vmwSmallTextXY("'Y'=CORRECT PASSWORD. ",70,50,2,0,1,tb1_font,game_state->virtual_1);
+          vmwSmallTextXY("WELCOME SUPREME TENTACLEE COMMANDER.",70,60,2,0,1,tb1_font,game_state->virtual_1);
+          vmwSmallTextXY("INITIATING TRACTOR BEAM AND AUTOMATIC",70,70,2,0,1,tb1_font,game_state->virtual_1);
+          vmwSmallTextXY("LANDING PROCEDURE.",70,80,2,0,1,tb1_font,game_state->virtual_1);
+          vmwSmallTextXY("WE WILL BE DEPARTING FOR THE PLANET",70,90,2,0,1,tb1_font,game_state->virtual_1);
+          vmwSmallTextXY("EERM IN THREE MICROCYCLE UNITS.",70,100,2,0,1,tb1_font,game_state->virtual_1);
+          vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
+	  pauseawhile(5);
+	  
+          game_state->level=3;
+          vmwClearKeyboardBuffer();
+	  
+          vmwArbitraryCrossBlit(game_state->virtual_3,0,42,58,37,
+				game_state->virtual_1,10,110);
+	  
+          vmwSmallTextXY("Wha? Wait!",70,110,9,0,1,tb1_font,game_state->virtual_1);
+          vmwSmallTextXY("What's happening?",70,120,9,0,1,tb1_font,game_state->virtual_1);
+          vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
+	  pauseawhile(6);
+       }
+       
+       vmwLoadPicPacked(0,0,game_state->virtual_3,0,1,
+			tb1_data_file("level3/tbtract.tb1",game_state->path_to_data),
+			game_state->graph_state);
 
-      if upcase(ch)='Y' then begin
-         blockmove(0,79,58,116,vaddr,10,50,vga);
-         outsmalltextxy('"Y"=CORRECT PASSWORD. ',70,50,2,0,vga,true);
-         outsmalltextxy('WELCOME SUPREME TENTACLEE COMMANDER.',70,60,2,0,vga,true);
-         outsmalltextxy('INITIATING TRACTOR BEAM AND AUTOMATIC',70,70,2,0,vga,true);
-         outsmalltextxy('LANDING PROCEDURE.',70,80,2,0,vga,true);
-         outsmalltextxy('WE WILL BE DEPARTING FOR THE PLANET',70,90,2,0,vga,true);
-         outsmalltextxy('EERM IN THREE MICROCYCLE UNITS.',70,100,2,0,vga,true);
-         pauseawhile(550);
-         level:=3;
-         clearkeyboardbuffer;
-         blockmove(0,42,58,79,vaddr,10,110,vga);
-         outsmalltextxy('Wha? Wait!',70,110,9,0,vga,true);
-         outsmalltextxy('What''s happening?',70,120,9,0,vga,true);
-         pauseawhile(550);
-         fade;
-     end;
+       
+       vmwArbitraryCrossBlit(game_state->virtual_3,0,0,240,50,
+			     game_state->virtual_2,0,0);
+       vmwClearScreen(game_state->virtual_1,0);
+       
+       setupsidebar(game_state,virtual_1);
+       
+       
+       for(howmuchscroll=50;howmuchscroll>0;howmuchscroll--) {
+	  vmwArbitraryCrossBlit(virtual_2,0,howmuchscroll,240,200,virtual_1,0,0);
+	  usleep(30000);
+	  vmwPutSprite(ship_shape[0],shipx,165,virtual_1);
+          vmwBlitMemToDisplay(game_state->graph_state,virtual_1);    
+       }
 
-         grapherror:=Mode13LoadPicPacked(0,0,vaddr,false,true,'tbtract.tb1');
-         for i:=0 to 239 do
-             for j:=0 to 49 do
-                 putpixel240(i,j,getpixel(i,j,vaddr),vaddr2);
-         cls(0,vga);
-         unfade;
-         for howmuchscroll:=50 downto 1 do begin
-            flipd240(howmuchscroll,vaddr,vaddr2);
-            putshape (bigship3off,vaddr,43,30,shipx,165);
-            waitretrace;
-            flipd320(vaddr,vga);
-        end;
+       if ((ch=='N') || (ch=='n')) {
+          vmwClearKeyboardBuffer();
+          vmwLine(7,6,shipx+10,180,4,virtual_1);
+          vmwLine(shipx+37,180,231,6,4,virtual_1);
+          vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
+	  pauseawhile(1);
+          vmwClearKeyboardBuffer();
+          for(i=shipx;i<shipx+48;i++) {
+             vmwDrawVLine(i,165,30,4,virtual_1);
+	  }
+	  vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
+          pauseawhile(2);
+	  vmwArbitraryCrossBlit(virtual_2,0,howmuchscroll,240,200,virtual_1,0,0);
+          vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
+	  pauseawhile(2);      
+       }
 
-        if upcase(ch)='N' then begin
-           clearkeyboardbuffer;
-           line(7,6,shipx+10,180,4,vga);
-           line(shipx+37,180,231,6,4,vga);
-           pauseawhile(50);
-           clearkeyboardbuffer;
-           for i:=shipx to shipx+48 do
-               verticalline(165,195,i,4,vga);
-           pauseawhile(200);
-           flipd240(howmuchscroll,vaddr,vaddr2);
-           flipd320(vaddr,vga);
-           pauseawhile(150);
-        end;
-
-
-     if upcase(ch)='Y' then begin;
-        shipadd:=sgn(shipx-95);
-        shipy:=165;
-        repeat
-          if shipx<>95 then shipx:=shipx-shipadd;
-          if shipy>9 then dec(shipy);
-          flipd240(howmuchscroll,vaddr,vaddr2);
-          line(7,6,shipx+10,shipy+15,2,vaddr);
-          line(shipx+37,shipy+15,231,6,2,vaddr);
-          putshape (bigship3off,vaddr,43,30,shipx,shipy);
-          waitretrace;
-          flipd320(vaddr,vga);
-        until (shipx=95) and (shipy=9);
-        clearkeyboardbuffer;
-     pauseawhile(850);
-     fade;
-        cls(0,vga);
-
-
+       else {
+	  if (shipx-95==0) shipadd=0;
+	  if (shipx-95>0) shipadd=1;
+	  if (shipx-95<0) shipadd=-1;
+	  shipy=165;
+          while ((shipx!=95) || (shipy>10)) {
+             if (shipx!=95) shipx-=shipadd;
+             if (shipy>10) shipy--;
+	     vmwArbitraryCrossBlit(virtual_2,0,howmuchscroll,240,200,virtual_1,0,0);
+	     
+             vmwLine(7,6,shipx+12,shipy+15,2,virtual_1);
+             vmwLine(shipx+37,shipy+15,231,6,2,virtual_1);
+             vmwPutSprite(ship_shape[0],shipx,shipy,virtual_1);
+             vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
+	     usleep(30000);
+	  }
+          vmwClearKeyboardBuffer();
+          pauseawhile(8);
+          vmwClearScreen(virtual_1,0);
+       }
+/*
      while keypressed do ch:=readkey;
      if level=4 then begin
-       outsmalltextxy('THE PLANET EERM?',20,20,10,0,vga,true);
-       outsmalltextxy('XENOCIDE FLEET?',20,30,10,0,vga,true);
-       outsmalltextxy('WHAT''S GOING ON?',20,40,10,0,vga,true);
-       outsmalltextxy('A MAJOR GOVERNMENT CONSPIRACY?  MASS HALUCINATIONS?',20,50,10,0,vga,true);
+       vmwSmallTextXY('THE PLANET EERM?',20,20,10,0,1,tb1_font,game_state->virtual_1);
+       vmwSmallTextXY('XENOCIDE FLEET?',20,30,10,0,1,tb1_font,game_state->virtual_1);
+       vmwSmallTextXY('WHAT'S GOING ON?',20,40,10,0,1,tb1_font,game_state->virtual_1);
+       vmwSmallTextXY('A MAJOR GOVERNMENT CONSPIRACY?  MASS HALUCINATIONS?',20,50,10,0,1,tb1_font,game_state->virtual_1);
 
-       outsmalltextxy('WATCH FOR TOM BOMBEM LEVEL 3 (CURRENTLY IN THE DESIGN PHASE).',10,70,12,0,vga,true);
-       outsmalltextxy('ALL THESE QUESTIONS WILL BE ANSWERED!',10,80,12,0,vga,true);
-       outsmalltextxy('ALSO MORE FEATURES WILL BE ADDED:',10,90,12,0,vga,true);
-       outsmalltextxy('     BETTER GRAPHICS, SOUND AND SPEED.',10,100,12,0,vga,true);
+       vmwSmallTextXY('WATCH FOR TOM BOMBEM LEVEL 3 (CURRENTLY IN THE DESIGN PHASE).',10,70,12,0,1,tb1_font,game_state->virtual_1);
+       vmwSmallTextXY('ALL THESE QUESTIONS WILL BE ANSWERED!',10,80,12,0,1,tb1_font,game_state->virtual_1);
+       vmwSmallTextXY('ALSO MORE FEATURES WILL BE ADDED:',10,90,12,0,1,tb1_font,game_state->virtual_1);
+       vmwSmallTextXY('     BETTER GRAPHICS, SOUND AND SPEED.',10,100,12,0,1,tb1_font,game_state->virtual_1);
 
-       outsmalltextxy('TO HASTEN COMPLETION, SEND QUESTIONS/COMMENTS/DONATIONS TO ',9,120,9,0,vga,true);
-       outsmalltextxy('THE AUTHOR (SEE THE REGISTER MESSAGE FOR RELEVANT ADDRESSES).',9,130,9,0,vga,true);
+       vmwSmallTextXY('TO HASTEN COMPLETION, SEND QUESTIONS/COMMENTS/DONATIONS TO ',9,120,9,0,1,tb1_font,game_state->virtual_1);
+       vmwSmallTextXY('THE AUTHOR (SEE THE REGISTER MESSAGE FOR RELEVANT ADDRESSES).',9,130,9,0,1,tb1_font,game_state->virtual_1);
 
-       outsmalltextxy('THANK YOU FOR PLAYING TOM BOMBEM',80,150,14,0,vga,true);
+       vmwSmallTextXY('THANK YOU FOR PLAYING TOM BOMBEM',80,150,14,0,1,tb1_font,game_state->virtual_1);
        unfade;
        pauseawhile(1800);
      end; */
           levelover=1;
-       }
+    }
     }
 
 }

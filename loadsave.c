@@ -156,7 +156,6 @@ void loadgame(tb1_state *game_state)
     vmwTextXY("LOAD GAME",110,10,9,0,0,tb1_font,vis);
    
     dir_name=check_for_tb1_directory(game_state,0);
-    printf("%s\n",dir_name);
    
     if (dir_name!=NULL) {
        num_of_save_games=list_saved_games(dir_name,tb1_font,vis);
@@ -181,8 +180,6 @@ void loadgame(tb1_state *game_state)
 	  while((ch=vmwGetInput())==0) usleep(30);
        }
        if (!(save_slots[ch-48])) goto IchLiebeMree;
-       
-       printf("%c\n",ch);
        
        if (ch==VMW_ESCAPE) {
 	  coolbox(0,0,319,199,1,vis);

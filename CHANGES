@@ -1,3 +1,11 @@
+2 November 2000
++ Continued re-writing the level_1 engine that I started last week.
++ Re-wrote frame limiter.  Managed to make it a lot less jumpy.
+
+28 October 2000
++ Finished porting the Level2->Level3 cut-scenes
++ Really crude level3 engine.
+
 27 October 2000
 + Started writing an opengl target.  Was hoping for a cool tb1 rotating
   on the side of a cube type deal.  Had some fights with glut and decided

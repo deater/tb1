@@ -1,5 +1,8 @@
 #include <stdio.h>
+#include <stdlib.h> /* For rand() */
 #include <unistd.h>
+#include <time.h>
+#include <sys/time.h>
 
 #include "./svmwgraph/svmwgraph.h"
 #include "tb1_state.h"
@@ -7,30 +10,44 @@
 #include "help.h"
 #include "loadsave.h"
 #include "graphic_tools.h"
+#include "tblib.h"
 
 #define NORTH 0
 #define SOUTH 1
 #define EAST  2
 #define WEST  3
 
+#define TOM_SHAPE 60
 
-void loadlevel3shapes() {
-   /*
-var x,y,i,j,shape:byte;
-begin
-   clearshape;
-   grapherror:=loadpicsuperpacked(0,0,vaddr,false,true,'tblev3.tb1');
+vmwSprite *shape_table[80];
+
+
+void loadlevel3shapes(tb1_state *game_state) {
+
    
-  for j:=0 to 3 do
-    for i:=0 to 19 do
-      for x:=0 to 9 do
-          for y:=0 to 9 do
-              ShapeTable1^[shape3array[(j*20)+i]+((y*10)+x)]
-                          :=getpixel(1+x+(i*11),1+y+(j*11),vaddr);
-  cls(0,vaddr);
-end;
-*/
+    int i,j;
+   
+    vmwLoadPicPacked(0,0,game_state->virtual_2,0,1,
+		  tb1_data_file("level3/tblev3.tb1",
+      	                      game_state->path_to_data),
+		  game_state->graph_state);
+   
+    for(j=0;j<5;j++) {
+       for(i=0;i<20;i++) {
+	  shape_table[(j*20)+i]=vmwGetSprite(1+(i*11),1+(j*11),
+					     10,10,game_state->virtual_2);
+       }
+    }
 }
+
+int our_sgn(int value) {
+   
+   if (value==0) return 0;
+   if (value<0) return -1;
+   return 1;
+}
+
+
 
 /*
 Procedure levelthree;
@@ -157,21 +174,28 @@ void LevelThreeEngine(tb1_state *game_state) {
 
     int level_over=0;
     int ch,direction=NORTH;
-    int x_add,y_add;
+    int x_add=0,y_add=0;
     int game_paused=0;
+   
+    int tom_x=100,tom_y=100,walking=0;
+    
    
     vmwVisual *virtual_1,*virtual_2;
     vmwFont *tb1_font;
+   
+    long oldsec,oldusec,time_spent;
+   
+    struct timeval timing_info;
+    struct timezone dontcare;
+    int speed_factor=0;
+   
    
     virtual_1=game_state->virtual_1;
     virtual_2=game_state->virtual_2;
     tb1_font=game_state->graph_state->default_font;
     
-/*
-
-BEGIN
-  {loadlevel3shapes;}
-  computer_0hits:=0;
+    loadlevel3shapes(game_state);
+/*  computer_0hits:=0;
   whatdelay:=1;
   havegun:=true;
   for i:=0 to 3 do keycards[i]:=false;
@@ -202,7 +226,7 @@ BEGIN
   flip(vaddr2,vaddr);
   str(level,tempst);
   fillblock(251,52,314,59,0,vaddr);
-  outtextxy(tempst,307,51,12,0,vaddr,false);
+  vmwTextXY(tempst,307,51,12,0,vaddr,false);
 
   cls(0,vaddr2);
 
@@ -214,8 +238,8 @@ BEGIN
 
   cls(0,vga);
   coolbox(70,85,240,120,true,vga);
-  outtextxy('   LEVEL THREE:',84,95,4,7,vga,false);
-  outtextxy('  THE ALIEN SHIP',84,105,4,7,vga,false);
+  vmwTextXY('   LEVEL THREE:',84,95,4,7,vga,false);
+  vmwTextXY('  THE ALIEN SHIP',84,105,4,7,vga,false);
 
   clearkeyboardbuffer;
   pauseawhile(300);
@@ -386,15 +410,15 @@ newroom:
         begin
           levelover:=true;
           cls(0,vga);
-          outtextxy('You Have won!',5,5,9,7,vga,false);
-          outtextxy('But as you can see this level is not done yet.',5,15,9,7,vga,false);
-          {outtextxy('Anyway');}
+          vmwTextXY('You Have won!',5,5,9,7,vga,false);
+          vmwTextXY('But as you can see this level is not done yet.',5,15,9,7,vga,false);
+          {vmwTextXY('Anyway');}
           readln;
           inc(level);
         end
      else begin
           cls(0,vga);
-          outtextxy('You Cannot Leave Yet',5,5,9,7,vga,true);
+          vmwTextXY('You Cannot Leave Yet',5,5,9,7,vga,true);
           repeat until keypressed; tempch:=readkey;
           levelover:=false;
           shipframe:=1;
@@ -405,7 +429,9 @@ newroom:
 
 */
 
-
+    gettimeofday(&timing_info,&dontcare);
+    oldsec=timing_info.tv_sec; oldusec=timing_info.tv_usec;
+   
 
 /**** GAME LOOP ****/
 /*******************/
@@ -423,7 +449,7 @@ newroom:
                  grapherror:=loadpicsuperpacked(0,0,vga,false,true,'tbpit.tb1');
 
 
-                 {outtextxy('You Fell In A Pit!',5,5,9,2,vga,false);}
+                 {vmwTextXY('You Fell In A Pit!',5,5,9,2,vga,false);}
                  clearkeyboardbuffer;
                  repeat until keypressed; tempch:=readkey;
             end;
@@ -486,33 +512,33 @@ newroom:
                     inc(computer_0hits);
                     if computer_0hits=1 then begin
 
-               outtextxy('COMPUTER ACTIVATED:',47,30,2,0,vga,true);
-               outsmalltextxy(' HUMAN YOU HAVE COME TOO SOON.  LEVELS 3',47,40,2,0,vga,true);
-               outsmalltextxy('  AND 4 ARE INCOMPLETE.',47,48,2,0,vga,true);
-               outsmalltextxy(' ANYWAY I CAN SEE YOU ARE NOT THE',47,58,2,0,vga,true);
-               outsmalltextxy('  TENTACLEE COMMANDER.  YOU ARE IN',47,66,2,0,vga,true);
-               outsmalltextxy('  GRAVE DANGER.  LUCKILY THE MAIN',47,74,2,0,vga,true);
-               outsmalltextxy('  COMPUTER SYSTEM DOES NOT APPROVE',47,82,2,0,vga,true);
-               outsmalltextxy('  OF THE TENTACLEE''S POLICIES.',47,90,2,0,vga,true);
-               outsmalltextxy(' I PERSONALLY CANNOT SHUT OFF THE TRACTOR',47,100,2,0,vga,true);
-               outsmalltextxy('  BEAM.  YOU MUST RETRIEVE FOUR KEYCARDS',47,108,2,0,vga,true);
-               outsmalltextxy('  SCATTERED AROUND THE FLIGHT DECK.',47,116,2,0,vga,true);
-               outsmalltextxy(' THE MAP BELOW WILL AID YOU.',47,124,2,0,vga,true);
+               vmwTextXY('COMPUTER ACTIVATED:',47,30,2,0,vga,true);
+               vmwSmallTextXY(' HUMAN YOU HAVE COME TOO SOON.  LEVELS 3',47,40,2,0,vga,true);
+               vmwSmallTextXY('  AND 4 ARE INCOMPLETE.',47,48,2,0,vga,true);
+               vmwSmallTextXY(' ANYWAY I CAN SEE YOU ARE NOT THE',47,58,2,0,vga,true);
+               vmwSmallTextXY('  TENTACLEE COMMANDER.  YOU ARE IN',47,66,2,0,vga,true);
+               vmwSmallTextXY('  GRAVE DANGER.  LUCKILY THE MAIN',47,74,2,0,vga,true);
+               vmwSmallTextXY('  COMPUTER SYSTEM DOES NOT APPROVE',47,82,2,0,vga,true);
+               vmwSmallTextXY('  OF THE TENTACLEE'S POLICIES.',47,90,2,0,vga,true);
+               vmwSmallTextXY(' I PERSONALLY CANNOT SHUT OFF THE TRACTOR',47,100,2,0,vga,true);
+               vmwSmallTextXY('  BEAM.  YOU MUST RETRIEVE FOUR KEYCARDS',47,108,2,0,vga,true);
+               vmwSmallTextXY('  SCATTERED AROUND THE FLIGHT DECK.',47,116,2,0,vga,true);
+               vmwSmallTextXY(' THE MAP BELOW WILL AID YOU.',47,124,2,0,vga,true);
               end;
               if computer_0hits=2 then begin
 
-               outtextxy('COMPUTER ACTIVATED:',47,30,2,0,vga,true);
-               outsmalltextxy(' HUMAN I HAVE ALREADY TOLD YOU MUCH.',47,40,2,0,vga,true);
-               outsmalltextxy('  COLLECT THE 4 KEYCARDS, MADE OF',47,48,2,0,vga,true);
-               outsmalltextxy('  RUBY, GOLD, EMERALD, AND ALUMINUM.',47,56,2,0,vga,true);
-               outsmalltextxy(' WATCH OUT FOR ENEMIES NOT UNDER MY',47,66,2,0,vga,true);
-               outsmalltextxy('  CONTROL, RADIOACTIVE FLOORS, AND',47,74,2,0,vga,true);
-               outsmalltextxy('  EXTREMELY DEEP PITS.',47,82,2,0,vga,true);
+               vmwTextXY('COMPUTER ACTIVATED:',47,30,2,0,vga,true);
+               vmwSmallTextXY(' HUMAN I HAVE ALREADY TOLD YOU MUCH.',47,40,2,0,vga,true);
+               vmwSmallTextXY('  COLLECT THE 4 KEYCARDS, MADE OF',47,48,2,0,vga,true);
+               vmwSmallTextXY('  RUBY, GOLD, EMERALD, AND ALUMINUM.',47,56,2,0,vga,true);
+               vmwSmallTextXY(' WATCH OUT FOR ENEMIES NOT UNDER MY',47,66,2,0,vga,true);
+               vmwSmallTextXY('  CONTROL, RADIOACTIVE FLOORS, AND',47,74,2,0,vga,true);
+               vmwSmallTextXY('  EXTREMELY DEEP PITS.',47,82,2,0,vga,true);
               end;
           if computer_0hits>2 then begin
-                outtextxy('COMPUTER ACTIVATED:',47,30,2,0,vga,true);
-               outsmalltextxy(' HUMAN, GO AWAY.  YOU ANNOY ME.',47,40,2,0,vga,true);
-               outsmalltextxy('  I HAVE TOLD YOU EVERYTHING.',47,48,2,0,vga,true);
+                vmwTextXY('COMPUTER ACTIVATED:',47,30,2,0,vga,true);
+               vmwSmallTextXY(' HUMAN, GO AWAY.  YOU ANNOY ME.',47,40,2,0,vga,true);
+               vmwSmallTextXY('  I HAVE TOLD YOU EVERYTHING.',47,48,2,0,vga,true);
           end;
 
 
@@ -530,12 +556,12 @@ newroom:
 /*{    for i:=0 to 30 do
         if passive[i].exploding then with passive[i] do begin
            inc(explodeprogress);
-           putshape240(shape2array[35+explodeprogress],vaddr2,
+           vmwPutSprite240(shape2array[35+explodeprogress],vaddr2,
                           20,9,x,y+howmuchscroll);
            if explodeprogress>4 then begin
               dead:=true;
               exploding:=false;
-              putshape240over(14800(*shape2array[34]*),vaddr2,
+              vmwPutSprite240over(14800(*shape2array[34]*),vaddr2,
                           20,9,x,y+howmuchscroll);
            end;
         end;
@@ -559,12 +585,12 @@ newroom:
        end;
 
        if collide<>0 then bullet1out:=false;
-       if bullet1out then putshape(shape3array[76],vaddr,10,9,bullet1x,bullet1y);
+       if bullet1out then vmwPutSprite(shape3array[76],vaddr,10,9,bullet1x,bullet1y);
     end;
     if bullet2out then begin
        dec(bullet2y,5);
        if bullet2y<5 then bullet2out:=false;
-       if bullet2out then putshape(shape3array[76],vaddr,10,9,bullet2x,bullet2y);
+       if bullet2out then vmwPutSprite(shape3array[76],vaddr,10,9,bullet2x,bullet2y);
     end;
  */
        /***MOVE ENEMIES***/
@@ -594,7 +620,7 @@ newroom:
     end;
     for j:=0 to 5 do begin
         if enemy[j].out then begin
-           putshape(shape2array[enemy[j].kind],vaddr,
+           vmwPutSprite(shape2array[enemy[j].kind],vaddr,
                           20,9,enemy[j].x,enemy[j].y);
            enemy[j].y:=enemy[j].y+enemy[j].yspeed;
            if enemy[j].y>189 then enemy[j].out:=false;
@@ -659,7 +685,7 @@ newroom:
             bullet1x:=shipx+3;
             bullet1y:=shipy+4;
             bullet1dir:=shipframe;
-            putshape(shape3array[76],vaddr,10,9,bullet1x,bullet1y);
+            vmwPutSprite(shape3array[76],vaddr,10,9,bullet1x,bullet1y);
          end
          else
          if (bullet2out=false) then begin
@@ -668,7 +694,7 @@ newroom:
             bullet2x:=shipx;
             bullet2y:=shipy;
             bullet2dir:=shipframe;
-            putshape(shape3array[76],vaddr,10,9,bullet2x,bullet2y);
+            vmwPutSprite(shape3array[76],vaddr,10,9,bullet2x,bullet2y);
        end;
     end;
 */
@@ -687,10 +713,12 @@ newroom:
         if (shipframe=3) and (dcollide<>0) then shipyadd:=0;
         if (shipframe=2) and (rcollide<>0) then shipxadd:=0;
         if (shipframe=4) and (lcollide<>0) then shipxadd:=0;
-        shipy:=shipy+shipyadd;
-        shipyadd:=shipyadd-sgn(shipyadd);
-        shipx:=shipx+shipxadd;
-        shipxadd:=shipxadd-sgn(shipxadd);
+	*/
+        tom_x+=x_add;
+        tom_y+=y_add;
+        y_add-=our_sgn(y_add);
+        x_add-=our_sgn(x_add);
+       /*
 
         case ucollide of
            5: begin
@@ -716,108 +744,165 @@ newroom:
                 room:=whichroomnext[3];
               end;
         end;
-       if (shipyadd<>0) or (shipxadd<>0) then inc(walking,4)
-       else walking:=0;
-       if walking>12 then walking:=0;
-*/
-     /*   CASE shipframe of
-           1   : putshape (shape3array[60+walking],vaddr,10,9,shipx,shipy);
-           2   : putshape (shape3array[61+walking],vaddr,10,9,shipx,shipy);
-           3   : putshape (shape3array[62+walking],vaddr,10,9,shipx,shipy);
-           4   : putshape (shape3array[63+walking],vaddr,10,9,shipx,shipy);
-        END;
-  */
+	*/
+       
+       if ((!y_add) || (!x_add)) walking+=4;
+       else walking=0;
+       
+       if (walking>12) walking=0;
+
+          switch(direction) {
+             case NORTH: vmwPutSprite(shape_table[TOM_SHAPE+walking],tom_x,tom_y,game_state->virtual_1);
+	                 break;
+             case EAST:  vmwPutSprite (shape_table[TOM_SHAPE+1+walking],tom_x,tom_y,game_state->virtual_1);
+                         break;
+	     case SOUTH: vmwPutSprite (shape_table[TOM_SHAPE+2+walking],tom_x,tom_y,game_state->virtual_1);
+                         break;
+	     case WEST:  vmwPutSprite (shape_table[TOM_SHAPE+3+walking],tom_x,tom_y,game_state->virtual_1);
+	  }
+       
+       vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
+       
+       
+          /* Calculate how much time has passed */
+       gettimeofday(&timing_info,&dontcare);
+       time_spent=timing_info.tv_usec-oldusec;
+       if (timing_info.tv_sec-oldsec) time_spent+=1000000;
+#ifdef DEBUG_ON
+          printf("%f\n",1000000/(float)time_spent);
+#endif
+              
+          /* If time passed was too little, wait a bit */
+       while (time_spent<33000){
+	  gettimeofday(&timing_info,&dontcare);
+	  usleep(5);
+	  time_spent=timing_info.tv_usec-oldusec;
+	  if (timing_info.tv_sec-oldsec) time_spent+=1000000;
+       }
+           
+          /* It game is paused, don't keep track of time */
+       if (game_paused) {
+	  gettimeofday(&timing_info,&dontcare);
+	  oldusec=timing_info.tv_usec;
+	  oldsec=timing_info.tv_sec;
+	  game_paused=0;
+	  speed_factor=1;
+       }
+       else {
+	  speed_factor=(time_spent/30000);
+	  oldusec=timing_info.tv_usec;
+	  oldsec=timing_info.tv_sec;
+       }
+       
     }
 }
 
 
 
-void littleopener3() {
-   /*
-var star_x:array[0..5]of integer;
-    star_y:array[0..5]of integer;
-begin
-  loadlevel3shapes;
-  grapherror:=loadpicsuperpacked(0,0,vga,true,false,'tbl2ship.tb1');
-  fade;
-  cls(0,vga);
-  grapherror:=loadpicsuperpacked(0,0,vaddr,false,true,'tbl3intr.tb1');
-  blockmove(0,3,171,117,vaddr,10,10,vga);
-  putshape (shape3array[60],vga,10,9,113,52);
+void LevelThreeLittleOpener(tb1_state *game_state) {
+   
+    int grapherror,i,j;
+   
+    vmwFont *tb1_font;
+    vmwVisual *virtual_1,*virtual_2;
+   
+    int star_x[6];
+    int star_y[6];
+   
+    tb1_font=game_state->graph_state->default_font;
+    virtual_1=game_state->virtual_1;
+    virtual_2=game_state->virtual_2;
 
+    loadlevel3shapes(game_state);
+    
+    vmwClearScreen(game_state->virtual_1,0);
+    grapherror=vmwLoadPicPacked(0,0,virtual_2,
+			        1,1,tb1_data_file("level3/tbl3intr.tb1",
+				game_state->path_to_data),game_state->graph_state);
+    vmwArbitraryCrossBlit(game_state->virtual_2,0,3,171,114,
+			  game_state->virtual_1,10,10);
 
-  unfade;
-  outtextxy('Hmmmm... STUPID TRACTOR BEAM.',10,155,10,0,vga,false);
-  outtextxy('I GUESS I''D BETTER GO SHUT IT OFF.',10,165,10,0,vga,false);
-  pauseawhile(700);
-  clearkeyboardbuffer;
+    
 
-  for i:=24 downto 0 do begin
-      blockmove(0,3,171,117,vaddr,10,10,vga);
-      putshape (shape3array[60+(4*(i mod 4))],vga,10,9,113,28+i);
-      
-      waitretrace; waitretrace; waitretrace;
-      waitretrace; waitretrace; waitretrace;
-  end;
-  putshape (shape3array[60],vga,10,9,113,28);
-  fillblock(10,155,300,185,0,vga);
-  outtextxy('I''M LUCKY I WORE MAGNETIC SHOES.',10,155,12,0,vga,false);
-  outtextxy('Hmmmm.  SOMEONE LEFT THE AIR-LOCK',10,165,12,0,vga,false);
-  outtextxy('        UNLOCKED.  STRANGE.',10,175,12,0,vga,false);
-  pauseawhile(600);
-  clearkeyboardbuffer;
-  putpixel(110,20,10,vga);
-  putpixel(110,22,10,vga);
-  fillblock(111,14,123,29,0,vga);
-  fillblock(10,155,300,185,0,vga);
-  outtextxy('I HOPE THIS ISN''T A TRAP.',10,155,9,0,vga,false);
-  outtextxy('I WISH I HAD SOME FORM OF ',10,165,9,0,vga,false);
-  outtextxy('        WEAPON.',10,175,9,0,vga,false);
-  pauseawhile(600);
-  clearkeyboardbuffer;
-  fade;
-  cls(0,vga);
-  blockmove(179,41,287,134,vaddr,10,10,vga);
-  for i:=0 to 5 do begin
-      star_x[i]:=37+random(70);
-      star_y[i]:=18+random(56);
-      putpixel(star_x[i],star_y[i],15,vga);
-  end;
-  outtextxy('WOW!! A GLASS-WALLED AIR-LOCK.',10,135,9,0,vga,false);
-  unfade;
-  pauseawhile(500);
-  clearkeyboardbuffer;
-  fillblock(10,135,300,185,0,vga);
-  outtextxy('NOW WHERE ARE WE GOING?',5,125,9,0,vga,false);
-  outtextxy('I GUESS THE PLANET EERM.',5,135,9,0,vga,false);
-  outtextxy('WHAT AN ODD NAME.',5,145,9,0,vga,false);
-  outtextxy('AND WHY AM I TALKING TO MYSELF?',5,155,10,0,vga,false);
-  outtextxy('ANYWAY I JUST WANT TO GO HOME',5,165,9,0,vga,false);
-  outtextxy('       AND SLEEP.',5,175,9,0,vga,false);
+    vmwPutSprite(shape_table[TOM_SHAPE],113,52,game_state->virtual_1);
 
-  clearkeyboardbuffer;
-  j:=0;
-  while (j<2400) and (not(keypressed)) do begin
-        inc(j);
-        for i:=0 to 5 do begin
-            putpixel(star_x[i],star_y[i],0,vga);
-            inc(star_x[i]);
-            if star_x[i]>107 then begin
-               star_x[i]:=37;
-               star_y[i]:=18+random(56);
-            end;
-            putpixel(star_x[i],star_y[i],15,vga);
-        end;
-        waitretrace; waitretrace;waitretrace;
+    vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
+   
+    vmwTextXY("Hmmmm... STUPID TRACTOR BEAM.",10,155,10,0,0,tb1_font,virtual_1);
+    vmwTextXY("I GUESS I'D BETTER GO SHUT IT OFF.",10,165,10,0,0,tb1_font,virtual_1);
+    vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
+  
+    pauseawhile(8);
+    vmwClearKeyboardBuffer();
 
-  end;
+    for(i=24;i>=0;i--) {
+      vmwArbitraryCrossBlit(game_state->virtual_2,0,3,171,114,
+			    game_state->virtual_1,10,10);
+      vmwPutSprite(shape_table[TOM_SHAPE+(4*(i% 4))],113,28+i,game_state->virtual_1);
+      vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
+      usleep(50000);
+    }
+    vmwPutSprite (shape_table[TOM_SHAPE],113,28,game_state->virtual_1);
+    vmwDrawBox(10,155,290,30,0,game_state->virtual_1);
+    vmwTextXY("I'M LUCKY I WORE MAGNETIC SHOES.",10,155,12,0,0,tb1_font,game_state->virtual_1);
+    vmwTextXY("Hmmmm.  SOMEONE LEFT THE AIR-LOCK",10,165,12,0,0,tb1_font,game_state->virtual_1);
+    vmwTextXY("        UNLOCKED.  STRANGE.",10,175,12,0,0,tb1_font,game_state->virtual_1);
+    vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
+    pauseawhile(8);
+    vmwClearKeyboardBuffer();
+   
+    vmwPutPixel(110,20,10,game_state->virtual_1);
+    vmwPutPixel(110,22,10,game_state->virtual_1);
+    vmwDrawBox(111,14,12,14,0,game_state->virtual_1);
+    vmwDrawBox(10,155,290,30,0,game_state->virtual_1);
+    vmwTextXY("I HOPE THIS ISN'T A TRAP.",10,155,9,0,0,tb1_font,game_state->virtual_1);
+    vmwTextXY("I WISH I HAD SOME FORM OF ",10,165,9,0,0,tb1_font,game_state->virtual_1);
+    vmwTextXY("        WEAPON.",10,175,9,0,0,tb1_font,game_state->virtual_1);
+    vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
+    pauseawhile(7);
+    vmwClearKeyboardBuffer();
+  
+    vmwClearScreen(game_state->virtual_1,0);
+   
+    vmwArbitraryCrossBlit(game_state->virtual_2,179,41,108,93,
+			  game_state->virtual_1,10,10);
+   
+    for(i=0;i<6;i++) {
+      star_x[i]=37+rand()%70;
+      star_y[i]=18+rand()%56;
+      vmwPutPixel(star_x[i],star_y[i],15,game_state->virtual_1);
+    }
 
-  if keypressed then ch:=readkey;
-
-  fade;
-  cls(0,vga);
-  unfade;
-end;
-    */
+    vmwTextXY("WOW!! A GLASS-WALLED AIR-LOCK.",10,135,9,0,0,tb1_font,game_state->virtual_1);
+    vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
+    pauseawhile(5);
+    vmwClearKeyboardBuffer();
+    
+    vmwDrawBox(10,135,290,50,0,game_state->virtual_1);
+    vmwTextXY("NOW WHERE ARE WE GOING?",5,125,9,0,0,tb1_font,game_state->virtual_1);
+    vmwTextXY("I GUESS THE PLANET EERM.",5,135,9,0,0,tb1_font,game_state->virtual_1);
+    vmwTextXY("WHAT AN ODD NAME.",5,145,9,0,0,tb1_font,game_state->virtual_1);
+    vmwTextXY("AND WHY AM I TALKING TO MYSELF?",5,155,10,0,0,tb1_font,game_state->virtual_1);
+    vmwTextXY("ANYWAY I JUST WANT TO GO HOME",5,165,9,0,0,tb1_font,game_state->virtual_1);
+    vmwTextXY("       AND SLEEP.",5,175,9,0,0,tb1_font,game_state->virtual_1);
+    vmwClearKeyboardBuffer();
+   
+    j=0;
+    while ((j<1000) && (!(vmwGetInput()))) {
+       j++;
+       for(i=0;i<6;i++) {
+	  vmwPutPixel(star_x[i],star_y[i],0,game_state->virtual_1);
+          star_x[i]++;
+          if (star_x[i]>107) {
+	     star_x[i]=37;
+             star_y[i]=18+rand()%56;
+	  }
+          vmwPutPixel(star_x[i],star_y[i],15,game_state->virtual_1);
+       }
+       vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
+       usleep(30000);
+    }
+   
+    vmwClearKeyboardBuffer();    
 }
 

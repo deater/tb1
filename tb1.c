@@ -1,6 +1,6 @@
 /****************************************************************\
 \*    TOM BOMBEM AND THE INVASION OF THE INANIMATE_OBJECTS      */
-/*                    version 2.9.11      20 October 2000	*\
+/*                    version 2.9.12      3 November 2000	*\
 \*        by Vince Weaver       weave@eng.umd.edu               */
 /*                                                              *\
 \*  Originally written in Pascal and x86 assembly for DOS       */
@@ -10,7 +10,7 @@
 \*          This source is released under the GPL               */
 /****************************************************************/
 
-#define TB1_VERSION "2.9.11"
+#define TB1_VERSION "2.9.12"
 
 #include <stdio.h>
 #include <stdlib.h>   /* for calloc */
@@ -326,6 +326,11 @@ int main(int argc,char **argv)
     while (1) {
           /* If virtual_3 was over-written, re-load it */
        if (reloadpic) {
+          if ((game_state->sound_possible) && (game_state->music_enabled)) {
+             loadSound(tb1_data_file("music/weave1.mod",game_state->path_to_data));
+	  }
+       
+    
           grapherror=vmwLoadPicPacked(0,0,virtual_3,1,1,
 				      tb1_data_file("tbomb1.tb1",
 						    game_state->path_to_data),

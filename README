@@ -53,15 +53,15 @@ Then a "make" should compile it.
  2.0  System Requirements
 ---------------------------------------------------------------------
       Reccommended Minimum:
-           486 66Mhz/ 8MB Ram, 1Meg disk space
+           486 66Mhz/ 8MB Ram, 2Meg disk space
 	   
       The game was originally written on a 386 33Mhz under DOS.
-      It has been tested to run fine on my 486 75Mhz laptop
-         w 12Mb ram and 8bpp display.
-	 
-      The game has not been verified to run on 64 bit or big-endian machines.
-
-
+      
+      Currently tested to work on the following targets:
+         + Linux 2.4.x  K6-2+ 450Mhz  160MB RAM  (sdl/curses)
+	 + Linux 2.2.x  486 75Mhz  12MB RAM  (sdl/curses)
+	 + Solaris 7, SMP UltraSPARC   (curses)
+      
  3.0  STARTING THE GAME
 ---------------------------------------------------------------------
    

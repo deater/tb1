@@ -15,25 +15,26 @@ void playthegame(tb1_state *game_state)
     char *hiname;
    
     if (game_state->level==0) {
-       littleopener(game_state);
+       LevelOneLittleOpener(game_state);
        game_state->shields=12;
        game_state->score=0;
        game_state->level++;
     }
    
     if (game_state->level==1) {
-       levelone(game_state);
+       LevelOneEngine(game_state);
        if (game_state->level==2) littleopener2(game_state);
     }
     if (game_state->level==2) {
        leveltwoengine(game_state);
+       if (game_state->level==3) LevelThreeLittleOpener(game_state);
     }
     if (game_state->level==3) {
-       /*littleopener3();
-       levelthree();*/
+       LevelThreeEngine(game_state);
+	  
     }
     if (game_state->level==4) {
-//       leveltwoengine(&level,&shields,&score);
+       leveltwoengine(game_state);
     }
     coolbox(70,85,170,110,1,game_state->virtual_1);
     vmwTextXY("GAME OVER",84,95,4,7,0,

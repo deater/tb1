@@ -1,5 +1,8 @@
 /*
  Level 1 Engine Code for Tom Bombem
+ * 
+ * November 2000 -- Changed the inner workings of engine.
+ *                  Now somewhat different than original feel.
  */
 
     /* The Includes */
@@ -21,7 +24,7 @@
 #include "graphic_tools.h"
 
     /* Define this to get a frames per second readout */
-/* #define DEBUG_ON */
+#define DEBUG_ON 
 
     /* The sounds */
   
@@ -35,6 +38,10 @@
 #define SND_OW     6
 #define SND_ZRRP   7
 
+
+#define NUM_ENEMIES  5
+#define NUM_MISSILES 2
+
 struct enemyinfo {
   int x,y;
   int kind;
@@ -44,32 +51,67 @@ struct enemyinfo {
   int hitsneeded;
 };
 
-struct bulletinfo {
+struct missileinfo {
   int out,x,y;
 };
 
     /* Define how many sound effects there are */
 
 
-    /* o/~ more structures o/~ */
-struct enemyinfo enemy[5];
-struct bulletinfo bullet[3];
+    /* Global Variables*/
+struct enemyinfo enemy[NUM_ENEMIES];
+struct missileinfo missile[NUM_MISSILES];
 struct timeval timing_info;
 struct timezone dontcare;
 
+int enemies_out;
+
+#define LEVEL_OVER 9
+
+#define STANDARD 0
+#define DIAGONAL 1
+#define DIAGONAL_NO_WAIT 2
+#define WIGGLING 3
+#define RAINING  4
+
+#define SCROLL_A_BIT 7
+#define BEFORE_BOSS   10
+#define BOSS_BEHAVIOR 11
+#define AFTER_BOSS    12
+#define BOSS_DESTROYED 13
+#define INVISIBLE_WAVE 15
+#define THE_END 100
+
+typedef struct {
+   int enemy_type;
+   int how_many;
+}level_one_behavior_t;
+
     /* This seemed like a good idea to modularize things */
-int level_one_wave_behavior[]=
-    {0,0,0,0,0, 1,1,1,1,1,
-     1,1,2,2,2, 2,2,2,2,2,
-     3,3,3,3,3, 3,3,3,3,3,
-     2,2,2,2,2, 2,3,3,3,3,
-     3,3,3,3,3, 3,1,1,1,1,
-     1,3,3,3,3, 3,3,3,3,3,
-     3,2,2,2,2, 2,2,2,2,2,
-     2,2,2,2,2, 2,1,1,1,1,
-     1,1,1,3,3, 3,2,2,2,2,
-     2,2,2,2,2, 2,1,1,1,1,
-     1,4,4,4,4};
+level_one_behavior_t level_one_wave_behavior[]=
+    {{STANDARD,5},
+     {STANDARD,5},
+     {DIAGONAL,5},
+     {DIAGONAL_NO_WAIT,5},
+     {WIGGLING,8},
+     {RAINING,10},
+     {WIGGLING,6},
+     {RAINING,12},
+     {DIAGONAL,5},
+     {RAINING,10},
+     {WIGGLING,16},
+     {DIAGONAL,5},
+     {DIAGONAL_NO_WAIT,5},
+     {RAINING,3},
+     {WIGGLING,10},
+     {DIAGONAL,5}, 
+     {SCROLL_A_BIT,100},
+     {BEFORE_BOSS,1},
+     {SCROLL_A_BIT,100},
+     {BOSS_BEHAVIOR,1},
+     {BOSS_DESTROYED,100},
+     {AFTER_BOSS,1},
+     {THE_END,1}};
 
 
 
@@ -182,154 +224,246 @@ void afterboss(tb1_state *game_state)
 
 
 
+
     /* Defines the behavior of the objects in level 1 */
-int level_one_behavior(int reset, tb1_state *game_state)
-{
-    int what,temp,whichone,need_to_pause=0;
-    static int wave=0;
-    static int saucersout=0;
+    /* Should change so it works even if NUM_ENEMIES>5 */
+int add_another_enemy(int start_of_level, 
+		      tb1_state *game_state) {
+
+    int what_type,i,need_to_pause=0;
+    static int wave_pointer=0;
+    static int wait_full_wave=0;
+    static int enemies_left_in_wave=0;
+    static int fighting_boss=0;
    
-    if (reset) { 
-       wave=0;
-       saucersout=0;
+       /* If re-initing, then clear some variables */
+       /* If we don't do this, the static variables won't get reset */
+       /* After Level1 starts over [i.e. you die]                   */
+    if (start_of_level) { 
+       wave_pointer=0;
+       enemies_out=0;
+       enemies_left_in_wave=0;
+       fighting_boss=0;
     }
    
-    if (level_one_wave_behavior[wave]!=4) wave++;
-    saucersout--;
-    if (saucersout<0) saucersout=0;
-    if (saucersout>5) saucersout=5;
- 
-    /* **START NEW WAVE ***/
+       /* If waiting for empty, then return w/o adding any */
+    if ((wait_full_wave) && (enemies_out)) return 0;
+    else {
+       wait_full_wave=0;
+    }
+   
+//    if (level_one_wave_behavior[behavior_pointer]!=BOSS_BEHAVIOR) behavior_pointer++;
+   
+       /* In order to be called, an enemy was destroyed */
 
-    switch(level_one_wave_behavior[wave]) {
+       /* Are these sanity checks needed? */
+    if (enemies_out<0) {
+       enemies_out=0;
+       printf("Blargh 0\n");
+    }
+    if (enemies_out>NUM_ENEMIES) {
+       enemies_out=NUM_ENEMIES;
+       printf("Blargh 7\n");
+    }
+   
+    if (enemies_left_in_wave<=0) {
+       wave_pointer++;
+       enemies_left_in_wave=level_one_wave_behavior[wave_pointer].how_many;
+    }
+   
+       /* Move on to next behvior */
+
+    switch(level_one_wave_behavior[wave_pointer].enemy_type) {
        
        /* STANDARD */
-     case 0: if (saucersout==0) {
-       saucersout=5;
-       what=(3+rand()%8);
-       for(temp=0; temp<5; temp++) { 
-          enemy[temp].kind=what;
-          enemy[temp].x=0;
-          enemy[temp].y=0;
-          enemy[temp].xspeed=5;
-          enemy[temp].x=temp*20;
-          enemy[temp].minx=(temp*20);
-          enemy[temp].maxx=(temp*20)+120;
-          enemy[temp].boundarycheck=1;
-          enemy[temp].yspeed=10;
-          enemy[temp].out=1;
-          enemy[temp].exploding=0;
-          enemy[temp].hitsneeded=1;
-          enemy[temp].dead=0;
+       /* That is, 5 enemies bouncing back/forth, gradually lowering*/
+    case STANDARD: 
+          /* We add all 5 at once, so there better not be anything else out */
+       if (enemies_out==0) {
+          enemies_out=5;
+	  enemies_left_in_wave-=5;
+	  wait_full_wave=1;
+             /* Randomly pick what type they are */
+	  what_type=(2+rand()%8);
+       
+	  for(i=0; i<5; i++) { 
+             enemy[i].kind=what_type;
+             enemy[i].x=i*20;                /* Space them in one line */
+             enemy[i].y=0;
+             enemy[i].xspeed=5;
+             enemy[i].minx=(i*20);           /* Make sure they "bounce" */
+             enemy[i].maxx=(i*20)+120;       /* Properly even when some */
+             enemy[i].boundarycheck=1;       /* Destroyed */
+             enemy[i].yspeed=10;
+             enemy[i].out=1;
+             enemy[i].exploding=0;
+             enemy[i].hitsneeded=1;
+             enemy[i].dead=0;
+	  }
        }
-     } break;
+       break;
+       
        /* *FALLING STRAIGHT* */
-     case 3:
-       for (temp=0; temp<5;temp++)
-           if (!enemy[temp].out) {
-	      enemy[temp].kind=rand()%8+3;
-              enemy[temp].x=rand()%200+1;
-              enemy[temp].y=0;
-              enemy[temp].xspeed=0;
-              enemy[temp].minx=enemy[temp].x;
-              enemy[temp].maxx=enemy[temp].x;
-              enemy[temp].boundarycheck=1;
-              enemy[temp].yspeed=5+(wave/40);
-              enemy[temp].out=1;
-              enemy[temp].exploding=0;
-              enemy[temp].hitsneeded=1;
-              enemy[temp].dead=0;
-              saucersout++;
-	  } break;
-    
+       /* That is, raining down from above */
+    case RAINING:
+          /* Fill up all empty slots?  Interesting behavior */
+       for(i=0; i<5;i++) {
+          if ((!enemy[i].out) && ( (rand()%5)==3) ){
+	     enemies_left_in_wave--;
+	     enemy[i].kind=rand()%8+2;
+             enemy[i].x=rand()%200+1;
+             enemy[i].y=0;
+             enemy[i].xspeed=0;
+             enemy[i].minx=enemy[i].x;   /* Hacky way of making sure they */
+             enemy[i].maxx=enemy[i].x;   /* Fall vertically               */
+             enemy[i].boundarycheck=1;
+             enemy[i].yspeed=5+(wave_pointer/8); /* Fall faster as game */
+	                                              /*      goes on */
+             enemy[i].out=1;
+             enemy[i].exploding=0;
+             enemy[i].hitsneeded=1;
+             enemy[i].dead=0;
+             enemies_out++;
+	  }
+       }
+       break;
+       
        /* *FALLING GRADUALLY SIDEWAYS* */
-     case 2:
-       for(temp=0;temp<5;temp++)
-          if (!enemy[temp].out) {
-	     enemy[temp].kind=rand()%8+3;
-             enemy[temp].y=0;
-             enemy[temp].xspeed=5;
-             enemy[temp].minx=rand()%100;
-             enemy[temp].maxx=rand()%100+120;
-             enemy[temp].x=enemy[temp].minx;
-             enemy[temp].boundarycheck=0;
-             enemy[temp].yspeed=1;
-             enemy[temp].out=1;
-             enemy[temp].exploding=0;
-             enemy[temp].hitsneeded=1;
-             enemy[temp].dead=0;
-	     saucersout++;
-	  } break;
+       /* AKA Wiggling back and forth independently */
+    case WIGGLING:
+       for(i=0;i<5;i++) {
+          if (!enemy[i].out) {
+	     enemies_left_in_wave--;
+	     enemy[i].kind=rand()%8+2;
+             enemy[i].y=0;
+             enemy[i].xspeed=5;
+             enemy[i].minx=rand()%100;     /* Set a random range to "wiggle */
+             enemy[i].maxx=rand()%100+120; 
+             enemy[i].x=enemy[i].minx;
+             enemy[i].boundarycheck=0;
+             enemy[i].yspeed=1;            /* Constantly Fall */
+             enemy[i].out=1;
+             enemy[i].exploding=0;
+             enemy[i].hitsneeded=1;
+             enemy[i].dead=0;
+	     enemies_out++;
+	  }
+       }
+       break;
     
        /**ZIG-ZAG**/
-     case 1: if (!saucersout) {
-       saucersout=5;
-       whichone=rand()%8+3;
-       for(temp=0;temp<5;temp++)  
-	  if (!enemy[temp].out) {
-             enemy[temp].kind=whichone;
-             enemy[temp].y=temp*10;
-             enemy[temp].xspeed=5;
-             enemy[temp].minx=0;
-             enemy[temp].maxx=220;
-             enemy[temp].x=temp*20;
-             enemy[temp].boundarycheck=0;
-             enemy[temp].yspeed=1;
-             enemy[temp].out=1;
-             enemy[temp].exploding=0;
-             enemy[temp].hitsneeded=1;
-             enemy[temp].dead=0;
-	  } 
-	} break;
+       /* That is, fall in a diagonal formation */
+    case DIAGONAL:
+         if (!enemies_out) wait_full_wave=1;
+    case DIAGONAL_NO_WAIT:
+          /* Another one of these that we need all to be empty */
+       if (!enemies_out) {
+          enemies_out=5;
+	  enemies_left_in_wave-=5;
+          what_type=rand()%8+2;
+          for(i=0;i<5;i++) { 
+	     if (!enemy[i].out) {
+                enemy[i].kind=what_type;
+                enemy[i].x=i*20;             /* Nice diagonal pattern */
+		enemy[i].y=i*10;
+                enemy[i].xspeed=5;
+                enemy[i].minx=0;
+                enemy[i].maxx=220;
+                enemy[i].boundarycheck=0;
+                enemy[i].yspeed=1;           /* Gradually fall */
+                enemy[i].out=1;
+                enemy[i].exploding=0;
+                enemy[i].hitsneeded=1;
+                enemy[i].dead=0;
+	     }
+	  }
+       }
+       break;
+       
+    case SCROLL_A_BIT:
+        enemies_left_in_wave--;
+        break;
+       
+     case BEFORE_BOSS:
+        beforeboss(game_state);
+        enemies_left_in_wave--;
+          if ((game_state->sound_possible) &&(game_state->music_enabled)) {
+	     loadSound(tb1_data_file("music/boss1.mod",game_state->path_to_data));
+	     playSound();
+	  }
+       
+        break;
+       
+     case BOSS_DESTROYED:
+        enemies_left_in_wave--;
+        if ((enemies_left_in_wave>25) &&  ( !(enemies_left_in_wave%3)) &&
+       	    (game_state->sound_possible)&&(game_state->sound_enabled)) {
+	     playGameFX(SND_KAPOW);
+	    }
+            break;
+
+       
+     case AFTER_BOSS:
+        stopSound();
+        afterboss(game_state);
+        enemies_left_in_wave--;
+        break;
+         
+     case THE_END:
+        return LEVEL_OVER;
        
        /* Beginning of Boss */
-      case 4:
-       if (!saucersout) {
-          beforeboss(game_state);
-	  need_to_pause=1;
-          enemy[0].kind=15;
-          enemy[1].kind=15;
-          enemy[2].kind=14;
-          for(temp=0;temp<3;temp++) {
-             enemy[temp].x=(temp*20)+10;
-             enemy[temp].y=0;
-             enemy[temp].xspeed=5;
-             enemy[temp].minx=0;
-             enemy[temp].maxx=220;
-             enemy[temp].boundarycheck=1;
-             enemy[temp].yspeed=0;
-             enemy[temp].out=1;
-             enemy[temp].exploding=0;
-             enemy[temp].hitsneeded=3;
-             enemy[temp].dead=0;
-             saucersout++;
+    case BOSS_BEHAVIOR:
+       if ((!enemies_out) && (!fighting_boss)) {
+	  fighting_boss=1;
+          enemy[0].kind=14;
+          enemy[1].kind=14;
+          enemy[2].kind=13;
+          for(i=0;i<3;i++) {
+             enemy[i].x=(i*20)+10;
+             enemy[i].y=0;
+             enemy[i].xspeed=5;
+             enemy[i].minx=0;
+             enemy[i].maxx=220;
+             enemy[i].boundarycheck=1;
+             enemy[i].yspeed=0;
+             enemy[i].out=1;
+             enemy[i].exploding=0;
+             enemy[i].hitsneeded=5;
+             enemy[i].dead=0;
+             enemies_out++;
 	  }
        } break;
      default: break;
     }
      
+    if (fighting_boss) {
+       
        /* Objects Cast off by the Boss */
-    if (enemy[1].kind==15) {
-          /* Detect if Level One is Over */
-       if ((enemy[0].dead) && (enemy[1].dead) && (enemy[2].dead)) return 9;
-          for(temp=3;temp<5;temp++) {
-             saucersout++;
-             if ((!enemy[temp].out) && (enemy[temp-3].out)) {
-	        enemy[temp].kind=rand()%8+3;
-                enemy[temp].x=enemy[temp-3].x;
-                enemy[temp].y=20;
-                enemy[temp].xspeed=0;
-                enemy[temp].minx=enemy[temp].x;
-                enemy[temp].maxx=enemy[temp].x;
-                enemy[temp].boundarycheck=0;
-                enemy[temp].yspeed=4;
-                enemy[temp].out=1;
-                enemy[temp].exploding=0;
-                enemy[temp].hitsneeded=1;
-                enemy[temp].dead=0;
-	     }
+       /* Detect if Level One is Over */
+       if ((enemy[0].dead) && (enemy[1].dead) && (enemy[2].dead)) {       
+	  enemies_left_in_wave--;
+	  fighting_boss=0;
+       }
+       else  
+       for(i=3;i<5;i++) {
+          if ((!enemy[i].out) && (enemy[i-3].out)) {
+	     enemies_out++;
+	     enemy[i].kind=rand()%8+2;
+             enemy[i].x=enemy[i-3].x;
+             enemy[i].y=20;
+             enemy[i].xspeed=0;
+             enemy[i].minx=enemy[i].x;
+             enemy[i].maxx=enemy[i].x;
+             enemy[i].boundarycheck=0;
+             enemy[i].yspeed=4;
+             enemy[i].out=1;
+             enemy[i].exploding=0;
+             enemy[i].hitsneeded=1;
+             enemy[i].dead=0;
 	  }
        }
+    }
     return need_to_pause;
 }
  
@@ -337,18 +471,19 @@ int level_one_behavior(int reset, tb1_state *game_state)
 
 
     /* The Main Level One */
-void levelone(tb1_state *game_state) {
+void LevelOneEngine(tb1_state *game_state) {
    
     int ch=0;
     int i,j,grapherror;
     char tempst[300];
-    int itemp,whatdelay=1,levelover=0;
+    int itemp,levelover=0;
     int shipx=36,shipadd=0,shipframe=1;
     vmwSprite *bigship1,*bigship2,*bigship3;
     vmwSprite *shapetable[20];
-    long oldsec,oldusec,time_spent;
+    long oldsec,oldusec,time_spent=1;
     int howmuchscroll=0;
-    int speed_factor=1,game_paused=0;
+    int game_paused=0;
+    int done_waiting=0;
     
     vmwVisual *virtual_1,*virtual_2;
     vmwFont *tb1_font;
@@ -362,7 +497,7 @@ void levelone(tb1_state *game_state) {
     game_state->begin_score=game_state->score;
     game_state->begin_shields=game_state->shields;
    
-       /* Load Sprites */
+       /* Load Ship Sprites */
     grapherror=vmwLoadPicPacked(0,0,virtual_1,1,1,
 	       tb1_data_file("level1/ships.tb1",game_state->path_to_data),
 	       game_state->graph_state);
@@ -371,29 +506,28 @@ void levelone(tb1_state *game_state) {
     bigship2=vmwGetSprite(0,32,48,30,virtual_1);
     bigship3=vmwGetSprite(0,64,48,30,virtual_1);
    
+       /* Load Inanimate Object Shapes */
     grapherror=vmwLoadPicPacked(0,0,virtual_1,0,1,
 	       tb1_data_file("level1/tbshapes.tb1",game_state->path_to_data),
-				game_state->graph_state);
+	       game_state->graph_state);
    
     for(j=0;j<2;j++) 
        for(i=0;i<10;i++) 
-          shapetable[(j*10)+i]=vmwGetSprite(1+(i*19),1+(j*19),18,18,
-		       virtual_1);
+          shapetable[(j*10)+i]=vmwGetSprite(1+(i*19),1+(j*19),18,18,virtual_1);
 
-       /* Set up initial Enemy Structs */
-    for(i=0;i<5;i++) {
+       /* Set up initial system conditions [ie, no enemies] */
+    for(i=0;i<NUM_ENEMIES;i++) {
        enemy[i].exploding=0;
        enemy[i].out=0;
        enemy[i].dead=0;
     }
-    for(i=0;i<2;i++) {
-       bullet[i].out=0;  
-       bullet[i].x=0; 
-       bullet[i].y=0;
+    for(i=0;i<NUM_MISSILES;i++) {
+       missile[i].out=0;  
+       missile[i].x=0; 
+       missile[i].y=0;
     }
    
-           /* Draw the Little Box announcing the Start of the Level */
-
+       /* Draw the Little Box announcing the Start of the Level */
     vmwDrawBox(0,0,320,200,0,virtual_1);
     coolbox(70,85,240,120,1,virtual_1);
     vmwTextXY("   LEVEL ONE:",84,95,4,7,0,tb1_font,virtual_1);
@@ -406,8 +540,8 @@ void levelone(tb1_state *game_state) {
 
     vmwFlipVirtual(virtual_1,virtual_2,320,200);
     sprintf(tempst,"%d",game_state->level);
-    vmwDrawBox(251,52,63,7,0,virtual_2);
-    vmwTextXY(tempst,307,51,12,0,0,tb1_font,virtual_2);
+//    vmwDrawBox(251,52,62,7,0,virtual_1);
+    vmwTextXY(tempst,307,51,12,0,0,tb1_font,virtual_1);
 
        /* Clear the screen and draw the stars */
     vmwDrawBox(0,0,320,400,0,virtual_2);
@@ -415,22 +549,29 @@ void levelone(tb1_state *game_state) {
        vmwPutSprite(shapetable[11],rand()%238,rand()%380,virtual_2);
        vmwPutSprite(shapetable[12],rand()%238,rand()%380,virtual_2);
     }
+       /* Initialize shield state */
     change_shields(game_state);
    
        /* Initiate some last variables */
-    level_one_behavior(1,game_state);
+    add_another_enemy(1,game_state);
     pauseawhile(5); 
+   
+       /* Get time values for frame-limiting */
     gettimeofday(&timing_info,&dontcare);
-    oldsec=timing_info.tv_sec; oldusec=timing_info.tv_usec;
+    oldsec=timing_info.tv_sec; 
+    oldusec=timing_info.tv_usec;
 
        /* MAIN GAME LOOP */
     while(!levelover) {
        ch=0;
           /* Scroll the Stars */
-       if (speed_factor>1) howmuchscroll-=speed_factor; 
-       else howmuchscroll--; 
+          /* We have a 240x400 field of stars */
+       howmuchscroll--; 
        if (howmuchscroll<0) howmuchscroll=399;
 
+          /* If scroll>199, then we have to split into two copies */
+          /* One from scroll to 400 */
+          /* Another from 0-(scroll-200) */
        if (howmuchscroll>199) {
 	  vmwArbitraryCrossBlit(virtual_2,0,howmuchscroll,240,
 				400-howmuchscroll,
@@ -443,13 +584,25 @@ void levelone(tb1_state *game_state) {
 				virtual_1,0,0);
        }
 
+       
+          /* Add new enemies and move to next wave if needed */
+       if (enemies_out<NUM_ENEMIES) {
+	  if (add_another_enemy(0,game_state)==LEVEL_OVER) {
+	     game_state->level=2;
+	     levelover=1;
+	  }
+       }
+       
 	 
-          /* Check for Collisions */
-       for(i=0;i<5;i++) {
+	  
+          /* See if the enemies have hit anything/scrolled off screen */
+       for(i=0;i<NUM_ENEMIES;i++) {
           if (!enemy[i].dead) {
-             for(itemp=0;itemp<2;itemp++) {
-	        if (bullet[itemp].out) 
-                   if (collision(bullet[itemp].x,bullet[itemp].y,10,10,
+	     
+                /* Check to see if our missiles have hit any enemies */
+             for(itemp=0;itemp<NUM_MISSILES;itemp++) {
+	        if (missile[itemp].out) { 
+                   if (collision(missile[itemp].x,missile[itemp].y,10,10,
                        enemy[i].x,enemy[i].y,9,9)) {
                       if ((game_state->sound_possible)&&(game_state->sound_enabled)) 
 			 playGameFX(SND_KAPOW);
@@ -458,70 +611,68 @@ void levelone(tb1_state *game_state) {
                       else enemy[i].dead=0;
                       enemy[i].exploding=1;
                       enemy[i].explodeprogress=0;
-                      bullet[itemp].out=0;
+                      missile[itemp].out=0;
                       game_state->score+=10;
                       changescore(game_state);
 		   }
-             }
+		}
+	     }
+	     
+	        /* While we are at it, see if scrolled off screen */
+	     if (enemy[i].y>179) {
+		enemy[i].out=0;
+		enemy[i].dead=1;
+	        enemies_out--;
+	     }
 	  }
        }
        
           /* Explode the things that are exploding */
-       for(i=0;i<5;i++) {
+       for(i=0;i<NUM_ENEMIES;i++) {
           if (enemy[i].exploding) {
              enemy[i].explodeprogress++;
-             if (enemy[i].explodeprogress<=5)
-	        vmwPutSprite(shapetable[enemy[i].explodeprogress+14],
-                             enemy[i].x,enemy[i].y,
-			     virtual_1);
-	     else if (enemy[i].dead) {
+             if (enemy[i].explodeprogress<10)
+	        vmwPutSprite(shapetable[(enemy[i].explodeprogress/2)+15],
+                             enemy[i].x,enemy[i].y,virtual_1);
+	     else if (enemy[i].dead) { /* Handle for objects w hitpoints >1 */
                 enemy[i].out=0;
                 enemy[i].exploding=0;
-                game_paused=level_one_behavior(0,game_state);
+		enemies_out--;
 	     }
              else enemy[i].exploding=0;
 	  }
        }
+       
           /* Move the Missiles */
-       for(i=0;i<2;i++) { 
-          if (bullet[i].out) {
-             if (speed_factor>1) bullet[i].y-=(5*speed_factor); 
-	     else bullet[i].y-=5;
-             if (bullet[i].y<5) bullet[i].out=0;
-             else vmwPutSprite(shapetable[0],
-			       bullet[i].x,bullet[i].y,
+       for(i=0;i<NUM_MISSILES;i++) { 
+          if (missile[i].out) {
+	     missile[i].y-=5;
+             if (missile[i].y<5) missile[i].out=0;
+             else vmwPutSprite(shapetable[0],missile[i].x,missile[i].y,
 			       virtual_1);
 	  }
        }
        
           /* MOVE ENEMIES */
-       for(i=0;i<5;i++) {
+       for(i=0;i<NUM_ENEMIES;i++) {
           if ((enemy[i].out) && (!enemy[i].dead)) {
-	     vmwPutSprite(shapetable[enemy[i].kind-1],
-			  enemy[i].x,enemy[i].y,
-			  virtual_1);
-	     if (speed_factor==1) enemy[i].x+=enemy[i].xspeed;
-	     else enemy[i].x+=(enemy[i].xspeed*speed_factor);
-                /* Check Position */
-	                     /* Check Position */
+	     vmwPutSprite(shapetable[enemy[i].kind],
+			  enemy[i].x,enemy[i].y,virtual_1);
+	        /* Move in X direction */
+	     enemy[i].x+=enemy[i].xspeed;
+                
+	        /* Move in Y direction */
              if (!enemy[i].boundarycheck) { 
-	        if (speed_factor>1) enemy[i].y+=(enemy[i].yspeed*speed_factor);
-                else enemy[i].y+=enemy[i].yspeed;
+                enemy[i].y+=enemy[i].yspeed;
 	     }
+	        /* Move down if an oscilating type */
 	     if ((enemy[i].x<=enemy[i].minx) || (enemy[i].x>=enemy[i].maxx)) {
                 enemy[i].xspeed=-enemy[i].xspeed;
-                if (speed_factor>1) enemy[i].x+=(enemy[i].xspeed*speed_factor);
-	        else enemy[i].x+=enemy[i].xspeed;
-                if (speed_factor>1) enemy[i].y+=(enemy[i].yspeed*speed_factor); 
-	        else enemy[i].y+=enemy[i].yspeed;
+	        enemy[i].x+=enemy[i].xspeed;
+	        enemy[i].y+=enemy[i].yspeed;
 	     }
-                /* Too Low */
 
-                /* Too Low */
-             if (enemy[i].y>179) {
-                enemy[i].out=0;
-                game_paused=level_one_behavior(0,game_state);
-	     }
+	        /* See if colliding with spaceship */
              if (enemy[i].y>140) {
                 if (collision(shipx,165,24,15,enemy[i].x,enemy[i].y,9,9)) {
                    if ((game_state->sound_possible)&&(game_state->sound_enabled)) 
@@ -538,12 +689,6 @@ void levelone(tb1_state *game_state) {
 	     }
 	  }
        }
-          /* See if beat the level.  Yes, bad variable name.  Oh well */
-       if (game_paused==9) {
-          afterboss(game_state);
-          game_state->level=2;
-          levelover=1;
-       }
        
           /* **READ KEYBOARD** */
        if ( (ch=vmwGetInput())!=0) {
@@ -552,7 +697,6 @@ void levelone(tb1_state *game_state) {
 	   case VMW_RIGHT: if (shipadd>=0) shipadd+=3; else shipadd=0; break;
            case VMW_LEFT: if (shipadd<=0) shipadd-=3; else shipadd=0; break;
            case VMW_F1: game_paused=1; help(game_state); break;
-           case '+': whatdelay++; if (whatdelay>25) whatdelay=25; break;
 	   case 'P': case 'p': game_paused=1; 
 	             coolbox(65,85,175,110,1,virtual_1);
 	             vmwTextXY("GAME PAUSED",79,95,4,7,
@@ -562,7 +706,6 @@ void levelone(tb1_state *game_state) {
 			usleep(30000);
 		     }
 	             break;
-	   case '-': whatdelay--; if (whatdelay<1) whatdelay=1; break;
 	   case 'S': 
 	   case 's': if (game_state->sound_possible) 
 	                game_state->sound_enabled=!(game_state->sound_enabled); break;
@@ -570,23 +713,22 @@ void levelone(tb1_state *game_state) {
 	                savegame(game_state);
 	               break;
            case ' ':  for(j=0;j<2;j++)
-	                if (!bullet[j].out) {
+	                if (!missile[j].out) {
                            if ((game_state->sound_possible)&&(game_state->sound_enabled)) 
 			      playGameFX(SND_CC);
-                           bullet[j].out=1;
-                           bullet[j].x=shipx+15;
-                           bullet[j].y=165;
+                           missile[j].out=1;
+                           missile[j].x=shipx+15;
+                           missile[j].y=165;
 		           vmwPutSprite(shapetable[0],
-				        bullet[j].x,
-					bullet[j].y,virtual_1);
+				        missile[j].x,
+					missile[j].y,virtual_1);
 		           j=3;
 			}
 	  }
        }
 
           /* **MOVE SHIP** */
-       if (speed_factor>1) shipx+=(shipadd*speed_factor); 
-       else shipx+=shipadd;
+       shipx+=shipadd;
        if (shipx<1) shipx=1;
        if (shipx>190) shipx=190;
        switch(shipframe) {
@@ -603,28 +745,32 @@ void levelone(tb1_state *game_state) {
        if (shipframe==5) shipframe=1;
        
           /* Flip Pages */
-       
+#ifdef DEBUG_ON       
+       sprintf(tempst,"%li",1000000/time_spent);
+       vmwTextXY(tempst,10,10,4,7,0,tb1_font,virtual_1);
+#endif
        vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
        
-       
-          /* Calculate how much time has passed */
-       gettimeofday(&timing_info,&dontcare);
-       time_spent=timing_info.tv_usec-oldusec;
-       if (timing_info.tv_sec-oldsec) time_spent+=1000000;
-#ifdef DEBUG_ON
-       printf("%f\n",1000000/(float)time_spent);
-#endif
           /* If time passed was too little, wait a bit */
-       while (time_spent<33000){
+          /* 33,333 would frame rate to 30Hz */
+          /* Linux with 100Hz scheduling only gives +- 10000 accuracy */
+       done_waiting=0;
+       while (!done_waiting){
+	  
 	  gettimeofday(&timing_info,&dontcare);
-	  usleep(5);
 	  time_spent=timing_info.tv_usec-oldusec;
-	  if (timing_info.tv_sec-oldsec) time_spent+=1000000;
-       }
-          /* It game is paused, don't keep track of time */
-       if (!game_paused) speed_factor=(time_spent/30000);
+	     /* Assume we don't lag more than a second */
+	     /* Seriously, if we lag more than 10ms we are screwed anyway */
+	  if (time_spent<0) time_spent+=1000000;
+	  if (time_spent<30000) usleep(100);
+	  else (done_waiting=1);
+	  
+       }              
        oldusec=timing_info.tv_usec;
        oldsec=timing_info.tv_sec;
+       
+          /* It game is paused, don't keep track of time */
+       
        if (game_paused) {
 	  gettimeofday(&timing_info,&dontcare);
 	  oldusec=timing_info.tv_usec;
@@ -636,7 +782,7 @@ void levelone(tb1_state *game_state) {
 }
 
     /* The little opener before Level 1 */
-void littleopener(tb1_state *game_state)
+void LevelOneLittleOpener(tb1_state *game_state)
 {
 
     vmwSprite *ship1,*ship2;

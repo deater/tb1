@@ -1,8 +1,8 @@
 /* "borrowed" from gltron */
 
 #ifdef SDL_MIXER_SOUND
-#include <SDL/SDL.h>
-#include <SDL/SDL_mixer.h>
+#include <SDL.h>
+#include <SDL_mixer.h>
 #endif
 
 #include "sound.h"
