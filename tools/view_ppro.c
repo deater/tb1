@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ggi/libggi.h>
-#include "../svmwgrap.h"
+#include "svmwgrap.h"
 
 ggi_visual_t vis,vaddr;
 uint white;

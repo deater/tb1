@@ -19,8 +19,8 @@
 #include <sys/time.h>
 
 #include <ggi/libggi.h>
-#include "../svmwgrap.h"
-#include "../gtblib.h"
+#include "svmwgrap.h"
+#include "tblib.h"
 
     /* Exported Global Variables */
 ggi_visual_t vis,vaddr,vaddr2;
@@ -37,13 +37,6 @@ char path_to_data[256];
 
 struct timeval time_info;
 struct timezone dontcare;
-
-/*----------------*/
-
-int game_map[12][200];
-int max_x,max_y,u_x,u_y,x_pos=0,y_pos=0,x,y;
-char tempst[40];
-
 
     /* Setup the Graphics */
 int setup_graphics(int force_8bpp)
@@ -195,7 +188,7 @@ int main(int argc,char **argv)
     srandom(time(NULL));
    
        /* Load the tom bombem font */
-    tb1_font=LoadVMWFont("../data/tbfont.tb1",8,16,256);
+    tb1_font=LoadVMWFont(tb1_data_file("tbfont.tb1",(char *)tempst),8,16,256);
    
        /* Setup Graphics */
     if (setup_graphics(force_8bpp)==2) {   
@@ -217,36 +210,58 @@ int main(int argc,char **argv)
     
         Load the title screen */
     grapherror=GGILoadPicPacked(0,0,vis,1,1,
-				"../data/tbomb1.tb1",
+				tb1_data_file("tbomb1.tb1",(char *)tempst),
 			        (ggi_color *)&eight_bit_pal,
 				(ggi_pixel *)&tb1_pal,color_depth); 
     grapherror=GGILoadPicPacked(0,0,vaddr2,1,1,
-				"../data/tbomb1.tb1",
+				tb1_data_file("tbomb1.tb1",(char *)tempst),
 			        (ggi_color *)&eight_bit_pal,
 			        (ggi_pixel *)&tb1_pal,color_depth);
     ggiFlush(vis);
     ggiFlush(vaddr2);
     pauseawhile(5); 
-
-   max_x=12;max_y=200;
-    x_pos=0; y_pos=0;   
     
-   for(x=0;x<max_x;x++) 
-       for(y=0;y<max_y;y++) 
-          game_map[x][y]=(rand()%26)+65;
-   
        /* Main Menu Loop */
     while (1) {
        
-       vmwCrossBlit(plb_vis->write,plb_vaddr->read,plb_vis->stride,200);
+       vmwCrossBlit(plb_vis->write,plb_vaddr2->read,plb_vis->stride,200);
        ggiFlush(vis);
               
        barpos=0;
-  
+       VMWtextxy("F1 HELP",0,190,tb1_pal[9],tb1_pal[7],0,tb1_font,vis);   
+       coolbox(117,61,199,140,1,vis);
        ggiFlush(vis);
        ch=0;
-  
-       
+       while(ch!=TB_ENTER){
+          if (barpos==0) VMWtextxy("NEW GAME",123,67,
+				   tb1_pal[32],tb1_pal[0],1,tb1_font,vis);
+                    else VMWtextxy("NEW GAME",123,67,
+			           tb1_pal[32],tb1_pal[7],1,tb1_font,vis);
+          if (barpos==1) VMWtextxy("OPTIONS",123,77,
+				   tb1_pal[32],tb1_pal[0],1,tb1_font,vis);
+                    else VMWtextxy("OPTIONS",123,77,
+				   tb1_pal[32],tb1_pal[7],1,tb1_font,vis);
+          if (barpos==2) VMWtextxy("ABOUT",123,87,
+				   tb1_pal[32],tb1_pal[0],1,tb1_font,vis);
+                    else VMWtextxy("ABOUT",123,87,
+				   tb1_pal[32],tb1_pal[7],1,tb1_font,vis);
+          if (barpos==3) VMWtextxy("LOAD GAME",123,97,
+				   tb1_pal[32],tb1_pal[0],1,tb1_font,vis);
+                    else VMWtextxy("LOAD GAME",123,97,
+				   tb1_pal[32],tb1_pal[7],1,tb1_font,vis);
+          if (barpos==4) VMWtextxy("STORY",123,107,
+				   tb1_pal[32],tb1_pal[0],1,tb1_font,vis);
+                    else VMWtextxy("STORY",123,107,
+				   tb1_pal[32],tb1_pal[7],1,tb1_font,vis);
+          if (barpos==5) VMWtextxy("CREDITS",123,117,
+				   tb1_pal[32],tb1_pal[0],1,tb1_font,vis);
+                    else VMWtextxy("CREDITS",123,117,
+				   tb1_pal[32],tb1_pal[7],1,tb1_font,vis);
+          if (barpos==6) VMWtextxy("QUIT",123,127,
+				   tb1_pal[32],tb1_pal[0],1,tb1_font,vis);
+                    else VMWtextxy("QUIT",123,127,
+				   tb1_pal[32],tb1_pal[7],1,tb1_font,vis);
+          ggiFlush(vis); 
           
 	  while( ((ch=get_input())==0)) {
 	     usleep(10);
@@ -254,26 +269,15 @@ int main(int argc,char **argv)
 	  
 	      /* Change menu position based on key pressed */
 	  ch2=toupper(ch);
-          if (ch==TB_DOWN) y_pos++;
-	  if (ch==TB_RIGHT) x_pos++;
-          if (ch==TB_UP) y_pos--;
-	  if (ch==TB_LEFT) x_pos--;
-          if (y_pos<0) y_pos=0; if(x_pos<0) x_pos=0;	  
-	  if (y_pos>(max_y-20)) y_pos=max_y-20;
-	  if (x_pos>(max_x)) x_pos=max_x;
-	
-           ggiSetGCForeground(vaddr,tb1_pal[0]);
-           ggiFillscreen(vaddr);
-       
-       
-          for(x=0;x<max_x;x++)
-	     for(y=y_pos;y<(y_pos+20);y++) {
-		sprintf(tempst,"%c",game_map[x][y]);
-	        VMWtextxy(tempst,x*20,(y-y_pos)*10,
-			  tb1_pal[32],tb1_pal[0],1,tb1_font,vaddr);
-		
-	     }
-	      
+          if ((ch==TB_DOWN)||(ch==TB_RIGHT)) barpos++;
+          if ((ch==TB_UP) || (ch==TB_LEFT)) barpos--;
+          if (ch==TB_F1) {barpos=10; ch=TB_ENTER;} /*F1*/
+          if (ch2=='N') barpos=0;    /*N*/
+          if (ch2=='O') barpos=1;    /*O*/
+          if (ch2=='A') barpos=2;    /*A*/
+          if (ch2=='L') barpos=3;    /*L*/
+          if (ch2=='S') barpos=4;    /*S*/
+          if (ch2=='C') barpos=5;    /*C*/
           if (ch2=='Q') barpos=6;    /*Q*/
           if (ch==27){ /* escape */
              barpos=6;
@@ -281,8 +285,8 @@ int main(int argc,char **argv)
           }
           if(barpos==7) barpos=0;
           if(barpos<0) barpos=6;
-    
+       }
           /* Run whatever it was that the person pressed */
-      if(barpos==6) quit();
+
     }
 }

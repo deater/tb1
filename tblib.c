@@ -14,6 +14,25 @@
 #include "string.h"
 #include "sound.h"
 
+
+void pauseawhile(int howlong) {
+   
+       struct timeval bob;
+       struct timezone mree;
+       long begin_s,begin_u;
+   
+       vmwClearKeyboardBuffer();
+       gettimeofday(&bob,&mree);
+       begin_s=bob.tv_sec; begin_u=bob.tv_usec;
+       while ((bob.tv_sec-begin_s)<howlong) {
+	         if (vmwGetInput()) return;
+	         usleep(30);
+	         gettimeofday(&bob,&mree);
+       }
+}
+
+
+
     /* Convenience Function */
 int change_shields(struct tb1_state *game_state)
 {
@@ -1194,7 +1213,9 @@ void playthegame(struct tb1_state *game_state)
     }
    
     if (game_state->level==1) {
-       levelone(game_state);
+       game_state->level=2;
+       leveltwoengine(game_state);
+//       levelone(game_state);
 //       if(level==2) littleopener2();
     }
     if (game_state->level==2) {
