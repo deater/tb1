@@ -1,3 +1,16 @@
+25 September 2004
++ Started working on level3 of the game again
++ Updated title screen to reflect current girlfriend.
++ Fixed sound.
++ A paint-pro plugin I developed for "Guinea Pig Adventure" 
+  improves productivity a lot.
+
+2001-2004
++ Sadly a lull in tb1 development.  In that time though I did develop
+  tb_6502 : tom bombem for the Apple IIe
+  tb_asm  : tom bombem in x86 assembly (fits in 8k statically linked)
+  tbo     : obfuscated C contest entry of tom bombem.
+
 28 October 2001
 + Debugged over a few days 32bpp solaris support, with lots of help 
   from G. Low <unix@macrosscity.com>  
@@ -134,8 +147,30 @@
 * Added support so it can (almost) run in both 8bpp and 16bpp mode.
 * Broke a lot more than I fixed.
 
-1994-1996
-  Wrote Tom Bombem in pascal and inline assembly, using the
-  "Flying Toaster" demo from PCGPE as a starting point.
-  Used Ethan Brodsky's sound libs, in addition to my own
-  "Paintpro" graphics program/loader.
+? 1997
+* Ported to the ggi graphics library
+
+Fall 1996
+* Original attempts to port to linux.  Used now-defunct graphics library.
+
+? 1996
++ Worked on level3 + level4?
++ Adding in-line 32-bit assembly to get it to run at fast enough
+  framerate on the 386 33MHz my family had.
+
+? 1995
++ Got sound blaster code working, using Ethan Brodsky's
+  soundblaster libraries.
++ Used newest versio of my "PaintPro" Graphics format.
+  It is very much like PCX, but I didn't know that when I invented it
+  a few years earlier in BASIC.
++ Written in Turbo Pascal 6.0 with in-line 16 bit assembly.
+
+Fall 1994
++ Gradually converted PCGPE "Flying Toaster" demo into proof-of-concept
+  Tom Bombem code.
++ Level 1 mostly working
+
+Summer 1994
++ Was exchange student in Hildesheim Germany.  People there gave me
+  a copy of the PCGPE (PC Game Programmer Encyclopedia)

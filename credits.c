@@ -97,8 +97,8 @@ void credits(tb1_state *game_state)
     vmwTextXY("               ISAAC ASIMOV",0,290,9,0,1,tb1_font,game_state->virtual_2);
     vmwTextXY("              GORDON KORMAN",0,310,9,0,1,tb1_font,game_state->virtual_2);
     vmwTextXY("         THANKS TO ALL THE AGENTS",0,340,10,0,1,tb1_font,game_state->virtual_2);
-    vmwTextXY("        B,D,JL,L,N,P,S,W,PM,E,G,TK",0,360,10,0,1,tb1_font,game_state->virtual_2);
-    vmwTextXY("           AND ESPECIALLY MP",0,380,10,0,1,tb1_font,game_state->virtual_2);
+    vmwTextXY("      B,D,JL,L,N,P,S,W,PM,E,G,TK,MP",0,360,10,0,1,tb1_font,game_state->virtual_2);
+    vmwTextXY("           AND ESPECIALLY KRG",0,380,10,0,1,tb1_font,game_state->virtual_2);
     
     if (!keypressed) for(i=0;i<200;i++){
        vmwArbitraryCrossBlit(game_state->virtual_2,0,i,320,200,

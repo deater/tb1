@@ -2,6 +2,10 @@ Finish the game:
 Requires:
   Levels3-10.  Level 3 is semi-done in pascal.
 
+  Record keypresses, have a demo mode.
+
+  Better joystick support
+
 Other aspirations:
    Some sort of "configure" type file
    Audit all the code.

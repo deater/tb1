@@ -19,9 +19,9 @@ SDL_MIXER_LIBS= -lSDL_mixer
 # Uncomment the following for SDL
 #
 SDL_TARGET= sdl_svmwgraph.o
-SDL_LIBS= -lSDL -L/usr/X11R6/lib -lX11 -lpthread
+SDL_LIBS= `sdl-config --libs`
 SDL_FLAGS= -DSDL_TARGET
-SDL_INCLUDE= -I/usr/local/include/SDL
+SDL_INCLUDE= `sdl-config --cflags`
 
 #
 # Uncomment the following for ncurses

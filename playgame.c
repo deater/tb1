@@ -29,7 +29,7 @@ void playthegame(tb1_state *game_state)
     if (game_state->level==2) {
        leveltwoengine(game_state,"level1/ships.tb1","level2/level2.dat",
 		      "level2/tbaship.tb1","   LEVEL TWO:",
-		      "THE \"PEASE ENVOY\"",NULL);
+		      "THE \"PEACE ENVOY\"",NULL);
        if (game_state->level==3) LevelThreeLittleOpener(game_state);
     }
     if (game_state->level==3) {

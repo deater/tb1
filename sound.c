@@ -50,10 +50,45 @@ void loadFX(char *path_to_data) {
 int initSound(char *path_to_data) {
   /* open the audio device */
 #ifdef SDL_MIXER_SOUND   
+
+           int audio_rate;
+           Uint16 audio_format;
+           int audio_channels;
+   
+   
+           /* Initialize variables */
+           audio_rate = MIX_DEFAULT_FREQUENCY;
+           audio_format = MIX_DEFAULT_FORMAT;
+           audio_channels = 2;
+   
+   
+         /* Initialize the SDL library */
+    if ( SDL_Init(SDL_INIT_AUDIO) < 0 ) {	
+       fprintf(stderr, "Couldn't initialize SDL: %s\n",SDL_GetError());
+      return(255);
+    }
+   
+         /* Open the audio device */
+    if (Mix_OpenAudio(audio_rate, audio_format, audio_channels, 4096) < 0) {	
+       fprintf(stderr, "Couldn't open audio: %s\n", SDL_GetError());
+       return(2);
+    } else {
+   
+       Mix_QuerySpec(&audio_rate, &audio_format, &audio_channels);
+       printf("+ Opened audio at %d Hz %d bit %s\n", audio_rate,
+			                          (audio_format&0xFF),
+			  (audio_channels > 1) ? "stereo" : "mono");
+   }
+   
+/*
+
+
+   
   if(Mix_OpenAudio(22050, AUDIO_U16, 1, 1024) < 0) {
     fprintf(stderr, "can't open audio: %s\n", SDL_GetError());
     return -1;
   }
+ */
   loadFX(path_to_data);
 #endif
   return 0;

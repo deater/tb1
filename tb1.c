@@ -230,7 +230,7 @@ int main(int argc,char **argv)
 \* 3-96 oh well... gave up on Gus finally               */
 /* 5-11-96 Now Marie...                                 *\
 \* 9-22-2000 :(                                         */  
-      
+/* 3-25-2002 Now Kristina ;)                            */ 
    
        /* Randomize random number generator */
     srandom(time(NULL));

@@ -56,17 +56,17 @@ void about(tb1_state *game_state)
              break;
 	case 2:
 	     shadowrite("MY NAME IS VINCE WEAVER",10,10,10,2,tb1_font,target1);
-	     shadowrite("   VISIT MY TALKER",10,20,10,2,tb1_font,target1);
-	     shadowrite("   DERANGED.STUDENT.UMD.EDU 7000",10,30,10,2,tb1_font,target1);
-	     shadowrite("   UP WHENEVER SCHOOL IS IN SESSION",10,40,10,2,tb1_font,target1);
-	     shadowrite("UNTIL DECEMBER OF 2000 I WILL BE",10,60,13,5,tb1_font,target1);
-	     shadowrite(" ATTENDING COLLEGE, AT THE UNIVERSITY",10,70,13,5,tb1_font,target1);
-	     shadowrite(" OF MARYLAND, COLLEGE PARK.",10,80,13,5,tb1_font,target1);
+	     shadowrite("   VISIT MY WEBSITE",10,20,10,2,tb1_font,target1);
+	     shadowrite("   http://www.deater.net/weave/",10,30,10,2,tb1_font,target1);
+/*	     shadowrite("   UP WHENEVER SCHOOL IS IN SESSION",10,40,10,2,tb1_font,target1);*/
+	     shadowrite("UNTIL 2008 I WILL BE IN GRAD SCHOOL",10,60,13,5,tb1_font,target1);
+	     shadowrite(" AT CORNELL UNIVERSITY.",10,70,13,5,tb1_font,target1);
+	     shadowrite(" THEN, ONTO THE MOON!.",10,80,13,5,tb1_font,target1);
 	     shadowrite("GET THE NEWEST VERSION OF TB1 AT",10,100,11,3,tb1_font,target1);
 	     shadowrite(" THE OFFICIAL TB1 WEB SITE:",10,110,11,3,tb1_font,target1);
-	     shadowrite(" http://www.glue.umd.edu/~weave/tb1/",10,120,11,3,tb1_font,target1);
+	     shadowrite("  www.deater.net/weave/vmwprod/tb1/",10,120,11,3,tb1_font,target1);
 	     shadowrite("I CAN BE CONTACTED VIA E-MAIL AT:",10,140,12,4,tb1_font,target1);
-	     shadowrite("    WEAVE@ENG.UMD.EDU",10,150,9,1,tb1_font,target1);
+	     shadowrite("    VINCE@DEATER.NET",10,150,9,1,tb1_font,target1);
 	     shadowrite("FEEL FREE TO SEND COMMENTS.",10,160,12,4,tb1_font,target1);
              break;
         case 3:
