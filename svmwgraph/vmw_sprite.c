@@ -24,14 +24,14 @@ vmwSprite *vmwGetSprite(int x, int y,
    return temp_sprite;
 }
 
-void vmwPutSprite(vmwSprite *sprite,int x,int y,int shield_color,
+void vmwPutSprite(vmwSprite *sprite,int x,int y,
 		  vmwVisual *screen) {
       
    unsigned char *temp_source,*temp_destination;
    int xx,yy;
    
    temp_source=sprite->spritedata;
-   temp_destination= (unsigned char *)(screen)+(y*320+x);
+   temp_destination= (unsigned char *)(screen->memory)+(y*screen->xsize+x);
   
    for (yy=0;yy<sprite->ysize;yy++) {
        for (xx=0;xx<sprite->xsize;xx++) {

@@ -1,6 +1,6 @@
 /****************************************************************\
 \*    TOM BOMBEM AND THE INVASION OF THE INANIMATE_OBJECTS      */
-/*                    version 2.9.1      5 August 2000	        *\
+/*                    version 2.9.2      15 September 2000	*\
 \*        by Vince Weaver       weave@eng.umd.edu               */
 /*                                                              *\
 \*  Originally written in Pascal and x86 assembly for DOS       */
@@ -10,49 +10,28 @@
 \*          This source is released under the GPL               */
 /****************************************************************/
 
-#define TB1_VERSION "2.9.1"
+#define TB1_VERSION "2.9.2"
 
-#include <ctype.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
+#include <stdlib.h>   /* for calloc */
+#include <string.h>   /* for strncpy */
 #include <unistd.h>
 #include <sys/time.h>
 
-#include "SDL.h"
-#include "sdl_svmwgraph.h"
+#include "svmwgraph/svmwgraph.h"
 #include "tb1_state.h"
 #include "tblib.h"
-#include "tb_keypress.h"
 #include "sound.h"
 
-    /* Setup the Graphics */
-int setup_graphics(struct tb1_state *state)
-{
-   
-       /* Initialize the SDL library */
-    if ( SDL_Init(SDL_INIT_VIDEO) < 0 ) {
-       fprintf(stderr,
-	       "Couldn't initialize SDL: %s\n", SDL_GetError());
-       exit(1);
-    }
-
-       /* Clean up on exit */
-    atexit(SDL_Quit);
-
-       /* Initialize the display in a 640x480 8-bit palettized mode */
-    state->sdl_screen = SDL_SetVideoMode(320, 200, 16, SDL_SWSURFACE);
-    if ( state->sdl_screen == NULL ) {
-       fprintf(stderr, "Couldn't set 320x200x8 video mode: %s\n",
-	      SDL_GetError());
-       exit(1);
-    }
-   
-    printf("  + SDL Graphics Initialization successful...\n");
-    printf("  + Running TB1 in %dbpp Mode...\n",16);
-    return 0;
-}
+#include "menu_tools.h"
+#include "help.h"
+#include "quit.h"
+#include "story.h"
+#include "credits.h"
+#include "about.h"
+#include "loadgame.h"
+#include "options.h"
+#include "playgame.h"
 
 int command_line_help(int show_version,char *runas)
 {
@@ -75,12 +54,13 @@ int main(int argc,char **argv)
     int i,grapherror,reloadpic=0;
     int custom_palette[256];
     int ch,x,barpos,time_sec;
+    int scale=1;
     FILE *fff;
-    unsigned char *virtual_1,*virtual_2; 
+    vmwVisual *virtual_1,*virtual_2; 
    
     struct tb1_state *game_state;
  
-    vmw_font *tb1_font;
+    vmwFont *tb1_font;
    
     struct timeval time_info;
     struct timezone dontcare;
@@ -101,9 +81,7 @@ int main(int argc,char **argv)
     game_state->virtual_1=NULL;
     game_state->virtual_2=NULL;
     game_state->virtual_3=NULL;
-    game_state->sdl_screen=NULL;
     game_state->sound_enabled=1;
-    game_state->tb1_font=NULL;
    
        /* Parse Command Line Arguments */
     i=1;
@@ -117,7 +95,6 @@ int main(int argc,char **argv)
 	
 	   case 'n': 
 	     game_state->sound_enabled=0;
-//	     sound_possible=0;
 	     printf("  + Sound totally disabled\n");
 	     break;
 	   case 'r': 
@@ -182,28 +159,31 @@ int main(int argc,char **argv)
    
     printf("  + Loaded sounds...\n");
    
-       /* Load the tom bombem font */
-    game_state->tb1_font=vmwLoadFont(tb1_data_file("tbfont.tb1",game_state->path_to_data),8,16,256);
-    printf("  + Loaded tb1 font...\n");
-   
        /* Setup Graphics */
-    if (setup_graphics(game_state)) {   
+    if ( (game_state->graph_state=vmwSetupSVMWGraph(VMW_SDLTARGET,
+						 320*scale,200*scale,
+						 16,1))==NULL) {   
        fprintf(stderr,"ERROR: Couldn't get display set up properly.\n");
-       return 2;
+       return VMW_ERROR_DISPLAY;
     }
-     
-   
-    if ((game_state->virtual_1=calloc(320*200,2))==NULL) {
+  
+       /* Load the tom bombem font */
+    game_state->graph_state->default_font=
+                vmwLoadFont(tb1_data_file("tbfont.tb1",
+					  game_state->path_to_data),8,16,256);
+    printf("  + Loaded tb1 font...\n");
+
+    if ((game_state->virtual_1=vmwSetupVisual(320,200,256))==NULL) {
        fprintf(stderr,"ERROR: Couldn't get RAM for virtual screen 1!\n");
-       return 3;
+       return VMW_ERROR_MEM;
     }
-    if ((game_state->virtual_2=calloc(320*400,2))==NULL) {
+    if ((game_state->virtual_2=vmwSetupVisual(320,400,256))==NULL) {
        fprintf(stderr,"ERROR: Couldn't get RAM for virtual screen 2!\n");
-       return 3;
+       return VMW_ERROR_MEM;
     }
-    if ((game_state->virtual_3=calloc(320*200,2))==NULL) {
+    if ((game_state->virtual_3=vmwSetupVisual(320,200,256))==NULL) {
        fprintf(stderr,"ERROR: Couldn't get RAM for virtual screen 3!\n");
-       return 3;
+       return VMW_ERROR_MEM;
     }
    
     printf("  + Allocated virtual screens...\n");
@@ -211,7 +191,9 @@ int main(int argc,char **argv)
       /* To ease typing burden */
     virtual_1=game_state->virtual_1;
     virtual_2=game_state->virtual_2;
-    tb1_font=game_state->tb1_font;
+    tb1_font=game_state->graph_state->default_font;
+
+    for (x=0;x<256;x++) custom_palette[x]=vmwPack3Bytes(0,0,0); /* 0=black */
    
        /* Do the VMW Software Production Logo */
     for(x=0;x<=40;x++) {
@@ -224,10 +206,8 @@ int main(int argc,char **argv)
     custom_palette[15]=vmwPack3Bytes(0xff,0xff,0xff);
    
        /* Finalize Pallette Stuff */
-    vmwLoadCustomPalette(custom_palette);
-    SDL_UpdateRect(game_state->sdl_screen, 0, 0, 0, 0);
-   
-   
+    vmwLoadCustomPalette(virtual_1,custom_palette);
+    
        /* Actually draw the stylized VMW */
     for(x=0;x<=40;x++){ 
        vmwDrawVLine(x+40,45,2*x,100+x,virtual_1);
@@ -245,11 +225,11 @@ int main(int argc,char **argv)
     }
    
     vmwTextXY("A VMW SOFTWARE PRODUCTION",60,140,
-	      15,15,0,game_state->tb1_font,virtual_1);   
+	      15,15,0,tb1_font,virtual_1);   
     
-    playSound();
+    if (game_state->sound_enabled) playSound();
    
-    vmwBlitMemToSDL(game_state->sdl_screen,virtual_1);
+    vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
     pauseawhile(5);
 
     stopSound();
@@ -265,28 +245,33 @@ int main(int argc,char **argv)
     grapherror=vmwLoadPicPacked(0,0,virtual_2,1,1,
 				tb1_data_file("tbomb1.tb1",game_state->path_to_data));
     
-    vmwBlitMemToSDL(game_state->sdl_screen,virtual_1);
+    vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
     
-   
        /* Main Menu Loop */
     while (1) {
        if (reloadpic) {
           grapherror=vmwLoadPicPacked(0,0,virtual_2,1,1,
 				    tb1_data_file("tbomb1.tb1",game_state->path_to_data));
+	  grapherror=vmwLoadPicPacked(0,0,virtual_1,1,0,
+				    tb1_data_file("tbomb1.tb1",game_state->path_to_data));
+	  
 	  reloadpic=0;
        }
-       vmwFlipVirtual(virtual_1,virtual_2);
-       playSound();
        
+       vmwFlipVirtual(virtual_1,virtual_2,320,200);
+       if (game_state->sound_enabled) playSound();
+       vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
+
        while (!vmwGetInput()) usleep(300);
-            
+                   
        barpos=0;
        vmwTextXY("F1 HELP",0,190,9,7,0,tb1_font,virtual_1);   
        coolbox(117,61,199,140,1,virtual_1);
-       vmwBlitMemToSDL(game_state->sdl_screen,virtual_1);
+       
+       vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
        ch=0;
        
-       while(ch!=TB_ENTER){
+       while(ch!=VMW_ENTER){
           if (barpos==0) vmwTextXY("NEW GAME",123,67,32,0,1,tb1_font,virtual_1);
                     else vmwTextXY("NEW GAME",123,67,32,7,1,tb1_font,virtual_1);
           if (barpos==1) vmwTextXY("OPTIONS",123,77,32,0,1,tb1_font,virtual_1);
@@ -302,7 +287,7 @@ int main(int argc,char **argv)
           if (barpos==6) vmwTextXY("QUIT",123,127,32,0,1,tb1_font,virtual_1);
                     else vmwTextXY("QUIT",123,127,32,7,1,tb1_font,virtual_1);
 
-          vmwBlitMemToSDL(game_state->sdl_screen,virtual_1);
+          vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
 	  
 	      /* If at title screen too long, run credits */
 	  gettimeofday(&time_info,&dontcare);
@@ -314,7 +299,7 @@ int main(int argc,char **argv)
 	     if (time_info.tv_sec-time_sec>40) {
 		stopSound();
 		credits(game_state);
-		ch=TB_ENTER;
+		ch=VMW_ENTER;
 		barpos=9;
 		reloadpic=1;
 		gettimeofday(&time_info,&dontcare);
@@ -323,9 +308,9 @@ int main(int argc,char **argv)
 	  }
 	  
 	      /* Change menu position based on key pressed */
-          if ((ch==TB_DOWN)||(ch==TB_RIGHT)) barpos++;
-          if ((ch==TB_UP) || (ch==TB_LEFT)) barpos--;
-          if (ch==TB_F1) {barpos=10; ch=TB_ENTER;} /*F1*/
+          if ((ch==VMW_DOWN)||(ch==VMW_RIGHT)) barpos++;
+          if ((ch==VMW_UP) || (ch==VMW_LEFT)) barpos--;
+          if (ch==VMW_F1) {barpos=10; ch=VMW_ENTER;} /*F1*/
           if (ch=='n') barpos=0;    /*N*/
           if (ch=='o') barpos=1;    /*O*/
           if (ch=='a') barpos=2;    /*A*/
@@ -333,9 +318,9 @@ int main(int argc,char **argv)
           if (ch=='s') barpos=4;    /*S*/
           if (ch=='c') barpos=5;    /*C*/
           if (ch=='q') barpos=6;    /*Q*/
-          if (ch==TB_ESCAPE){ /* escape */
+          if (ch==VMW_ESCAPE){ /* escape */
              barpos=6;
-             ch=TB_ENTER;
+             ch=VMW_ENTER;
           }
           if(barpos==7) barpos=0;
           if(barpos<0) barpos=6;

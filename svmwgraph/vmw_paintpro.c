@@ -5,15 +5,6 @@
 #include <stdio.h>  /* For FILE I/O */
 #include <string.h> /* For strncmp */
 
-
-   /* The "packing" method used by paintpro files */
-int vmwPack3Bytes(int r, int g, int b) {
-   
-      return  ( ( ( (r>>3)&0x1f) <<11)+
-	        ( ( (g>>2)&0x3f) <<5)+
-	        ( ( (b>>3)&0x1f) ) );
-}
-
     /*---------------------------------------------------------------*\
     |    vmwLoadPicPacked                                             |
     |  There is so much history in this function, I won't get into    |

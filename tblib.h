@@ -1,22 +1,4 @@
-int change_shields(struct tb1_state *game_state);
-int changescore(struct tb1_state *game_state);
-int collision(int x1,int y1,int xsize,int ysize,int x2,int y2,int x2size,int y2size);
-char *tb1_data_file(char *name,char *path);
-int get_input();
-void coolbox(int x1,int y1,int x2,int y2,int fill,unsigned char *target);
-int close_graphics();
-int quit(struct tb1_state *game_state);
-void ReadConfigFile(int CDROMmode);
-int showhiscore(struct tb1_state *game_state,int showchart);
-void write_hs_list(int score,char *hiname);
-void help();
-void setupsidebar(struct tb1_state *game_state);
-void shadowrite(char *st,int x,int y,int forecol,int backcol,vmw_font *tb1_font,unsigned char *target);
 void pauseawhile(int howlong);
-void options();
-void savegame(int level,int begin_score,int begin_shields);
-void loadgame();
-void story();
-void credits();
-void about(struct tb1_state *game_state);
-void playthegame(struct tb1_state *game_state);
+int collision(int x1,int y1,int xsize,int ysize,
+	      int x2,int y2,int x2size,int y2size);
+char *tb1_data_file(char *name,char *path);

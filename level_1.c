@@ -7,14 +7,17 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include "SDL.h"
-#include "sdl_svmwgraph.h"
+
+#include "svmwgraph/svmwgraph.h"
 #include "tb1_state.h"
 #include "levels.h"
-#include "tblib.h"
-#include "vmw_sprite.h"
-#include "tb_keypress.h"
+
 #include "sound.h"
+
+#include "tblib.h"
+#include "sidebar.h"
+#include "help.h"
+#include "menu_tools.h"
 
     /* Define this to get a frames per second readout */
 /* #define DEBUG_ON */
@@ -73,57 +76,57 @@ int level_one_wave_behavior[]=
 void beforeboss(struct tb1_state *game_state)
 {
 
-    clear_keyboard_buffer();
+    vmwClearKeyboardBuffer();
     vmwLoadPicPacked(0,0,game_state->virtual_3,0,1,
 		     tb1_data_file("viewscr.tb1",game_state->path_to_data));
     vmwClearScreen(game_state->virtual_1,0);
     vmwArbitraryCrossBlit(game_state->virtual_3,0,5,58,37,
 			  game_state->virtual_1,10,10);
-    vmwSmallTextXY("HUMAN!",70,10,2,0,1,game_state->tb1_font,game_state->virtual_1);
+    vmwSmallTextXY("HUMAN!",70,10,2,0,1,game_state->graph_state->default_font,game_state->virtual_1);
     vmwSmallTextXY("WHAT ARE YOU DOING?!",70,20,2,
-		                                0,1,game_state->tb1_font,game_state->virtual_1);
+		                                0,1,game_state->graph_state->default_font,game_state->virtual_1);
     vmwSmallTextXY("YOUR SPECIES MUST BE TERMINATED!",70,30,2,
-		                                0,1,game_state->tb1_font,game_state->virtual_1);
-    vmwBlitMemToSDL(game_state->sdl_screen,game_state->virtual_1);
+		                                0,1,game_state->graph_state->default_font,game_state->virtual_1);
+    vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
     pauseawhile(5);
    
     vmwArbitraryCrossBlit(game_state->virtual_3,0,42,58,37,
 			  game_state->virtual_1,10,50);
-    vmwSmallTextXY("I'M SORRY.",70,50,9,0,1,game_state->tb1_font,game_state->virtual_1);
+    vmwSmallTextXY("I'M SORRY.",70,50,9,0,1,game_state->graph_state->default_font,game_state->virtual_1);
     vmwSmallTextXY("WE DIDN'T MEAN TO DESTROY YOUR ENVOY.",70,60,9,
-		                                0,1,game_state->tb1_font,game_state->virtual_1);
+		                                0,1,game_state->graph_state->default_font,game_state->virtual_1);
     vmwSmallTextXY("WILL YOU FORGIVE US AND TRY PEACE?",70,70,9,
-		                                0,1,game_state->tb1_font,game_state->virtual_1);
-    vmwBlitMemToSDL(game_state->sdl_screen,game_state->virtual_1);
+		                                0,1,game_state->graph_state->default_font,game_state->virtual_1);
+    vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
     pauseawhile(5);
    
     vmwArbitraryCrossBlit(game_state->virtual_3,0,5,58,37,
 			  game_state->virtual_1,10,90);
     vmwSmallTextXY("NO!  YOU MUST BE DESTROYED!",70,90,2,
-		                                0,1,game_state->tb1_font,game_state->virtual_1);
+		                                0,1,game_state->graph_state->default_font,game_state->virtual_1);
     vmwSmallTextXY("OUR FUNDING ... OUR ENVOY WAS DAMAGED BY",70,100,
-		                     2,0,1,game_state->tb1_font,game_state->virtual_1);
+		                     2,0,1,game_state->graph_state->default_font,game_state->virtual_1);
     vmwSmallTextXY("YOU!  VENGEANCE WILL BE OURS!  YOUR PUNY",70,110,
-		                     2,0,1,game_state->tb1_font,game_state->virtual_1);
+		                     2,0,1,game_state->graph_state->default_font,game_state->virtual_1);
     vmwSmallTextXY("PRIMITIVE SPACECRAFT WITH ITS INFERIOR",70,120,
-		                     2,0,1,game_state->tb1_font,game_state->virtual_1);
+		                     2,0,1,game_state->graph_state->default_font,game_state->virtual_1);
     vmwSmallTextXY("WEAPONS WOULD HAVE TO SCORE 9 DIRECT HITS",70,130,
-		                     2,0,1,game_state->tb1_font,game_state->virtual_1);
+		                     2,0,1,game_state->graph_state->default_font,game_state->virtual_1);
     vmwSmallTextXY("TO DESTROY MY SHIP!  DIE EARTH SCUM!!!!",70,140,
-		                     2,0,1,game_state->tb1_font,game_state->virtual_1);
-    vmwBlitMemToSDL(game_state->sdl_screen,game_state->virtual_1);
+		                     2,0,1,game_state->graph_state->default_font,game_state->virtual_1);
+    vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
     pauseawhile(5);
     setupsidebar(game_state);
-    vmwFlipVirtual(game_state->virtual_1,game_state->virtual_2);
+    vmwFlipVirtual(game_state->virtual_1,game_state->virtual_2,320,200);
 }
 
     /* The Sequence After You Defeat (hopefully) the Boss */
 void afterboss(struct tb1_state *game_state)
 {
    
-    vmw_font *tb1_font;
+    vmwFont *tb1_font;
    
-    tb1_font=game_state->tb1_font;
+    tb1_font=game_state->graph_state->default_font;
    
     vmwLoadPicPacked(0,0,game_state->virtual_3,0,1,
 		     tb1_data_file("viewscr.tb1",game_state->path_to_data));
@@ -136,7 +139,7 @@ void afterboss(struct tb1_state *game_state)
 		          9,0,1,tb1_font,game_state->virtual_1);
     vmwSmallTextXY("I GUESS I CAN GO HOME NOW.",70,30,
 		          9,0,1,tb1_font,game_state->virtual_1);
-    vmwBlitMemToSDL(game_state->sdl_screen,game_state->virtual_1);
+    vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
     pauseawhile(5);
    
     vmwArbitraryCrossBlit(game_state->virtual_3,0,5,58,37,
@@ -155,7 +158,7 @@ void afterboss(struct tb1_state *game_state)
 		          2,0,1,tb1_font,game_state->virtual_1);
     vmwSmallTextXY("NICE TRY PUNY EARTHLING!",70,110,2,
 		          0,1,tb1_font,game_state->virtual_1);
-    vmwBlitMemToSDL(game_state->sdl_screen,game_state->virtual_1);
+    vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
     pauseawhile(7);
    
     vmwArbitraryCrossBlit(game_state->virtual_3,0,42,58,37,
@@ -168,7 +171,7 @@ void afterboss(struct tb1_state *game_state)
 		          9,0,1,tb1_font,game_state->virtual_1);
     vmwSmallTextXY("WELL AT LEAST I HAVE SOME SMALLER SPARES.",70,160,
 		          9,0,1,tb1_font,game_state->virtual_1);
-    vmwBlitMemToSDL(game_state->sdl_screen,game_state->virtual_1);
+    vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
     pauseawhile(5);
 
 }
@@ -332,23 +335,23 @@ int level_one_behavior(int reset, struct tb1_state *game_state)
     /* The Main Level One */
 void levelone(struct tb1_state *game_state) {
    
-    int ch=0,shield_color=0;
+    int ch=0;
     int i,j,grapherror;
     char tempst[300];
     int itemp,whatdelay=1,levelover=0;
     int shipx=36,shipadd=0,shipframe=1;
-    struct vmwSprite *bigship1,*bigship2,*bigship3;
-    struct vmwSprite *shapetable[20];
+    vmwSprite *bigship1,*bigship2,*bigship3;
+    vmwSprite *shapetable[20];
     long oldsec,oldusec,time_spent;
     int howmuchscroll=0;
     int speed_factor=1,game_paused=0;
     int beginscore,beginshield;
     
-    unsigned char *virtual_1,*virtual_2;
-    vmw_font *tb1_font;
+    vmwVisual *virtual_1,*virtual_2;
+    vmwFont *tb1_font;
    
        /* For convenience */
-    tb1_font=game_state->tb1_font;
+    tb1_font=game_state->graph_state->default_font;
     virtual_1=game_state->virtual_1;
     virtual_2=game_state->virtual_2;
    
@@ -390,13 +393,13 @@ void levelone(struct tb1_state *game_state) {
     coolbox(70,85,240,120,1,virtual_1);
     vmwTextXY("   LEVEL ONE:",84,95,4,7,0,tb1_font,virtual_1);
     vmwTextXY("INANIMATE OBJECTS",84,105,4,7,0,tb1_font,virtual_1);
-    vmwBlitMemToSDL(game_state->sdl_screen, virtual_1);
+    vmwBlitMemToDisplay(game_state->graph_state, virtual_1);
 
       
        /* Setup and draw the sidebar */
     setupsidebar(game_state);
 
-    vmwFlipVirtual(virtual_1,virtual_2);
+    vmwFlipVirtual(virtual_1,virtual_2,320,200);
     sprintf(tempst,"%d",game_state->level);
     vmwDrawBox(251,52,63,7,0,virtual_2);
     vmwTextXY(tempst,307,51,12,0,0,tb1_font,virtual_2);
@@ -404,8 +407,8 @@ void levelone(struct tb1_state *game_state) {
        /* Clear the screen and draw the stars */
     vmwDrawBox(0,0,320,400,0,virtual_2);
     for(i=0;i<100;i++) {
-       vmwPutSprite(shapetable[11],rand()%238,rand()%380,0,virtual_2);
-       vmwPutSprite(shapetable[12],rand()%238,rand()%380,0,virtual_2);
+       vmwPutSprite(shapetable[11],rand()%238,rand()%380,virtual_2);
+       vmwPutSprite(shapetable[12],rand()%238,rand()%380,virtual_2);
     }
     change_shields(game_state);
    
@@ -464,7 +467,7 @@ void levelone(struct tb1_state *game_state) {
              enemy[i].explodeprogress++;
              if (enemy[i].explodeprogress<=5)
 	        vmwPutSprite(shapetable[enemy[i].explodeprogress+14],
-                             enemy[i].x,enemy[i].y,0,
+                             enemy[i].x,enemy[i].y,
 			     virtual_1);
 	     else if (enemy[i].dead) {
                 enemy[i].out=0;
@@ -481,7 +484,7 @@ void levelone(struct tb1_state *game_state) {
 	     else bullet[i].y-=5;
              if (bullet[i].y<5) bullet[i].out=0;
              else vmwPutSprite(shapetable[0],
-			       bullet[i].x,bullet[i].y,0,
+			       bullet[i].x,bullet[i].y,
 			       virtual_1);
 	  }
        }
@@ -491,7 +494,7 @@ void levelone(struct tb1_state *game_state) {
           if ((enemy[i].out) && (!enemy[i].dead)) {
 	     vmwPutSprite(shapetable[enemy[i].kind-1],
 			  enemy[i].x,enemy[i].y,
-			  0,virtual_1);
+			  virtual_1);
 	     if (speed_factor==1) enemy[i].x+=enemy[i].xspeed;
 	     else enemy[i].x+=(enemy[i].xspeed*speed_factor);
                 /* Check Position */
@@ -540,16 +543,16 @@ void levelone(struct tb1_state *game_state) {
           /* **READ KEYBOARD** */
        if ( (ch=vmwGetInput())!=0) {
           switch(ch){  
-	   case TB_ESCAPE: levelover=1; break;
-	   case TB_RIGHT: if (shipadd>=0) shipadd+=3; else shipadd=0; break;
-           case TB_LEFT: if (shipadd<=0) shipadd-=3; else shipadd=0; break;
-           case TB_F1: game_paused=1; help(); break;
+	   case VMW_ESCAPE: levelover=1; break;
+	   case VMW_RIGHT: if (shipadd>=0) shipadd+=3; else shipadd=0; break;
+           case VMW_LEFT: if (shipadd<=0) shipadd-=3; else shipadd=0; break;
+           case VMW_F1: game_paused=1; help(game_state); break;
            case '+': whatdelay++; if (whatdelay>25) whatdelay=25; break;
 	   case 'P': case 'p': game_paused=1; 
 	             coolbox(65,85,175,110,1,virtual_1);
 	             vmwTextXY("GAME PAUSED",79,95,4,7,
 			                    0,tb1_font,virtual_1);
-	             vmwBlitMemToSDL(game_state->sdl_screen,virtual_1);
+	             vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
 	             while (vmwGetInput()==0) {
 			usleep(30000);
 		     }
@@ -558,7 +561,7 @@ void levelone(struct tb1_state *game_state) {
 	   case 'S': 
 	   case 's': if (game_state->sound_enabled) 
 	                game_state->sound_enabled=!(game_state->sound_enabled); break;
-           case TB_F2: game_paused=1; 
+           case VMW_F2: game_paused=1; 
 //	               savegame(*level,beginscore,beginshield);
 	               break;
            case ' ':  for(j=0;j<2;j++)
@@ -570,7 +573,7 @@ void levelone(struct tb1_state *game_state) {
                            bullet[j].y=165;
 		           vmwPutSprite(shapetable[0],
 				        bullet[j].x,
-					bullet[j].y,0,virtual_1);
+					bullet[j].y,virtual_1);
 		           j=3;
 			}
 	  }
@@ -583,12 +586,12 @@ void levelone(struct tb1_state *game_state) {
        if (shipx>190) shipx=190;
        switch(shipframe) {
 	  
-        case 1: vmwPutSprite(bigship1,shipx,165,shield_color,virtual_1); 
+        case 1: vmwPutSprite(bigship1,shipx,165,virtual_1); 
 	        break;
-        case 3: vmwPutSprite(bigship2,shipx,165,shield_color,virtual_1); 
+        case 3: vmwPutSprite(bigship2,shipx,165,virtual_1); 
 	        break;
 	case 2:
-	case 4: vmwPutSprite(bigship3,shipx,165,shield_color,virtual_1);
+	case 4: vmwPutSprite(bigship3,shipx,165,virtual_1);
 	        break;
        }
        shipframe++;
@@ -596,7 +599,7 @@ void levelone(struct tb1_state *game_state) {
        
           /* Flip Pages */
        
-       vmwBlitMemToSDL(game_state->sdl_screen,virtual_1);
+       vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
        
        
           /* Calculate how much time has passed */
@@ -631,14 +634,14 @@ void levelone(struct tb1_state *game_state) {
 void littleopener(struct tb1_state *game_state)
 {
 
-    struct vmwSprite *ship1,*ship2;
+    vmwSprite *ship1,*ship2;
     int i;
 
     vmwClearScreen(game_state->virtual_2,0);
    
     vmwLoadPicPacked(0,0,game_state->virtual_2,1,1,
 		     tb1_data_file("moon2.tb1",game_state->path_to_data));
-    vmwLoadPicPacked(0,0,game_state->virtual_2,1,0,
+    vmwLoadPicPacked(0,0,game_state->virtual_1,1,0,  /* Load palette */
 		     tb1_data_file("moon2.tb1",game_state->path_to_data));
    
     ship1=vmwGetSprite(9,178,15,18,game_state->virtual_2);
@@ -646,35 +649,35 @@ void littleopener(struct tb1_state *game_state)
     vmwDrawBox(0,178,319,21,0,game_state->virtual_2);
    
     for(i=100;i>0;i--) {
-       vmwFlipVirtual(game_state->virtual_1,game_state->virtual_2);
-       vmwPutSprite(ship2,i*2,100,0,game_state->virtual_1);
-       vmwBlitMemToSDL(game_state->sdl_screen,game_state->virtual_1);
+       vmwFlipVirtual(game_state->virtual_1,game_state->virtual_2,320,200);
+       vmwPutSprite(ship2,i*2,100,game_state->virtual_1);
+       vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
        usleep(30000);
        if (vmwGetInput()) break;       
     }
-    vmwFlipVirtual(game_state->virtual_1,game_state->virtual_2);
-    vmwBlitMemToSDL(game_state->sdl_screen,game_state->virtual_1);
+    vmwFlipVirtual(game_state->virtual_1,game_state->virtual_2,320,200);
+    vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
    
     vmwTextXY(">KCHK< TOM! WHERE ARE YOU GOING?",5,180,15,0,1,
-	      game_state->tb1_font,game_state->virtual_1);
-    vmwBlitMemToSDL(game_state->sdl_screen,game_state->virtual_1);
+	      game_state->graph_state->default_font,game_state->virtual_1);
+    vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
     pauseawhile(3); 
     vmwDrawBox(0,178,319,21,0,game_state->virtual_1); 
-    vmwTextXY("Ooops. ",5,180,24,0,1,game_state->tb1_font,game_state->virtual_1);
-    vmwBlitMemToSDL(game_state->sdl_screen,game_state->virtual_1);
+    vmwTextXY("Ooops. ",5,180,24,0,1,game_state->graph_state->default_font,game_state->virtual_1);
+    vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
     pauseawhile(3);
     for(i=0;i<151;i++) {
-       vmwFlipVirtual(game_state->virtual_1,game_state->virtual_2);
-       vmwPutSprite(ship1,i*2,100,0,game_state->virtual_1);
-       vmwBlitMemToSDL(game_state->sdl_screen,game_state->virtual_1);
+       vmwFlipVirtual(game_state->virtual_1,game_state->virtual_2,320,200);
+       vmwPutSprite(ship1,i*2,100,game_state->virtual_1);
+       vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
        usleep(15000);
        if (vmwGetInput()) break;
     }
-    vmwFlipVirtual(game_state->virtual_1,game_state->virtual_2);
-    vmwBlitMemToSDL(game_state->sdl_screen,game_state->virtual_1);
+    vmwFlipVirtual(game_state->virtual_1,game_state->virtual_2,320,200);
+    vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
       
     vmwDrawBox(0,0,320,200,0,game_state->virtual_1);
-    vmwLoadPicPacked(0,0,game_state->virtual_1,1,0,
+    vmwLoadPicPacked(0,0,game_state->virtual_1,1,0, /* Restore Palette */
 		     tb1_data_file("tbgorg.tb1",game_state->path_to_data));
    
 }

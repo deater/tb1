@@ -1,10 +1,14 @@
 /* Defines for the Super VMW Graphics Library */
 
+
+/* Structures */
+   
 typedef struct {
    int xsize;
    int ysize;
    unsigned char *memory;
-   int palette[256];
+   int *palette;
+   int palette_size;
 } vmwVisual;
 
 typedef struct {
@@ -19,6 +23,41 @@ typedef struct {
    int ysize;
    unsigned char *spritedata;
 } vmwSprite;
+
+
+typedef struct {
+   int xsize;
+   int ysize;
+   int bpp;
+   void *output_screen;
+   vmwFont *default_font;
+} vmwSVMWGraphState;
+
+/* Constants */
+
+     /* Display Target Constants */
+#define VMW_SDLTARGET     1
+
+     /* Error Constants */
+
+#define VMW_ERROR_DISPLAY 1
+#define VMW_ERROR_FILE    2
+#define VMW_ERROR_SIZE    3
+#define VMW_ERROR_MEM     4
+
+    /* Keypress Constants */
+#define VMW_BACKSPACE 1024
+#define VMW_ESCAPE      27
+#define VMW_ENTER     1025
+#define VMW_UP        1026
+#define VMW_DOWN      1027
+#define VMW_RIGHT     1028
+#define VMW_LEFT      1029
+#define VMW_F1        1030
+#define VMW_F2        1031
+#define VMW_PGUP      1032
+#define VMW_PGDN      1033
+
 
 /* Function declarations */
 
@@ -36,7 +75,7 @@ void vmwDrawBox(int x1,int y1,int xsize,int ysize,int col, vmwVisual *where);
 
     /* From vmw_flip.c */
 void vmwFlipVirtual(vmwVisual *destination, 
-		    vmwVisual *source);
+		    vmwVisual *source,int xsize, int ysize);
 int vmwArbitraryCrossBlit(vmwVisual *src,int x1,int y1,int w,int h,
 			  vmwVisual *dest,int x2,int y2);
 
@@ -60,24 +99,32 @@ int vmwSavePicPacked(int x1,int y1,int xsize,int ysize,
 
 
     /* From vmw_palette.c */
+int vmwPack3Bytes(int r, int g, int b);
 void vmwLoadCustomPalette(vmwVisual *source, int pal[256]);
 void vmwFadeToBlack(vmwVisual *source);
 void vmwUnFade(vmwVisual *source);
 
+    /* From vmw_setup.c */
+
+
+extern void *(*vmwSetupGraphics)(int xsize,int ysize, int bpp, int verbose);
+extern void (*vmwBlitMemToDisplay)(vmwSVMWGraphState *display, vmwVisual *source);
+extern void (*vmwClearKeyboardBuffer)(void);
+extern int (*vmwGetInput)(void);
+vmwSVMWGraphState *vmwSetupSVMWGraph(int display_type,int xsize,int ysize,
+				     int bpp,int verbose);
+vmwVisual *vmwSetupVisual(int xsize,int ysize,int palette_size);
 
     /* From vmw_sprite.c */
 
 vmwSprite *vmwGetSprite(int x, int y,
 			int xsize, int ysize,vmwVisual *screen);
 
-void vmwPutSprite(vmwSprite *sprite,int x,int y,int shield_color,
+void vmwPutSprite(vmwSprite *sprite,int x,int y,
 		  vmwVisual *screen);
 
 void vmwPutPartialSprite(vmwVisual *destination,
 			 vmwSprite *sprite,
 			 int x_start,int y_start,
 			 int x_stop, int y_stop);
-
-
-
 

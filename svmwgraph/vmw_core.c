@@ -1,8 +1,9 @@
 /* Core Graphics routines for the Super VMW Graphics Library */
 
 #include "svmwgraph.h"
+#include <stdio.h>
 
-// #define DEBUG 1
+#define DEBUG 1
 
     /*---------------------------------------------------------------*\
     |          vmwPutPixel                                            |
@@ -51,6 +52,12 @@ void vmwDrawHLine(int xstart,int ystart,int how_long,int color,
     for(i=0;i<how_long;i++) {
        *temp_pointer=color;
        temp_pointer++;
+#ifdef DEBUG
+       if (xstart+i>target->xsize-1) {
+	  printf("Out of bounds!\n");
+	  return;  
+       }
+#endif
     }
 }
 

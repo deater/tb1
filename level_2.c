@@ -7,14 +7,15 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include "SDL.h"
-#include "sdl_svmwgraph.h"
+#include "svmwgraph/svmwgraph.h"
 #include "tb1_state.h"
 #include "levels.h"
 #include "tblib.h"
-#include "vmw_sprite.h"
-#include "tb_keypress.h"
 #include "sound.h"
+
+#include "sidebar.h"
+#include "help.h"
+#include "menu_tools.h"
 
     /* Define this to get a frames per second readout */
 /* #define DEBUG_ON */
@@ -55,7 +56,7 @@ struct obstruction {
 void leveltwoengine(struct tb1_state *game_state)
 {
     int ch,i;
-    char tempst[300];
+    char tempst[BUFSIZ];
     int k,game_paused=0,speed_factor=1;
     int shipx=36;
     int whatdelay=1,beginscore,beginshield;
@@ -74,16 +75,16 @@ void leveltwoengine(struct tb1_state *game_state)
     int our_row,our_shape,rows_goneby=0;
     int grapherror;
    
-    vmw_font *tb1_font;
-    unsigned char *virtual_1;
-    unsigned char *virtual_2;
+    vmwFont *tb1_font;
+    vmwVisual *virtual_1;
+    vmwVisual *virtual_2;
    
-    struct vmwSprite *ship_shape[3];
-    struct vmwSprite *shape_table[40];
+    vmwSprite *ship_shape[3];
+    vmwSprite *shape_table[40];
     int enemies_drawn[200];
    
        /* For convenience */
-    tb1_font=game_state->tb1_font;
+    tb1_font=game_state->graph_state->default_font;
     virtual_1=game_state->virtual_1;
     virtual_2=game_state->virtual_2;
    
@@ -99,9 +100,9 @@ void leveltwoengine(struct tb1_state *game_state)
 			        tb1_data_file("ships.tb1",
 					      game_state->path_to_data));
    
-    ship_shape[1]=vmwGetSprite(0,0,48,30,virtual_1);
-    ship_shape[2]=vmwGetSprite(0,32,48,30,virtual_1);
-    ship_shape[3]=vmwGetSprite(0,64,48,30,virtual_1);
+    ship_shape[0]=vmwGetSprite(0,0,48,30,virtual_1);
+    ship_shape[1]=vmwGetSprite(0,32,48,30,virtual_1);
+    ship_shape[2]=vmwGetSprite(0,64,48,30,virtual_1);
 
    
     if (game_state->level==2) vmwLoadPicPacked(0,0,virtual_1,1,1,
@@ -151,57 +152,49 @@ void leveltwoengine(struct tb1_state *game_state)
        vmwTextXY("   LEVEL FOUR:",84,95,4,7,0,tb1_font,virtual_1);
        vmwTextXY(" THE PLANET EERM",84,105,4,7,0,tb1_font,virtual_1);
     }
-    vmwBlitMemToSDL(game_state->sdl_screen,virtual_1);
-    clear_keyboard_buffer();
+    vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
+    vmwClearKeyboardBuffer();
     pauseawhile(5);
 
        /* Setup and draw the sidebar */
     setupsidebar(game_state);
-    vmwFlipVirtual(virtual_1,virtual_2);
+    vmwFlipVirtual(virtual_1,virtual_2,320,200);
     sprintf(tempst,"%d",game_state->level);
     vmwDrawBox(251,52,63,7,0,virtual_2);
     vmwTextXY(tempst,307,51,12,0,0,tb1_font,virtual_2);
      
-    printf("Sidebar Drawn %i\n",sizeof(*virtual_2)); fflush(stdout);
-   
        /* Clear the screen and draw the stars */
     vmwDrawBox(0,0,320,400,0,virtual_2);
     for(i=0;i<100;i++) {
 //       printf("%i\n",i); fflush(stdout);
-//       vmwPutSprite(shape_table[32],rand()%238,rand()%150,0,virtual_2);
-//       vmwPutSprite(shape_table[33],rand()%238,rand()%150,0,virtual_2);
+       vmwPutSprite(shape_table[32],rand()%238,rand()%150,virtual_2);
+       vmwPutSprite(shape_table[33],rand()%238,rand()%150,virtual_2);
     }
    
-   
-    printf("Stars Drawn\n"); fflush(stdout);
     change_shields(game_state);
    
-
     gettimeofday(&timing_info,&dontcare);
     oldsec=timing_info.tv_sec; oldusec=timing_info.tv_usec;
-   
-    printf("Entering game loop\n"); fflush(stdout);
    
        /**** GAME LOOP ****/
     while (!levelover) { 
        ch=0;
-       printf("Scrolling Background\n"); fflush(stdout);
           /* Scroll the Background */
        if (speed_factor>1) howmuchscroll-=speed_factor;
        else howmuchscroll--;
        if (howmuchscroll<0) {
 	  howmuchscroll=200+howmuchscroll;
-//	  vmwArbitraryCrossBlit(virtual_2,0,0,240,200,virtual_2,0,200);
+	  vmwArbitraryCrossBlit(virtual_2,0,0,240,200,virtual_2,0,200);
 	  /*ggiCopyBox(vaddr2,0,0,240,200,0,200);*/
 	  for(i=0;i<12;i++) 
 	     for(j=19;j>=0;j--) {
 		our_shape=background[backrow+(19-j)][i];
-	        vmwPutSprite(shape_table[our_shape],
-			     i*20,j*10,0,virtual_1);
+//	        printf("Shape : %i\n",our_shape);
+		vmwPutSprite(shape_table[our_shape],
+			     i*20,j*10,virtual_2);
 	     }
 	     backrow+=20;
        }
-       printf("Setting Obsrtuctions\n"); fflush(stdout);
        
           /* Setup Obstructions */
        our_row=rows_goneby/10;
@@ -225,13 +218,11 @@ void leveltwoengine(struct tb1_state *game_state)
 	  }
        }
        
-       printf("Flipping\n"); fflush(stdout);
        
           /* Flip the far background to vaddr */
        vmwArbitraryCrossBlit(virtual_2,0,0+howmuchscroll,240,200,
                              virtual_1,0,0);
              
-       printf("Collision Check\n"); fflush(stdout);
        
           /***Collision Check***/
        for(i=0;i<40;i++) 
@@ -274,7 +265,7 @@ void leveltwoengine(struct tb1_state *game_state)
                 if(game_state->shields<0) levelover=1;
 		vmwPutSprite(shape_table[34],
 			     passive[i].x,passive[i].y+howmuchscroll,
-			     0,virtual_1);
+			     virtual_1);
 		change_shields(game_state);
 		}
 	  }
@@ -298,13 +289,13 @@ void leveltwoengine(struct tb1_state *game_state)
              passive[i].explodeprogress++;
 	     vmwPutSprite(shape_table[35+passive[i].explodeprogress],
                           passive[i].x,passive[i].y+howmuchscroll,
-			  0,virtual_1);
-             if (passive[i].explodeprogress>4) {
+			  virtual_2);
+             if (passive[i].explodeprogress>3) {
                 passive[i].dead=1;
                 passive[i].exploding=0;
 	        vmwPutSprite(shape_table[34],
 			     passive[i].x,passive[i].y+howmuchscroll,
-			     0,virtual_2);   
+			     virtual_2);   
            }
         }
        
@@ -316,7 +307,7 @@ void leveltwoengine(struct tb1_state *game_state)
 	  if (bullet[i].y<5) bullet[i].out=0;
 	  else vmwPutSprite(shape_table[20],
                             bullet[i].x,bullet[i].y,
-                            0,virtual_1);
+                            virtual_1);
        }
     }
        
@@ -348,7 +339,7 @@ void leveltwoengine(struct tb1_state *game_state)
        if (enemy[j].out) {
 	  vmwPutSprite(shape_table[enemy[j].kind],
 		       enemy[j].x,enemy[j].y,
-		       0,virtual_1);
+		       virtual_1);
           if (speed_factor==1) enemy[j].y+=enemy[j].yspeed;
 	  else enemy[j].y+=(enemy[j].yspeed*speed_factor);
           if (enemy[j].y>189) enemy[j].out=0;
@@ -358,22 +349,22 @@ void leveltwoengine(struct tb1_state *game_state)
        /***READ KEYBOARD***/
     if ((ch=vmwGetInput())!=0) { 
        switch(ch) {
-	case TB_ESCAPE: levelover=1; break;
-	case TB_RIGHT: if (shipadd>=0) shipadd+=3; else shipadd=0; break;
-	case TB_LEFT:  if (shipadd<=0) shipadd-=3; else shipadd=0; break;
-	case TB_F1: game_paused=1; help(); break;      
+	case VMW_ESCAPE: levelover=1; break;
+	case VMW_RIGHT: if (shipadd>=0) shipadd+=3; else shipadd=0; break;
+	case VMW_LEFT:  if (shipadd<=0) shipadd-=3; else shipadd=0; break;
+	case VMW_F1: game_paused=1; help(game_state); break;      
         case '+': whatdelay++; break;
 	case 'P': case 'p': game_paused=1;
 	                    coolbox(65,85,175,110,1,virtual_1);
 	                    vmwTextXY("GAME PAUSED",79,95,4,7,
 					            0,tb1_font,virtual_1);
-	                    vmwBlitMemToSDL(game_state->sdl_screen,virtual_1);
+	                    vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
 	                    while (vmwGetInput()==0) usleep(30000);
 			    break;
 	case '-': whatdelay--; break;
 	case 'S':
 	case 's': game_state->sound_enabled=!(game_state->sound_enabled); break;
-        case TB_F2: game_paused=1; /*savegame(*level,beginscore,beginshield);*/
+        case VMW_F2: game_paused=1; /*savegame(*level,beginscore,beginshield);*/
 	            break;
 	case ' ':  for(j=0;j<3;j++)
 	              if (!bullet[j].out) {
@@ -382,14 +373,14 @@ void leveltwoengine(struct tb1_state *game_state)
 			 bullet[j].x=shipx+21;
 			 bullet[j].y=165;
 			 vmwPutSprite(shape_table[20],
-			                bullet[j].x,bullet[j].y,0,virtual_1);
+			                bullet[j].x,bullet[j].y,virtual_1);
 			 j=4;
 		      }
 	  
        }
     }
 	  
-	  
+
        /***MOVE SHIP***/
     if (speed_factor>1) {
        shipx+=(shipadd*speed_factor);
@@ -403,18 +394,18 @@ void leveltwoengine(struct tb1_state *game_state)
     if (shipx>190) shipx=190;
     switch(shipframe) {
        case 1: vmwPutSprite(ship_shape[0],
-			    shipx,165,0,virtual_1); break;
+			    shipx,165,virtual_1); break;
        case 3: vmwPutSprite(ship_shape[1],
-			    shipx,165,0,virtual_1); break;
+			    shipx,165,virtual_1); break;
        case 2:
        case 4: vmwPutSprite(ship_shape[2],
-			    shipx,165,0,virtual_1); break;
+			    shipx,165,virtual_1); break;
     }
     shipframe++;
     if (shipframe==5) shipframe=1;
    
        /* Flip Pages */
-    vmwBlitMemToSDL(game_state->sdl_screen,virtual_1);   
+    vmwBlitMemToDisplay(game_state->graph_state,virtual_1);   
 
        /* Calculate how much time has passed */
     gettimeofday(&timing_info,&dontcare);
@@ -571,7 +562,7 @@ void leveltwoengine(struct tb1_state *game_state)
 
 void littleopener2()
 {
-    char tempst[300];
+//    char tempst[300];
 /*   
     ggiSetGCForeground(vis,tb1_pal[0]);
     ggiDrawBox(vis,0,0,320,200);

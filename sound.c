@@ -1,11 +1,8 @@
 /* "borrowed" from gltron */
 
 #include "sound.h"
-#include "SDL.h"
-#include "sdl_svmwgraph.h"
-#include "tb1_state.h"
-#include "tblib.h"
 #include <stdlib.h>
+#include "tblib.h"
 
 /* linux only, at the moment */
 

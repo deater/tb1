@@ -3,6 +3,15 @@
 #include "svmwgraph.h"
 
 
+   /* The "packing" method used by the 16 bit palette */
+int vmwPack3Bytes(int r, int g, int b) {
+   
+         return  ( ( ( (r>>3)&0x1f) <<11)+
+		   ( ( (g>>2)&0x3f) <<5)+
+		   ( ( (b>>3)&0x1f) ) );
+}
+
+
 void vmwLoadCustomPalette(vmwVisual *source, int pal[256]) {
    int i;
    for (i=0;i<256;i++) {

@@ -3,11 +3,10 @@ struct tb1_state {
    int shields;
    int shield_color;
    int score;
-   unsigned char *virtual_1;
-   unsigned char *virtual_2;
-   unsigned char *virtual_3;
-   SDL_Surface   *sdl_screen;
+   vmwVisual *virtual_1;
+   vmwVisual *virtual_2;
+   vmwVisual *virtual_3;
+   vmwSVMWGraphState *graph_state;
    int sound_enabled;
-   vmw_font *tb1_font;
    char path_to_data[BUFSIZ];
 };

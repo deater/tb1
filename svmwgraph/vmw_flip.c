@@ -5,9 +5,9 @@
 #include <string.h> /* For memcpy() */
 
 void vmwFlipVirtual(vmwVisual *destination, 
-		    vmwVisual *source) {
+		    vmwVisual *source, int xsize,int ysize) {
  
-   memcpy(destination,source,source->xsize*source->ysize);
+   memcpy(destination->memory,source->memory,xsize*ysize);
    
 }
 
@@ -25,7 +25,7 @@ int vmwArbitraryCrossBlit(vmwVisual *src,int x1,int y1,int w,int h,
    for(y=0;y<h;y++) {
       memcpy ((destination+x2),(source+x1),w);
       source+=src->xsize;
-      destination+=dest->ysize;
+      destination+=dest->xsize;
    }
     
    return 0;   
