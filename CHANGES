@@ -1,3 +1,10 @@
+29 Septemer 2004
++ Backed out the half-baked "generalized level 2" changes.  They made
+  things 10 times as complicated for no good reason.  Pre-mature
+  optimization is the root of all evil, etc.
++ Got rid of most of the warnings.
++ Have level_2 almost working.  Have to get collision detection working.
+  
 25 September 2004
 + Started working on level3 of the game again
 + Updated title screen to reflect current girlfriend.

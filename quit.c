@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <unistd.h>
+#include <stdlib.h> /* exit() */
 
 #include "svmwgraph/svmwgraph.h"
 #include "tb1_state.h"

@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h> /* abs */
 #include "svmwgraph/svmwgraph.h"
 #include "tb1_state.h"
 #include "graphic_tools.h"

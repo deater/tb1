@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <string.h> /* strlen() */
 
 #include "svmwgraph/svmwgraph.h"
 #include "tb1_state.h"

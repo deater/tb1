@@ -1,6 +1,6 @@
 include Makefile.inc
 
-INCLUDE= $(INCLUDE_GLOBAL)
+INCLUDE= $(INCLUDE_GLOBAL) -g
 LIBS= $(LIBS_GLOBAL)
 
 all:	tb1

@@ -1,6 +1,7 @@
 /* Routines for drawing the sidebar */
 
 #include <stdio.h>
+#include <string.h> /* strlen() */
 
 #include "svmwgraph/svmwgraph.h"
 #include "tb1_state.h"

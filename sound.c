@@ -75,7 +75,7 @@ int initSound(char *path_to_data) {
     } else {
    
        Mix_QuerySpec(&audio_rate, &audio_format, &audio_channels);
-       printf("+ Opened audio at %d Hz %d bit %s\n", audio_rate,
+       printf("  + Opened audio at %d Hz %d bit %s\n", audio_rate,
 			                          (audio_format&0xFF),
 			  (audio_channels > 1) ? "stereo" : "mono");
    }

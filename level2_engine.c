@@ -240,95 +240,54 @@ int free_level2_data(struct level2_data *data) {
 #define SND_OW     6
 #define SND_ZRRP   7
 
-struct enemyinfo {
+struct enemy_info_type {
+     int out;  
      int x,y;
-     int kind;
-     int out,exploding,boundarycheck,dead;
-     int explodeprogress;
-     int minx,maxx,xspeed,yspeed;
-     int hitsneeded;
+     int yspeed;
+     int type;
+     
 };
 
 struct bullet_info_type {
-   int out,type,x,y;
-   struct bullet_info_type *next,*prev;
-};
-
-struct bullet_root_type {
-   int howmany,allowed;
-   struct bullet_info_type *head,*tail;
+   int out,x,y;
 };
 
 struct obstruction_type {
-    int x,y;
-    int type;
+    int valid;
+    int type,shoots;
     int exploding;
     int explodeprogress;
     int howmanyhits;
     int lastshot;
-    struct obstruction_type *next;
 };
 
 
 #define BULLETS_MAX 3
+#define ENEMIES_MAX 25
 
-    struct bullet_root_type *bullet_root;
-    struct bullet_info_type **bullet_info;
-    struct bullet_info_type *temp_bullet=NULL;
+    struct enemy_info_type *enemies;
 
-
-void remove_bullet() {
-   
-	  temp_bullet->out=0;
-	  bullet_root->howmany--;
-
-	     /* Remove bullet from linked list */
-	  if (bullet_root->head==temp_bullet) {
-	     bullet_root->head=temp_bullet->next;
-	  }
-	  
-	  if (bullet_root->tail==temp_bullet) {
-	     bullet_root->tail=temp_bullet->prev;
-	  }
-	  
-	  if (temp_bullet->prev!=NULL) {
-	     if (temp_bullet->next!=NULL) 
-		temp_bullet->prev->next=temp_bullet->next;
-             else temp_bullet->prev->next=NULL;
-	  }
-	  
-	  
-	  if (temp_bullet->next!=NULL) {
-	     if (temp_bullet->prev!=NULL) 
-	        temp_bullet->next->prev=temp_bullet->prev;
-	     else temp_bullet->next->prev=NULL;
-	  }
-	
-}
-
-	
+    struct bullet_info_type *bullets;
+    int bullets_out=0;
 
 void leveltwoengine(tb1_state *game_state, char *shipfile, char *levelfile,
 		    char *spritefile,char *level_num, char *level_desc,
 		    void *close_function) 
 {
-    int ch,i;
+    int ch,i,temp_y;
     char tempst[BUFSIZ];
-    int k,game_paused=0,speed_factor=1;
+    int game_paused=0;
     int shipx=36,shipy;
     int whatdelay=1;
     int levelover=0,j,offscreen_row=0;
-//    struct enemyinfo *enemy;
     struct timeval timing_info;
     struct timezone dontcare;
    
     long oldsec,oldusec,time_spent;
     int howmuchscroll=200; /* there is a reason for this */
-    struct obstruction_type *obstruction_head[20];
-    struct obstruction_type obstructions[20][12];
-    struct obstruction_type *temp_obstruct;
+    struct obstruction_type obstruction[12][20];
     int shipadd=0,shipframe=1;
-    int our_row,rows_goneby=0;
+    int our_row,rows_goneby=0,rows_offset=0;
     int grapherror;
     int done_waiting,type;
    
@@ -337,7 +296,7 @@ void leveltwoengine(tb1_state *game_state, char *shipfile, char *levelfile,
     vmwVisual *virtual_2;
    
     vmwSprite *ship_shape[3];
-//    int enemies_drawn[200];
+
    
     struct level2_data *data;
    
@@ -350,7 +309,7 @@ void leveltwoengine(tb1_state *game_state, char *shipfile, char *levelfile,
     game_state->begin_score=game_state->score;
     game_state->begin_shields=game_state->shields;
     
-          /* Load Sprite Data */
+       /* Load Sprite Data */
     grapherror=vmwLoadPicPacked(0,0,virtual_1,1,1,
 			        tb1_data_file(shipfile,
 					      game_state->path_to_data),
@@ -364,7 +323,7 @@ void leveltwoengine(tb1_state *game_state, char *shipfile, char *levelfile,
        /* Load Level Data */
     data=parse_data_file(tb1_data_file(levelfile,game_state->path_to_data));
    
-      vmwLoadPicPacked(0,0,virtual_1,1,1,
+    vmwLoadPicPacked(0,0,virtual_1,1,1,
 		     tb1_data_file(spritefile,game_state->path_to_data),
 					       game_state->graph_state);
       
@@ -373,37 +332,21 @@ void leveltwoengine(tb1_state *game_state, char *shipfile, char *levelfile,
           data->sprites[j*10+i]->data=vmwGetSprite(1+i*21,1+j*11,20,10,virtual_1);
 
 
-       /* Initialize Structures for background */
-    bullet_info=calloc(5,sizeof(struct bullet_info_type *));
-    bullet_info[0]=calloc(5,sizeof(struct bullet_info_type));
-    for (i=1;i<5;i++) bullet_info[i]=bullet_info[0]+i*sizeof(struct bullet_info_type);
-    bullet_root=malloc(sizeof(struct bullet_root_type));
-    bullet_root->howmany=0;
-    bullet_root->allowed=5;
-    bullet_root->head=NULL;
-    bullet_root->tail=NULL;
-    for(i=0;i<bullet_root->allowed;i++) {
-       bullet_info[i]->out=0;
-    }
-   
+       /* Initialize Bullets */
+    bullets=calloc(BULLETS_MAX,sizeof(struct bullet_info_type));
+    for (i=0;i<BULLETS_MAX;i++) bullets[i].out=0;
+      
      
-      /* Initialize obstruction heap to 0 */
+      /* Initialize obstructions to zero */
    for(j=0;j<20;j++) {
       for(i=0;i<12;i++) {
-         obstructions[j][i].next=NULL;
+         obstruction[i][j].valid=0;
       }
    }
-   for(i=0;i<12;i++) {
-      obstruction_head[i]=NULL;
-   }
-   
-   
-	
-  
-   
-   
-   
-   
+
+      /* Initialize Enemies */
+   enemies=calloc(ENEMIES_MAX,sizeof(struct enemy_info_type));
+   for(i=0;i<ENEMIES_MAX;i++) enemies[i].out=0;
    
 
       /* Announce the Start of the Level */
@@ -432,16 +375,20 @@ void leveltwoengine(tb1_state *game_state, char *shipfile, char *levelfile,
 
    
        /* Get the initial background ready */
+       /* We copy the last 40 rows into vaddr_2 */
+       /* as we are scrolling bottom_up         */
     offscreen_row=data->level_length-(COL_HEIGHT*2);
     for(i=0;i<ROW_WIDTH;i++) {
        for(j=0;j<40;j++) {
-	  vmwPutSpriteNonTransparent(data->sprites[(int) *(data->level_data[offscreen_row+j]+i)]->data,
+	  vmwPutSpriteNonTransparent(
+		data->sprites[(int) *(data->level_data[offscreen_row+j]+i)]->data,
 		       i*20,j*10,virtual_2);
        }
     }
     offscreen_row-=20;
 
        /* Get the initial obstructions ready */
+       /* Get them from the last 20 rows     */
     our_row=data->level_length-20;
     for(j=0;j<20;j++) {
        for(i=0;i<12;i++) {
@@ -451,32 +398,34 @@ void leveltwoengine(tb1_state *game_state, char *shipfile, char *levelfile,
           if ((type==SPRITE_OBSTRUCTION) || 
 	      (type==SPRITE_ENEMY_SHOOT) || 
 	      (type==SPRITE_ENEMY_REFLECT)) {
-	     k=0;
-	     obstruction_head[j]=obstructions[j][0];
-	     temp_obstruct=obstructions[j][0];
-	     while(temp_obstruct->next!=NULL) temp_obstruct=temp_obstruct->next;
-	     temp_obstruct->next=temp_obstruct+1;
-	     temp_obstruct=temp_obstruct->next;
-	     temp_obstruct->x=i*20;
-	     temp_obstruct->y=j*20;
-	     temp_obstruct->type=type;
-	     temp_obstruct->exploding=0;
-	     temp_obstruct->lastshot=0;
-	     temp_obstruct->next=NULL;
+
+	     obstruction[i][j].shoots=data->sprites[*(data->level_data[our_row]+i)]->shoots;
+	     obstruction[i][j].valid=1;
+	     obstruction[i][j].type=type;
+	     obstruction[i][j].exploding=0;
+	     obstruction[i][j].lastshot=0;
+	     
 	  }
        }
     }
    
+     /* howmuchscroll is originally 200, as we start at the bottom */
     vmwArbitraryCrossBlit(virtual_2,0,0+howmuchscroll,240,200,
                           virtual_1,0,0);   
    
-       /**** GAME LOOP ****/
+
+
+       /************************************************************/
+       /*    MAIN LEVEL 2 GAME LOOP                                */
+       /************************************************************/
+
     while (!levelover) { 
+       
        ch=0;
        
           /* Scroll the Background */
-       if (speed_factor>1) howmuchscroll-=speed_factor;
-       else howmuchscroll--;
+       howmuchscroll--;
+       rows_offset++;
        
           /* If used up all the buffered background, draw some more */
        if (howmuchscroll<0) {
@@ -495,142 +444,124 @@ void leveltwoengine(tb1_state *game_state, char *shipfile, char *levelfile,
        
 
           /* Setup Obstructions */
-       if (rows_goneby%10==0) {
+       if (rows_offset==10) {
 
+	  rows_offset=0;
+	  
 	  /* move all rows down by one, dropping old off end */
-	  memmove(obstructions[1],obstructions[0],
+	  memmove(&obstruction[0][1],&obstruction[0][0],
 		  19*12*sizeof(struct obstruction_type));
-	  memmove(obstruction_head[1],obstruction_head[0],
-		  19*sizeof(struct *obstruction_type));
-	  obstructions[0]->next=NULL;
+
 	  our_row--;
-//	  printf("ROW %i\n",our_row);       
-	  temp_obstruct=obstructions[0];
+
 	  for(i=0;i<12;i++) {
              type=data->sprites[*(data->level_data[our_row]+i)]->type;
-//	     printf("%3i ",type);
              if ((type==SPRITE_OBSTRUCTION) || 
 	         (type==SPRITE_ENEMY_SHOOT) || 
 	         (type==SPRITE_ENEMY_REFLECT)) {
-//	         printf("*");
-//		 printf("Enemy %i on row %i\n",type,our_row);
-//		 fflush(stdout);
-	         while(temp_obstruct->next!=NULL) temp_obstruct=temp_obstruct->next;
-	         temp_obstruct->next=temp_obstruct+1;
-		 temp_obstruct=temp_obstruct+1;
-		 temp_obstruct->x=i*20;
-	         temp_obstruct->y=j*20;
-	         temp_obstruct->type=type;
-	         temp_obstruct->exploding=0;
-	         temp_obstruct->lastshot=0;
-	         temp_obstruct->next=NULL;
+
+		 obstruction[i][0].shoots=data->sprites[*(data->level_data[our_row]+i)]->shoots;
+		 obstruction[i][0].valid=1;
+	         obstruction[i][0].type=type;
+	         obstruction[i][0].exploding=0;
+	         obstruction[i][0].lastshot=0;
 	     }
+	     else {
+		obstruction[i][0].valid=0;
+	     }		  
 	  }
-//	  printf("\n"); fflush(stdout);
        }
 
 
-#if 0
-       if (!enemies_drawn[our_row]) {
-	  enemies_drawn[our_row]=1;
-	  for(i=0;i<12;i++) {
-//	     our_shape=background[our_row][i];
-	     if ((our_shape>9)&&(our_shape<20)) {
-		   k=0;
-		   while ((!passive[k].dead) && (k<40)) k++;
-		   passive[k].dead=0;
-		   passive[k].kind=our_shape;
-		   if ((our_shape>10) && (our_shape<15)) passive[k].shooting=1;
-		   else passive[k].shooting=0;
-		   passive[k].exploding=0;
-		   passive[k].x=i*20;
-		   passive[k].y=(rows_goneby%10)-9;
-		   passive[k].howmanyhits=1;
-		   passive[k].lastshot=0;
-	     }
-	  }
-       }
-#endif
        
           /* Flip the far background to regular background */
        vmwArbitraryCrossBlit(virtual_2,0,0+howmuchscroll,240,200,
                              virtual_1,0,0);
 
           /***Collision Check***/
-       for(i=0;i<bullet_root->howmany;i++) {
-	  temp_obstruct=obstructions[ (bullet_info[i]->y)/10];
-//	  printf("%p %p\n",temp_obstruct,temp_obstruct->next);
-//	  printf("Row %i\n",(bullet_info[i]->y)/10); fflush(stdout);
-	  while (temp_obstruct->next!=NULL) {
-	     temp_obstruct=temp_obstruct->next;
-	     if ( ( (bullet_info[i]->x-3) >= temp_obstruct->x) &&
-	          ( bullet_info[i]->x <= (temp_obstruct->x+20))) {
+       for(i=0;i<BULLETS_MAX;i++) {
+	  if (bullets[i].out) {  
+	     temp_y=(bullets[i].y)/10;
+	     for(j=0;j<12;j++) {
+	        if (obstruction[j][temp_y].valid) {
+	           if ( ( (bullets[i].x) >= j*20) &&
+	               ( bullets[i].x <= j*20+17)) {
 		
-		  if (temp_obstruct->type!=SPRITE_ENEMY_REFLECT) {
-		       if ((game_state->sound_possible)&&(game_state->sound_enabled)) 
-			  playGameFX(SND_KAPOW);
-                       temp_obstruct->exploding=1;
-                       temp_obstruct->explodeprogress=0;
-		       temp_bullet=bullet_info[i];
-		       remove_bullet();
-                       game_state->score+=10;
-                       changescore(game_state);
-		    }
-                    else {
-  //                     bullet[j].out=0;
-    //                   k=0;
-//		       while ((!enemy[k].out) && (k<10)) k++;
-//		       if (k<9) {
-  //                        enemy[k].out=1;
-    //                      enemy[k].y=bullet[j].y;
-      //                    enemy[k].x=bullet[j].x;
-        //                  enemy[k].yspeed=7;
-          //                enemy[k].kind=21;
-	//	       }
-		    }
-		
-	//	  printf("BOOM\n"); fflush(stdout);
-	     }	  
+		      if (obstruction[j][temp_y].type!=SPRITE_ENEMY_REFLECT) {
+		         if ((game_state->sound_possible)&&(game_state->sound_enabled)) 
+			    playGameFX(SND_KAPOW);
+                         obstruction[j][temp_y].exploding=1;
+                         obstruction[j][temp_y].explodeprogress=0;
+		         bullets[i].out=0;
+			 bullets_out--;
+                         game_state->score+=10;
+                         changescore(game_state);
+		      }
+		      
+                      else {
+			 int k=0;
+			 
+			 while(enemies[k].out) k++;
+			 if (k<ENEMIES_MAX) {
+			    bullets[i].out=0;
+			    bullets_out--;
+			    
+			    enemies[k].out=1;
+			    enemies[k].type=obstruction[j][temp_y].shoots;
+			    enemies[k].yspeed=5;
+			    enemies[k].x=bullets[i].x;
+			    enemies[k].y=bullets[i].y;
+			    
+			 }
+
+		      }
+		      
+		   }
+		   
+		}
+	     }
+	     
 	  }
 	  
        }
 	  
 	  
 	  
-       
-	  
-       
-#if 0       
-       for(i=0;i<40;i++) 
-	  if ((!passive[i].dead) && (!passive[i].exploding)) {
-	     for(j=0;j<3;j++) {
-                if ((bullet[j].out) && 
-		    (collision(bullet[j].x,bullet[j].y,3,4,passive[i].x,
-						  passive[i].y,10,5))){
-                    if (passive[i].kind!=10) {
-		       if ((game_state->sound_possible)&&(game_state->sound_enabled)) 
-			  playGameFX(SND_KAPOW);
-                       passive[i].exploding=1;
-                       passive[i].explodeprogress=0;
-                       bullet[j].out=0;
-                       game_state->score+=10;
-                       changescore(game_state);
-		    }
-                    else {
-                       bullet[j].out=0;
-                       k=0;
-		       while ((!enemy[k].out) && (k<10)) k++;
-		       if (k<9) {
-                          enemy[k].out=1;
-                          enemy[k].y=bullet[j].y;
-                          enemy[k].x=bullet[j].x;
-                          enemy[k].yspeed=7;
-                          enemy[k].kind=21;
-		       }
-		    }
-		 }
+
+       for(i=0;i<12;i++) {
+	  for(j=0;j<20;j++) {
+	     
+	     if (obstruction[i][j].valid) {
+	        if (obstruction[i][j].type==SPRITE_ENEMY_SHOOT) {
+		   obstruction[i][j].lastshot++;
+		   if (obstruction[i][j].lastshot>50) {
+		      int k=0;
+
+		      obstruction[i][j].lastshot=rand()%10;
+		      while(enemies[k].out) k++;
+		      if (k<ENEMIES_MAX) {
+		         enemies[k].out=1;
+			 enemies[k].x=(i*20)+10;
+			 enemies[k].y=(j*10)+5;
+			 enemies[k].yspeed=4;
+			 enemies[k].type=obstruction[i][j].shoots;
+		      }
+		      		      
+		   }
+		   
+		}
+		     
 	     }
+	  }
 	  
+       }
+       
+	    
+	  
+       
+
+
+#if 0
              /* See if ship is hitting any Obstructions*/
           if ((passive[i].y>155) && (passive[i].kind!=10)) {
              if ((collision(passive[i].x,passive[i].y,10,5,shipx+16,165,5,5))||
@@ -660,38 +591,50 @@ void leveltwoengine(tb1_state *game_state, char *shipfile, char *levelfile,
 	        change_shields(game_state);
 	    }
 	 }
-       
-          /***DO EXPLOSIONS***/
-       for(i=0;i<40;i++) 
-          if (passive[i].exploding) { 
-             passive[i].explodeprogress++;
-//	     vmwPutSprite(shape_table[35+passive[i].explodeprogress],
-  //                        passive[i].x,passive[i].y+howmuchscroll,
-//			  virtual_2);
-             if (passive[i].explodeprogress>3) {
-                passive[i].dead=1;
-                passive[i].exploding=0;
-//	        vmwPutSprite(shape_table[34],
-//			     passive[i].x,passive[i].y+howmuchscroll,
-//			     virtual_2);   
-           }
-        }
+
 #endif       
-       /***MOVE BULLETS***/
     
-    temp_bullet=bullet_root->head;
-    while(temp_bullet!=NULL) {
-       if (speed_factor>1) temp_bullet->y-=(5*speed_factor);
-       else temp_bullet->y-=5;
-       if (temp_bullet->y<5) {
-
-	  remove_bullet();
-	  
-
-       }	  
-       else vmwPutSprite(data->sprites[temp_bullet->type]->data,
-			 temp_bullet->x,temp_bullet->y,virtual_1);
-       temp_bullet=temp_bullet->next;
+   
+       /***DO EXPLOSIONS***/
+    for(i=0;i<12;i++) {
+       for(j=0;j<20;j++) {
+	  if (obstruction[i][j].valid) {
+	     if (obstruction[i][j].exploding) {
+                obstruction[i][j].explodeprogress++;
+		
+	        vmwPutSprite(data->sprites[35+(obstruction[i][j].explodeprogress)/2]->data,
+			    // shape_table[35+passive[i].explodeprogress],
+                             i*20,j*10+howmuchscroll+rows_offset,
+			     virtual_2);
+                if (obstruction[i][j].explodeprogress>6) {
+                   obstruction[i][j].valid=0;
+	           vmwPutSprite(data->sprites[34]->data,
+			     i*20,j*10+howmuchscroll+rows_offset,
+			     virtual_2);   
+		}
+		
+	     }
+	     
+	  }
+       }
+    }
+       
+       /***MOVE BULLETS***/
+    for(i=0;i<BULLETS_MAX;i++) {
+       if (bullets[i].out) {
+          bullets[i].y-=4;
+          if (bullets[i].y<4) {
+	     bullets[i].out=0;
+	     bullets_out--;
+	  }
+	  else {
+             vmwPutSprite(data->sprites[20]->data,
+			  
+			 bullets[i].x,
+			 bullets[i].y,virtual_1);
+	  }
+       }
+       
     }
     
 #if 0       
@@ -718,18 +661,21 @@ void leveltwoengine(tb1_state *game_state, char *shipfile, char *levelfile,
 	  }
        }
     }
-    
-    for(j=0;j<10;j++) {
-       if (enemy[j].out) {
-//	  vmwPutSprite(shape_table[enemy[j].kind],
-//		       enemy[j].x,enemy[j].y,
-//		       virtual_1);
-          if (speed_factor==1) enemy[j].y+=enemy[j].yspeed;
-	  else enemy[j].y+=(enemy[j].yspeed*speed_factor);
-          if (enemy[j].y>189) enemy[j].out=0;
+#endif
+       /* Draw Enemies */
+    for(j=0;j<ENEMIES_MAX;j++) {
+       if (enemies[j].out) {
+	  if (enemies[j].y>189) enemies[j].out=0;
+	  else {
+	     vmwPutSprite(data->sprites[enemies[j].type]->data,
+		       enemies[j].x,enemies[j].y,
+		       virtual_1);
+             enemies[j].y+=enemies[j].yspeed;
+	  }
+	  
        }
     }
-#endif
+       
        
        /***READ KEYBOARD***/
     if ((ch=vmwGetInput())!=0) { 
@@ -752,53 +698,37 @@ void leveltwoengine(tb1_state *game_state, char *shipfile, char *levelfile,
         case VMW_F2: game_paused=1; 
 	             savegame(game_state);
 	             break;
-	case ' ':  if (bullet_root->howmany<BULLETS_MAX) {  
-	              /* Find empty slot */
-	              for (j=0;j<bullet_root->allowed;j++) {
-			  if (!bullet_info[j]->out) {
-			     temp_bullet=bullet_info[j];
-			     break;
-			  }
-		      }
-	              bullet_root->howmany++;
-	              temp_bullet->out=1;
-	              temp_bullet->type=20;  /* FIXME */
-		      if ((game_state->sound_possible)&&(game_state->sound_enabled))
-			 playGameFX(SND_CC);
-		      temp_bullet->x=shipx+21;
-		      temp_bullet->y=165;
-	              temp_bullet->next=NULL;
-	                 /* Insert in linked list */
-	              if (bullet_root->head==NULL) {
-		         bullet_root->head=temp_bullet;
-			 bullet_root->tail=temp_bullet;
-			 temp_bullet->prev=NULL;
-		      }
-	              else {
-			 temp_bullet->prev=bullet_root->tail;
-			 bullet_root->tail->next=temp_bullet;
-			 bullet_root->tail=temp_bullet;
-		      } 
-	                 /* Draw Bullet */
+	case ' ':  
+	              i=0;
+	              while(bullets[i].out) i++;
+	              if (i<BULLETS_MAX) {
+			 bullets_out++;
+			 bullets[i].out=1;
+			 if ((game_state->sound_possible)&&(game_state->sound_enabled))
+			    playGameFX(SND_CC);
+		         bullets[i].x=shipx+21;
+		         bullets[i].y=165;
 
-		       vmwPutSprite(data->sprites[temp_bullet->type]->data,
-			            temp_bullet->x,temp_bullet->y,virtual_1);
-
-	}
+		         vmwPutSprite(data->sprites[20]->data,
+			              bullets[i].x,
+				      bullets[i].y,virtual_1);
+		      }
 	  
+	              break;
        }
+       
     }
-	  
+       
+       
 
        /***MOVE SHIP***/
-//    if (speed_factor>1) {
-//       shipx+=(shipadd*speed_factor);
-//       rows_goneby+=(speed_factor);
-//    }
-//    else {
+
        shipx+=shipadd;
+       
        rows_goneby++;
-//    }
+       
+    
+       /* Keep ship on screen */
     if (shipx<1) shipx=1;
     if (shipx>190) shipx=190;
     switch(shipframe) {
@@ -845,7 +775,9 @@ void leveltwoengine(tb1_state *game_state, char *shipfile, char *levelfile,
     }
     
 
-    /*printf("%i\n",rows_goneby);*/
+       /* The leve is over */
+       /* FIXME autocalculate rather than 1950 */
+       
     if (rows_goneby>1950) {
 //       printf("%i\n",rows_goneby);
 //       coolbox(35,85,215,110,1,virtual_1);
@@ -945,6 +877,7 @@ void leveltwoengine(tb1_state *game_state, char *shipfile, char *levelfile,
           vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
 	  pauseawhile(2);      
        }
+       
 
        else {
 	  if (shipx-95==0) shipadd=0;

@@ -100,8 +100,8 @@ void write_hs_list(tb1_state *game_state,int score,char *hiname,int wipe)
        }
    
        if (wipe) {
-	  fprintf(hilist,"Vince\nChipper\nMarie\nHairold\nKevin\n"
-		         "Leonard\nLizann\nPete\nJim\nBrigid\n"
+	  fprintf(hilist,"Vince\nChipper\nHairold\nLeonard\n"
+		         "Susie\nJim\nPete\nBrigid\nLizann\nMarie\n"
 		         "5000\n4500\n4000\n3500\n3000\n"
 		         "2500\n2000\n1500\n1000\n500\n");
        }

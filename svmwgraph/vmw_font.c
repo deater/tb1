@@ -4,6 +4,7 @@
 
 #include <stdio.h>  /* For File I/O */
 #include <stdlib.h> /* For malloc/calloc */
+#include <string.h> /* strlen() */
 
 /* The font used is a standard VGA font.          */
 /* To use the "smallText" functions, the VGA font */

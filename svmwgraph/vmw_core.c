@@ -2,6 +2,7 @@
 
 #include "svmwgraph.h"
 #include <stdio.h>
+#include <string.h> /* memset */
 #include <math.h>
 
 #define DEBUG 1
