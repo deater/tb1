@@ -1,11 +1,8 @@
 /* The OpenGL hooks for the Super VMW graphics library */
 
-/* based on the "glxheads.c" file from the Mesa 3.4 demos distribution */
-
-
+#include <SDL/SDL.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
-#include <GL/glx.h>
 
 #include "svmwgraph.h"
 #include <stdlib.h>  /* For atexit() */
@@ -15,7 +12,11 @@ static float rotation=0.0;
 
 unsigned char palette[256][4];
 
-#define TEXTURE_SIZE 32
+#define TEXTURE_SIZE 64
+
+int texture_grid[5][4];
+GLubyte *texture_data[5][4];
+
 
 typedef struct {
    GLubyte *texture_data;
@@ -23,111 +24,104 @@ typedef struct {
    GLfloat x1,y1,x2,y2;
 } texture_block;
 
-texture_block *texture_grid;
+
 texture_block *current_texture;
 
 GLuint temp_texture_name;
 int texnumx,texnumy;
 
-static Display *display;
-static Window win;
-static GLXContext ctx;
+
+
+void reshape(int w,int h) {
+      glViewport(0,0,(GLsizei)w,(GLsizei)h);
+      glMatrixMode(GL_PROJECTION);
+      glLoadIdentity();
+      gluPerspective(60.0,(GLfloat)w/(GLfloat)h,1.0,100.0);
+      glMatrixMode(GL_MODELVIEW);
+      glLoadIdentity();
+      //glTranslatef(0.0,0.0,-3.6);
+}
+
+
 
     /* Setup the Graphics */
     /* Pass '0' to auto-detect bpp */
 void *openGL_setupGraphics(int *xsize,int *ysize,int *bpp,
 			int fullscreen,int verbose) {
-	    
-    int scrnum,x,y;
-    XSetWindowAttributes attr;
-    Window root;
-    XVisualInfo *visinfo;
-    unsigned long mask;
-    XSizeHints sizehints;
-   
-    int attrib[] = { GLX_RGBA,
-	             GLX_RED_SIZE, 1,
-	             GLX_GREEN_SIZE, 1,
-	             GLX_BLUE_SIZE, 1,
-	             GLX_DOUBLEBUFFER,
-	             None };
-   
-   
-   
-    display=XOpenDisplay(NULL);
-    if (display==NULL) {
-       printf("Unable to open X display!\n");
-       return NULL;
-    }
-   
-    scrnum=DefaultScreen(display);
-    root=RootWindow(display,scrnum);
-    visinfo=glXChooseVisual(display,scrnum,attrib);
-    if (visinfo==NULL) {
-       printf("Unable to make RGB double-buffered visual\n");
-       return NULL;
-    }
-   
-       /* Window Attributes */
-    attr.background_pixel=0;
-    attr.border_pixel=0;
-    attr.colormap=XCreateColormap(display,root,visinfo->visual,AllocNone);
-    attr.event_mask=StructureNotifyMask | ExposureMask | KeyPressMask;
-    mask =CWBackPixel | CWBorderPixel | CWColormap | CWEventMask;
-   
-    win = XCreateWindow(display,root,0,0,640,400,
-		       0,visinfo->depth,InputOutput,visinfo->visual,mask,
-		       &attr);
-    if (!win) {
-       printf("Could not create X-window!\n");
-       return NULL;
-    }
-   
-    sizehints.x=10;
-    sizehints.y=10;
-    sizehints.width=640;
-    sizehints.height=400;
-    sizehints.flags=USSize | USPosition;
-    XSetNormalHints(display,win,&sizehints);
-    XSetStandardProperties(display,win,NULL,NULL,
-			  None,(char **)NULL,0,&sizehints);
-    ctx=glXCreateContext(display,visinfo,NULL,True);
-    if (ctx==NULL) {
-       printf("Can't create GLX context!\n");
-       return NULL;
-    }
-    XMapWindow(display,win);
-    if (!glXMakeCurrent(display,win,ctx)) {
-       printf("glXMakeCurrent failed!\n");
-       return NULL;
-     }
-   
-     printf("  GL_VERSION:  %s\n", glGetString(GL_VERSION));
-     printf("  GL_VENDOR:   %s\n", glGetString(GL_VENDOR));
-     printf("  GL_RENDERER: %s\n", glGetString(GL_RENDERER));
-      
-     glClearColor(0.0,0.0,0.0,0.0);
-     glShadeModel(GL_FLAT);
-//     glShadeModel(GL_SMOOTH);
-//     glEnable(GL_POLYGON_SMOOTH);
-//     glEnable(GL_BLEND);
-//     glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-   
-     glPixelStorei(GL_UNPACK_ALIGNMENT,1);
-   
-//     for (i=0;i<NUM_TEXTURES;i++) {
-  //   for (x=0;x<TEXTURE_SIZE;x++) {
-//	for (y=0;y<TEXTURE_SIZE;y++) {
-//	   textureBlock[i][x][y][3]=255;
-//	}
-  //   }
-    // }
 
-     printf("Init!\n"); fflush(stdout);
+    SDL_Surface *sdl_screen=NULL;
+    SDL_Joystick *joy;   
+    int mode,x,y;
+
+       /* Initialize SDL */
+    if ( SDL_Init(SDL_INIT_VIDEO|SDL_INIT_JOYSTICK)<0) {
+       printf("Error trying to init SDL: %s\n",SDL_GetError());
+       return NULL;
+    }
+   
+    if (fullscreen) mode=SDL_OPENGL | SDL_FULLSCREEN;
+    else mode=SDL_OPENGL;
+   
+       /* Create the OpenGL screen */
+    if ( (sdl_screen=SDL_SetVideoMode(*xsize, *ysize, 0, mode)) == NULL ) {
+       printf("Unable to create OpenGL screen: %s\n", SDL_GetError());
+       SDL_Quit();
+       return NULL;
+    }
+   
+    atexit(SDL_Quit);
+   
+    SDL_WM_SetCaption("Tom Bombem...",NULL);
+
+       /* Try to init Joysticks */
+    if (SDL_NumJoysticks()>0){
+       /* Open joystick */
+       joy=SDL_JoystickOpen(0);
+       if (joy) {
+	  printf("Opened Joystick 0\n");
+	  printf("Name: %s\n", SDL_JoystickName(0));
+	  SDL_JoystickEventState(SDL_ENABLE);
+       }
+    }
+   
+    printf("  GL_VERSION:  %s\n", glGetString(GL_VERSION));
+    printf("  GL_VENDOR:   %s\n", glGetString(GL_VENDOR));
+    printf("  GL_RENDERER: %s\n", glGetString(GL_RENDERER));
+        
+    glPixelStorei(GL_UNPACK_ALIGNMENT,1);
+    glClearColor(0.0,0.0,0.0,0.0);
+    glClearDepth(1.0);
+    glShadeModel(GL_SMOOTH);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+    glLoadIdentity();
+   
+    reshape(*xsize,*ysize);
+      
+    printf("Init!\n"); fflush(stdout);
 
 // Initializing Textures!!
 //
-   
+
+
+     for(x=0;x<5;x++) {
+	for(y=0;y<4;y++) {
+	   texture_data[x][y]=calloc(64*64,sizeof(char)*4);
+	   glBindTexture(GL_TEXTURE_2D,texture_grid[x][y]);
+	   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+	   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 64,
+			64 ,0,GL_RGBA,GL_UNSIGNED_BYTE,texture_data[x][y]);
+	   
+	}
+     }
+
+
+
+#if 0   
      texnumx=320/TEXTURE_SIZE;
      if (320%TEXTURE_SIZE) texnumx++;
      texnumy=200/TEXTURE_SIZE;
@@ -169,8 +163,9 @@ void *openGL_setupGraphics(int *xsize,int *ysize,int *bpp,
       glOrtho(-20,340,-20,220,-100,100);
   
 //     gluPerspective(60,1.6,-10,10);
-   
-     return (char *)(1);
+#endif
+     return sdl_screen;
+
 }
 
 
@@ -193,18 +188,105 @@ void openGL_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
    
    int x=0,y=0,temp_col,i,j,ending_j,ending_i;
    unsigned char *s_pointer;
+
+    GLubyte temp_data[64*64*4];
    
-   GLubyte *t_pointer;
+    GLubyte *t_pointer;
+
+    GLfloat light_position[]={0.0,0.0,25.0,0.0};
+    GLfloat light_ambient[]={0.65,0.65,0.65,1.0};
+    GLfloat lmodel_ambient[]={0.4,0.4,0.4,1.0};
+    GLfloat white_light[]={1.0,1.0,1.0,1.0};
    
-   if (!glXMakeCurrent(display,win,ctx)) {
-      printf("Error getting context!\n");
-      return;
-   }
+      
+    glLoadIdentity();
+
+    gluLookAt(0.0,0.0,20.0,
+	      0.0,0.0,0.0,
+	      0.0,1.0,1.0);
    
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-   glPushMatrix();
+    
+
+    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, white_light);
+    glLightfv(GL_LIGHT0, GL_SPECULAR,white_light);
+          
+    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, lmodel_ambient);
+  
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);   
+
+    glColor3f(1,0,0);     
+     {  
+	        GLfloat default_a[]={0.6,0.6,0.6,1.0
+		};
+	        GLfloat default_d[]={   0.8,0.8,0.8,1.0
+		};
+	        GLfloat default_s[]={0.0,0.0,0.0,1.0
+		};
+	        GLfloat default_e[]={0.0,0.0,0.0,1.0
+		};
+	       
+	        glMaterialfv(GL_FRONT,GL_AMBIENT,default_a);
+	        glMaterialfv(GL_FRONT,GL_DIFFUSE,default_d);
+	        glMaterialfv(GL_FRONT,GL_SPECULAR,default_s);
+	        glMaterialfv(GL_FRONT,GL_EMISSION,default_e);
+     }
+#if 0
+  for (x=0;x<source->xsize;x++)
+            for (y=0;y<source->ysize;y++) {
+	   *((Uint16 *)(t_pointer))=target_p->palette[*(s_pointer)];
+	                  s_pointer++; t_pointer+=2;
+	    }
+#endif     
+
    
-   glRotatef(rotation,160,100,0);
+    glRotatef(rotation,1,1,1);
+    rotation+=1.0;
+    glEnable(GL_TEXTURE_2D);
+    glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_REPLACE);
+   
+    for(i=0;i<5;i++) {
+       for(j=0;j<3;j++) {  /* make it 4, but fix so no out of bounds */
+	  s_pointer=(source->memory)+(((j*64*320)+(i*64)));
+
+          for(y=0;y<64;y++) {   
+             for(x=0;x<64;x++) {    
+	        temp_data[ ((y*64)+x)*4] =palette[*(s_pointer)][0];
+	        temp_data[ ((y*64)+x)*4+1] =palette[*(s_pointer)][1];
+	        temp_data[ ((y*64)+x)*4+2] =palette[*(s_pointer)][2];
+	        temp_data[ ((y*64)+x)*4+3] =palette[*(s_pointer)][3];
+	        s_pointer++;
+	     }
+             s_pointer+=(320-64);
+	  }
+   
+	  glBindTexture(GL_TEXTURE_2D,texture_grid[i][j]);
+   
+          glTexSubImage2D(GL_TEXTURE_2D,0,0,0,64,64,GL_RGBA,GL_UNSIGNED_BYTE,
+		          &temp_data);
+   
+	  glPushMatrix();
+	  glTranslatef( i*4,-(j*4),0);
+	  
+          glBegin(GL_QUADS);
+             glNormal3f(0.0,0.0,1.0);
+             glTexCoord2f(0,0);
+             glVertex3f(-2,2,0);
+             glTexCoord2f(1,0);
+             glVertex3f(2,2,0);
+             glTexCoord2f(1,1);
+             glVertex3f(2,-2,0);
+             glTexCoord2f(0,1);
+             glVertex3f(-2,-2,0);
+          glEnd();
+	  glPopMatrix();
+       }
+    }
+    glDisable(GL_TEXTURE_2D);
+#if 0   
+
 //   glEnable(GL_DEPTH_TEST);
    glEnable(GL_TEXTURE_2D);
    
@@ -259,150 +341,12 @@ void openGL_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_DEPTH_TEST);
     glPopMatrix();
-    
-    glXSwapBuffers(display,win);
-   
-   /*
-   int x,y;
-   
-   unsigned char *s_pointer;
-   
-   s_pointer=source->memory;
-   
-   for (x=0;x<source->xsize;x++)
-       for (y=0;y<source->ysize;y++) {
-	   glColor3f(palette[*s_pointer][0],palette[*s_pointer][1],palette[*s_pointer][2]);
-	   glRectf(x,y,x+1,y+1);
-	   
-//           *((Uint16 *)(t_pointer))=target_p->palette[*(s_pointer)];
-           s_pointer++; 
-       }
-    */
-}
-
-void openGL_clearKeyboardBuffer() {
-/*   SDL_Event event;
-   while (SDL_PollEvent(&event)) {
-*/      
-   
-}
-
-void reshape(int w,int h) {
-      glViewport(0,0,(GLsizei)w,(GLsizei)h);
-      glMatrixMode(GL_PROJECTION);
-      glLoadIdentity();
-      if (w<=h)
-          glOrtho(-30,30,-30*(GLfloat)h/(GLfloat)w,
-		               30*(GLfloat)h/(GLfloat)w,-30,30);
-      else
-          glOrtho(-20,340,-20,
-		               220,-100,100);
-            
-            
-            
-      glMatrixMode(GL_MODELVIEW);
-      glLoadIdentity();
+#endif
+    glFlush();
+    SDL_GL_SwapBuffers();
+    glDisable(GL_LIGHTING);
 }
       
-
-
-
-int openGL_getInput() {
-    
-    static int keydown=0;
-    KeySym keysym;
-    XEvent E;
-    char keyname[18];
-   
-    while (XPending(display) > 0) {
-       XNextEvent(display, &E);
-       if (E.xany.window == win) {
-	  switch (E.type) {
-	      case Expose:
-		   //Redraw();
-		   break;
-	      case ConfigureNotify:
-		   reshape(E.xconfigure.width, E.xconfigure.height);
-		   break;
-	      case KeyPress:
-	           keydown=1;
-	      case KeyRelease:
-	             /* get bare keysym, for the scancode */
-	             keysym = XLookupKeysym ((XKeyEvent *) &E, 0);
-	             /* get key name, using modifiers for the unicode */
-	             XLookupString ((XKeyEvent *) &E, keyname, 16, NULL, NULL);
-	     
-//	             fprintf(stderr, "Keyevent keycode: %04X, keysym: %04X, unicode: %02X\n",
-//	                  E.xkey.keycode, (unsigned int)keysym, (unsigned int)keyname[0]); 
-	     
-	             /* look which table should be used */
-//	             if ( (keysym & ~0x1ff) == 0xfe00 )
-//	                  event.scancode = extended_code_table[keysym & 0x01ff];
-//	             else if (keysym < 0xff)
-//	                  event.scancode = code_table[keysym & 0x00ff];
-//	             else
-//	                  event.scancode = 0;
-//	     
-//	             event.unicode = keyname[0];
-	     
-//	             keyboard_register_event(&event);
-                     switch(E.xkey.keycode) {
-		      case 0x09: return VMW_ESCAPE;
-		      case 0x24: return VMW_ENTER;
-		      case 0x62: return VMW_UP;
-		      case 0x68: return VMW_DOWN;
-		      case 0x66: return VMW_RIGHT;
-		      case 0x64: return VMW_LEFT;
-		      case 0x41: return ' ';
-		      case 0x43: return VMW_F1;
-		      case 0x44: return VMW_F2;
-		      case 0x63: return VMW_PGUP;
-		      case 0x69: return VMW_PGDN;
-		      case 0x4A: /* F8 */
-			rotation+=10.0;
-			printf("Rotation now=%f\n",rotation);
-			return 0;
-		     }
-	             break;
-	     
-	      default:
-		   /*no-op*/ ;
-	  }
-       }
-    }
-        
-   
-/*   SDL_Event event;
-   int keypressed;
-   
-   while ( SDL_PollEvent(&event)) {
-      
-       switch(event.type) {
-	case SDL_KEYDOWN:
-	     keypressed=event.key.keysym.sym;
-	     switch (keypressed) {
-	      case SDLK_BACKSPACE: return VMW_BACKSPACE;
-	      case SDLK_ESCAPE   : return VMW_ESCAPE;
-	      case SDLK_RETURN   : return VMW_ENTER;
-	      case SDLK_UP       : return VMW_UP;
-	      case SDLK_DOWN     : return VMW_DOWN;
-	      case SDLK_RIGHT    : return VMW_RIGHT;
-	      case SDLK_LEFT     : return VMW_LEFT;
-	      case SDLK_F1       : return VMW_F1;
-	      case SDLK_F2       : return VMW_F2;
-	      case SDLK_PAGEUP   : return VMW_PGUP;
-	      case SDLK_PAGEDOWN : return VMW_PGDN;
-	      default: if ((keypressed>='a') && (keypressed<='z')  
-		          && (event.key.keysym.mod & KMOD_SHIFT) )
-		          return keypressed-32;
-		       else return keypressed;
-	     }
-	default: break;
-       }
-   }
- */
-   return 0;
-}
 
 void openGL_closeGraphics() {
 }

@@ -7,6 +7,7 @@
 #include "graphic_tools.h"
 
 #include "levels.h"
+#include "level2_engine.h"
 #include "hiscore.h"
 
 void playthegame(tb1_state *game_state)
@@ -26,7 +27,9 @@ void playthegame(tb1_state *game_state)
        if (game_state->level==2) littleopener2(game_state);
     }
     if (game_state->level==2) {
-       leveltwoengine(game_state);
+       leveltwoengine(game_state,"level1/ships.tb1","level2/level2.dat",
+		      "level2/tbaship.tb1","   LEVEL TWO:",
+		      "THE \"PEASE ENVOY\"",NULL);
        if (game_state->level==3) LevelThreeLittleOpener(game_state);
     }
     if (game_state->level==3) {
@@ -34,7 +37,9 @@ void playthegame(tb1_state *game_state)
 	  
     }
     if (game_state->level==4) {
-       leveltwoengine(game_state);
+       leveltwoengine(game_state,"level1/ships.tb1","level4/level4.dat",
+		      "level4/tbeerm.tb1","   LEVEL FOUR:"," THE PLANET EERM",
+		      NULL);
     }
     coolbox(70,85,170,110,1,game_state->virtual_1);
     vmwTextXY("GAME OVER",84,95,4,7,0,

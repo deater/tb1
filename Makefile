@@ -5,8 +5,14 @@ LIBS= $(LIBS_GLOBAL)
 
 all:	tb1
 
-tb1:	tb1.o ./svmwgraph/libsvmwgraph.a about.o credits.o graphic_tools.o help.o hiscore.o level_1.o level_2.o level_3.o loadsave.o options.o playgame.o quit.o sidebar.o sound.o story.o tblib.o
-	$(CC) -o tb1 tb1.o about.o credits.o graphic_tools.o help.o hiscore.o level_1.o level_2.o level_3.o loadsave.o options.o playgame.o quit.o sidebar.o sound.o story.o tblib.o ./svmwgraph/libsvmwgraph.a $(LIBS)
+tb1:	tb1.o ./svmwgraph/libsvmwgraph.a about.o credits.o graphic_tools.o \
+		help.o hiscore.o level_1.o level2_engine.o level_3.o \
+		loadsave.o options.o playgame.o quit.o sidebar.o sound.o\
+		story.o tblib.o
+	$(CC) -o tb1 tb1.o about.o credits.o graphic_tools.o help.o hiscore.o\
+		level_1.o level2_engine.o level_3.o loadsave.o options.o\
+		playgame.o quit.o sidebar.o sound.o story.o tblib.o\
+		./svmwgraph/libsvmwgraph.a $(LIBS)
 
 ./svmwgraph/libsvmwgraph.a:	
 	cd svmwgraph && make
@@ -31,9 +37,12 @@ hiscore.o:	hiscore.c
 
 level_1.o:	level_1.c
 	$(CC) -c level_1.c $(INCLUDE)
-	
-level_2.o:	level_2.c
-	$(CC) -c level_2.c $(INCLUDE)
+
+level2_engine.o:	level2_engine.c
+	$(CC) -c level2_engine.c $(INCLUDE)
+
+#level_2.o:	level_2.c
+#	$(CC) -c level_2.c $(INCLUDE)
 
 level_3.o:	level_3.c
 	$(CC) -c level_3.c $(INCLUDE)

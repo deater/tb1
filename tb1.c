@@ -1,6 +1,6 @@
 /****************************************************************\
 \*    TOM BOMBEM AND THE INVASION OF THE INANIMATE_OBJECTS      */
-/*                    version 2.9.14      3 June 2001    	*\
+/*                    version 2.9.15      28 October 2001    	*\
 \*        by Vince Weaver       vince@deater.net                */
 /*                                                              *\
 \*  Originally written in Pascal and x86 assembly for DOS       */
@@ -10,12 +10,13 @@
 \*          This source is released under the GPL               */
 /****************************************************************/
 
-#define TB1_VERSION "2.9.14"
+#define TB1_VERSION "2.9.15"
 
 #include <stdio.h>
 #include <stdlib.h>   /* for calloc */
 #include <string.h>   /* for strncpy */
 #include <unistd.h>
+#include <time.h>
 #include <sys/time.h>
 
 #include "svmwgraph/svmwgraph.h"

@@ -21,7 +21,7 @@ int vmwLoadPCX(int x1,int y1,vmwVisual *target,
 
 {
 
-    int pcx_fd,x,y,i,r,g,b,numacross;
+    int pcx_fd,x,y,i,r,g,b,numacross,xsize,ysize;
     unsigned char pcx_header[128];
     unsigned char temp_byte;
    
@@ -34,6 +34,10 @@ int vmwLoadPCX(int x1,int y1,vmwVisual *target,
     }
    
     read(pcx_fd,&pcx_header,128);
+
+    xsize=(pcx_header[9]<<8)+pcx_header[8];
+    ysize=(pcx_header[11]<<8)+pcx_header[10];
+    printf("Loading %ix%i pcx file\n",xsize,ysize);
    
     /* Possibly add some sanity checking in the header at some point... */
     /* Or actually even get the proper VALUES from the header.  Some day... */
@@ -42,7 +46,7 @@ int vmwLoadPCX(int x1,int y1,vmwVisual *target,
     
        x=0; y=0;
    
-       while (y<200) {
+       while (y<ysize) {
           read(pcx_fd,&temp_byte,1);
           if ((temp_byte>=192) && (temp_byte<=255)) {
 	     numacross=temp_byte-192;
@@ -54,7 +58,7 @@ int vmwLoadPCX(int x1,int y1,vmwVisual *target,
 	     vmwPutPixel(x,y,temp_byte,target);
 	     x++;
           }
-          if (x>319) {
+          if (x>xsize) {
 	     x=0;
 	     y++;
           }

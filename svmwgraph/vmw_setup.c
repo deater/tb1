@@ -88,9 +88,9 @@ vmwSVMWGraphState *vmwSetupSVMWGraph(int display_type,int xsize,int ysize,
        case VMW_OPENGLTARGET:
 #ifdef OPENGL_TARGET
                vmwFlushPalette=openGL_flushPalette;
-               vmwClearKeyboardBuffer=openGL_clearKeyboardBuffer;
+               vmwClearKeyboardBuffer=SDL_clearKeyboardBuffer;
                vmwBlitMemToDisplay=openGL_BlitMem;
-               vmwGetInput=openGL_getInput;
+               vmwGetInput=SDL_getInput;
                vmwCloseGraphics=openGL_closeGraphics;
 #endif
                break;
@@ -122,19 +122,19 @@ vmwSVMWGraphState *vmwSetupSVMWGraph(int display_type,int xsize,int ysize,
                if (temp_state->bpp==24) {
 		  printf("ERROR! 24bpp not supported!\n");
 		  if (scale==1) {
-                     vmwBlitMemToDisplay=SDL_NoScale16bpp_BlitMem;
-                  } else { 
-	            vmwBlitMemToDisplay=SDL_Double16bpp_BlitMem;
+		     vmwBlitMemToDisplay=SDL_NoScale16bpp_BlitMem;
+		  } else { 
+		     vmwBlitMemToDisplay=SDL_Double16bpp_BlitMem;
+		  }
+	       }
+               if (temp_state->bpp>=32) {
+	          if (scale==1) {
+	             vmwBlitMemToDisplay=SDL_NoScale32bpp_BlitMem;
+		  } else { 
+	             vmwBlitMemToDisplay=SDL_Double32bpp_BlitMem;
 		  }
 	       }
        
-               if (temp_state->bpp>=32) {
-		  if (scale==1) {
-                     vmwBlitMemToDisplay=SDL_NoScale32bpp_BlitMem;
-                  } else { 
-	            vmwBlitMemToDisplay=SDL_Double32bpp_BlitMem;
-		  }
-	       }
                vmwFlushPalette=SDL_flushPalette;
                vmwClearKeyboardBuffer=SDL_clearKeyboardBuffer;
                vmwGetInput=SDL_getInput;

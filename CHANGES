@@ -1,3 +1,7 @@
+28 October 2001
++ Debugged over a few days 32bpp solaris support, with lots of help 
+  from G. Low <unix@macrosscity.com>  
+
 2 June 2001
 + Made a super fancy level2 level editor.  it's in the ./tools directory.
 + Verified that tb1 will in fact compile and run under windows with

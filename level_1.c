@@ -771,7 +771,7 @@ void LevelOneEngine(tb1_state *game_state) {
        oldusec=timing_info.tv_usec;
        oldsec=timing_info.tv_sec;
        
-          /* It game is paused, don't keep track of time */
+          /* If game is paused, don't keep track of time */
        
        if (game_paused) {
 	  gettimeofday(&timing_info,&dontcare);

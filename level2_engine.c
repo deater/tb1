@@ -1,22 +1,229 @@
-/*
- *  Level 2 Engine Code for Tom Bombem
- *  */
-
-    /* The Includes */
 #include <stdio.h>
-#include <sys/time.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include "svmwgraph/svmwgraph.h"
-#include "tb1_state.h"
-#include "levels.h"
-#include "tblib.h"
-#include "sound.h"
+#include <string.h> /* strncmp */
+#include <unistd.h> /* usleep */
+#include <stdlib.h> /* free */
+#include <sys/time.h> /* gettimeofday */
 
+#include "./svmwgraph/svmwgraph.h"
+#include "tb1_state.h"
+#include "tblib.h"
+#include "graphic_tools.h"
 #include "sidebar.h"
+#include "sound.h"
 #include "help.h"
 #include "loadsave.h"
-#include "graphic_tools.h"
+
+#define ROW_WIDTH 12
+#define COL_HEIGHT 20
+
+/* #define DEBUG  1 */
+
+struct sprite_type {
+   int initialized;
+   int type;
+   int shoots;
+   int explodes;
+   vmwSprite *data;
+};
+
+struct level2_data {
+    int xsize,ysize,rows,cols;
+    int numsprites;
+    struct sprite_type **sprites;
+    int level_length,level_width;
+    unsigned char **level_data;
+};
+
+
+#define SPRITE_BACKGROUND    0
+#define SPRITE_ENEMY_SHOOT   1
+#define SPRITE_ENEMY_REFLECT 2
+#define SPRITE_ENEMY_WEAPON  3
+#define SPRITE_OBSTRUCTION   4
+#define SPRITE_EXPLOSION     5
+#define SPRITE_WEAPON        6
+#define SPRITE_POWERUP       7
+
+
+struct text_mapping_type {
+   char name[30];
+   int  size;
+   int	type;
+} text_mapping[] = { {"BACKGROUND",	10, SPRITE_BACKGROUND},
+                     {"ENEMY_SHOOT",	11, SPRITE_ENEMY_SHOOT},
+	             {"ENEMY_REFLECT",	13, SPRITE_ENEMY_REFLECT},
+                     {"ENEMY_WEAPON",	12, SPRITE_ENEMY_WEAPON},
+                     {"OBSTRUCTION",	11, SPRITE_OBSTRUCTION},
+                     {"EXPLOSION",	9,  SPRITE_EXPLOSION},
+                     {"WEAPON",		6,  SPRITE_WEAPON},
+                     {"POWERUP",	7,  SPRITE_POWERUP},
+                     {"DONE",		4,  0xff},
+                     { }
+};
+
+int belongs_on_map(int type) {
+   
+   switch (type) {
+    case SPRITE_BACKGROUND:
+    case SPRITE_ENEMY_SHOOT:
+    case SPRITE_ENEMY_REFLECT:
+    case SPRITE_OBSTRUCTION: return 1;
+    default: return 0;
+   }
+   return 0;
+}
+      
+
+int map_string_to_type(char *string) {
+
+    int i=0;
+   
+    while(text_mapping[i].type!=0xff) {
+       if (!strncmp(text_mapping[i].name,string,text_mapping[i].size)) {
+	  printf("%s %i\n",string,text_mapping[i].type);
+	  return text_mapping[i].type;
+       }
+       i++;
+    }
+    return -1;
+}
+
+struct level2_data *parse_data_file(char *filename) {
+   
+    
+    FILE *fff;
+     
+    char tempst[255],sprite_file[255],throwaway[255];
+
+    char type[255];
+   
+    int number,shoots,explodes,count,i,numsprites,tempint;
+   
+    struct level2_data *data;
+   
+   
+    fff=fopen(filename,"r");
+    if (fff==NULL) {
+       printf("Cannot open %s\n",filename);
+       return NULL;
+    }
+   
+    data=(struct level2_data *)malloc(sizeof(struct level2_data));
+   
+   
+   
+       /* Pass 1 */
+    do {
+       fgets(tempst,254,fff);
+       
+       switch (tempst[0]) {
+	  
+	case '%': 
+	  if (!strncmp(tempst,"%SPRITEFILE",11)) {
+	     sscanf(tempst,"%s %s",throwaway,sprite_file);  
+	  }
+	  if (!strncmp(tempst,"%SPRITEXSIZE",11)) {
+	     sscanf(tempst,"%s %d",throwaway,&data->xsize);
+	  }
+	  if (!strncmp(tempst,"%SPRITEYSIZE",11)) {
+	     sscanf(tempst,"%s %d",throwaway,&data->ysize);
+	  }
+	  if (!strncmp(tempst,"%SPRITEROWS",11)) {
+	     sscanf(tempst,"%s %d",throwaway,&data->rows);
+	  }
+	  if (!strncmp(tempst,"%SPRITECOLS",11)) {
+	     sscanf(tempst,"%s %d",throwaway,&data->cols);
+	  }
+       }
+	       
+    } while (!feof(fff));
+
+       /* Pass 2 */
+
+    numsprites=(data->rows) * (data->cols);
+    data->numsprites=numsprites;
+   
+    data->sprites=calloc( numsprites, sizeof(struct sprite_type*));
+    for (i=0; i< numsprites;i++)  {
+        data->sprites[i]=calloc(1,sizeof(struct sprite_type)); 
+        data->sprites[i]->initialized=0;
+    }
+   
+    rewind(fff);
+    do {
+       fgets(tempst,254,fff);
+       switch(tempst[0]) {
+	  
+	case '%': if (!strncmp(tempst,"%SPRITE ",8)) {
+	             count=sscanf(tempst,"%s %d %s %d %d",
+				  throwaway,&number,type,&shoots,&explodes);
+	             
+	             if (count > 2) {
+			data->sprites[number]->type=map_string_to_type(type);
+			data->sprites[number]->initialized=1;
+	             }
+	             if (count > 3) {
+			data->sprites[number]->shoots=shoots;
+		     }
+	             if (count > 4) {
+			data->sprites[number]->explodes=explodes;
+		     }
+	          }
+	          if (!strncmp(tempst,"%DATALENGTH",10)) {
+		     sscanf(tempst,"%s %d",throwaway,&data->level_length);
+		  }   
+	          if (!strncmp(tempst,"%DATAWIDTH",9)) {
+		     sscanf(tempst,"%s %d",throwaway,&data->level_width);
+		  }
+		  
+	          break;
+	 
+	  
+       }
+    } while (!feof(fff));
+   
+   
+    /* Pass 3 */
+    data->level_data=calloc(data->level_length, sizeof(char *));
+   
+    data->level_data[0]=calloc(data->level_length * data->level_width,sizeof(char));
+    for(i=1;i<data->level_length;i++) {
+       data->level_data[i]=data->level_data[0]+ (i*data->level_width*sizeof(char));
+    }
+      
+    rewind(fff);
+   
+    
+    do {
+	fgets(tempst,254,fff);       
+    } while (strncmp(tempst,"%DATABEGIN",10));
+   
+    i=0;
+    while(i<data->level_length*data->level_width) {
+       /* Grrrrr */
+//       fscanf(fff,"%d",(int *)data->level_data[0]);
+       fscanf(fff,"%d",&tempint);
+       *(data->level_data[0]+i)=(char)tempint;
+       i++;
+    }
+#ifdef DEBUG     
+    print_level(data);
+   
+
+    printf("Sprite File: %s\n",sprite_file);
+    printf("Sprite size:  %ix%i\n",data->xsize,data->ysize);
+    printf("Sprite array: %ix%i\n",data->rows,data->cols);
+    printf("Level length: %i\n",data->level_length);
+#endif   
+    fclose(fff);
+    return data;
+}
+   
+int free_level2_data(struct level2_data *data) {
+   /* IMPLEMENT THIS */
+   return 0;
+}
+
 
     /* Define this to get a frames per second readout */
 /* #define DEBUG_ON */
@@ -42,47 +249,61 @@ struct enemyinfo {
      int hitsneeded;
 };
 
-struct bulletinfo {
-     int out,x,y;
+struct bullet_info_type {
+   int out,type,x,y;
+   struct bullet_info_type *next,*prev;
 };
 
-struct obstruction {
+struct bullet_root_type {
+   int howmany,allowed;
+   struct bullet_info_type *head,*tail;
+};
+
+struct obstruction_type {
     int x,y;
-    int shooting,dead,exploding;
-    int explodeprogress;
+    int type;
+    int exploding;
     int howmanyhits;
-    int kind,lastshot;
+    int lastshot;
+    struct obstruction_type *next;
 };
 
-void leveltwoengine(tb1_state *game_state)
+
+#define BULLETS_MAX 3
+
+void leveltwoengine(tb1_state *game_state, char *shipfile, char *levelfile,
+		    char *spritefile,char *level_num, char *level_desc,
+		    void *close_function) 
 {
     int ch,i;
     char tempst[BUFSIZ];
     int k,game_paused=0,speed_factor=1;
     int shipx=36,shipy;
     int whatdelay=1;
-    FILE *f=NULL;
-    int levelover=0,j,backrow=0;
-    int background[201][13];
-    struct enemyinfo enemy[10];
-    struct bulletinfo bullet[4];
+    int levelover=0,j,offscreen_row=0;
+    struct enemyinfo *enemy;
+    struct bullet_root_type *bullet_root;
+    struct bullet_info_type **bullet_info;
+    struct bullet_info_type *temp_bullet=NULL;
     struct timeval timing_info;
     struct timezone dontcare;
    
     long oldsec,oldusec,time_spent;
-    int howmuchscroll=0;
-    struct obstruction passive[50];
+    int howmuchscroll=200; /* there is a reason for this */
+    struct obstruction_type obstruction_heap[20][12];
     int shipadd=0,shipframe=1;
     int our_row,our_shape,rows_goneby=0;
     int grapherror;
+    int done_waiting,type;
    
     vmwFont *tb1_font;
     vmwVisual *virtual_1;
     vmwVisual *virtual_2;
    
     vmwSprite *ship_shape[3];
-    vmwSprite *shape_table[40];
     int enemies_drawn[200];
+   
+    struct level2_data *data;
    
        /* For convenience */
     tb1_font=game_state->graph_state->default_font;
@@ -93,9 +314,9 @@ void leveltwoengine(tb1_state *game_state)
     game_state->begin_score=game_state->score;
     game_state->begin_shields=game_state->shields;
     
-          /* Load Sprites */
+          /* Load Sprite Data */
     grapherror=vmwLoadPicPacked(0,0,virtual_1,1,1,
-			        tb1_data_file("level1/ships.tb1",
+			        tb1_data_file(shipfile,
 					      game_state->path_to_data),
 				game_state->graph_state);
    
@@ -104,53 +325,56 @@ void leveltwoengine(tb1_state *game_state)
     ship_shape[2]=vmwGetSprite(0,64,48,30,virtual_1);
 
    
-    if (game_state->level==2) vmwLoadPicPacked(0,0,virtual_1,1,1,
-				 tb1_data_file("level2/tbaship.tb1",game_state->path_to_data),
-					       game_state->graph_state);
-    if (game_state->level==4) vmwLoadPicPacked(0,0,virtual_1,1,1,
-				 tb1_data_file("level4/tbeerm.tb1",game_state->path_to_data),
+       /* Load Level Data */
+    data=parse_data_file(tb1_data_file(levelfile,game_state->path_to_data));
+   
+      vmwLoadPicPacked(0,0,virtual_1,1,1,
+		     tb1_data_file(spritefile,game_state->path_to_data),
 					       game_state->graph_state);
       
-    for(j=0;j<4;j++)
-       for(i=0;i<10;i++) 
-          shape_table[j*10+i]=vmwGetSprite(1+i*21,1+j*11,20,10,virtual_1);
+    for(j=0;j<data->rows;j++)
+       for(i=0;i<data->cols;i++) 
+          data->sprites[j*10+i]->data=vmwGetSprite(1+i*21,1+j*11,20,10,virtual_1);
 
-       /* Load Background Data */
-    if (game_state->level==2) 
-       f=fopen(tb1_data_file("level2/level2.dat",game_state->path_to_data),"r");
-    if (game_state->level==4) 
-       f=fopen(tb1_data_file("level4/level4.dat",game_state->path_to_data),"r");
-    if (f==NULL) 
-       printf("ERROR! Could't open level %d data!\n",game_state->level);
-  
-    for(j=0;j<200;j++) 
-       for(i=0;i<12;i++) fscanf(f,"%d",&background[j][i]);
-    fclose(f);
 
-       /* Initialize Structures for enemy, bullets, and background */
-    for(i=0;i<50;i++) {  
-       passive[i].dead=1;
-       passive[i].exploding=0;
+       /* Initialize Structures for background */
+    bullet_info=calloc(5,sizeof(struct bullet_info_type *));
+    bullet_info[0]=calloc(5,sizeof(struct bullet_info_type));
+    for (i=1;i<5;i++) bullet_info[i]=bullet_info[0]+i*sizeof(struct bullet_info_type);
+    bullet_root=malloc(sizeof(struct bullet_root_type));
+    bullet_root->howmany=0;
+    bullet_root->allowed=5;
+    bullet_root->head=NULL;
+    bullet_root->tail=NULL;
+    for(i=0;i<bullet_root->allowed;i++) {
+       bullet_info[i]->out=0;
     }
-    for(i=0;i<10;i++) enemy[i].out=0;
-    for(i=0;i<3;i++) {
-       bullet[i].out=0;
-       bullet[i].x=0;
-       bullet[i].y=0;
-    }
-   for(i=0;i<200;i++) enemies_drawn[i]=0;
+   
+       /* Initialize structures for obstructions */
+       /* Waste lots of RAM in name of speed.    */
+       /* Never would have done this on the original Pascal DOS version */
+//   obstruction_heap=calloc(20*12,sizeof(struct obstruction_type));
+//   for(i=0;i<20;i++) {
+//      obstructions[i]=obstruction_heap+(i*12*sizeof(struct obstruction_type));
+//   }
+   for(j=0;j<20;j++) {
+      for(i=0;i<12;i++) {
+//         obstructions[j][i].next=NULL;
+      }
+   }
+   
+   
+   
+   
+   
+   
 
       /* Announce the Start of the Level */
     vmwDrawBox(0,0,320,200,0,virtual_1);
     coolbox(70,85,240,120,1,virtual_1);
-    if (game_state->level==2) {
-       vmwTextXY("   LEVEL TWO:",84,95,4,7,0,tb1_font,virtual_1);
-       vmwTextXY("THE \"PEACE ENVOY\"",84,105,4,7,0,tb1_font,virtual_1);
-    }
-    if (game_state->level==4) {
-       vmwTextXY("   LEVEL FOUR:",84,95,4,7,0,tb1_font,virtual_1);
-       vmwTextXY(" THE PLANET EERM",84,105,4,7,0,tb1_font,virtual_1);
-    }
+    vmwTextXY(level_num,84,95,4,7,0,tb1_font,virtual_1);
+    vmwTextXY(level_desc,84,105,4,7,0,tb1_font,virtual_1);
+    
     vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
     vmwClearKeyboardBuffer();
     pauseawhile(5);
@@ -162,45 +386,114 @@ void leveltwoengine(tb1_state *game_state)
     vmwDrawBox(251,52,63,7,0,virtual_2);
     vmwTextXY(tempst,307,51,12,0,0,tb1_font,virtual_2);
      
-       /* Clear the screen and draw the stars */
-    vmwDrawBox(0,0,320,400,0,virtual_2);
-    for(i=0;i<100;i++) {
-//       printf("%i\n",i); fflush(stdout);
-       vmwPutSprite(shape_table[32],rand()%238,rand()%150,virtual_2);
-       vmwPutSprite(shape_table[33],rand()%238,rand()%150,virtual_2);
-    }
-   
     change_shields(game_state);
+
    
+       /* Ready the timing loop */
     gettimeofday(&timing_info,&dontcare);
     oldsec=timing_info.tv_sec; oldusec=timing_info.tv_usec;
+
+   
+       /* Get the initial background ready */
+    offscreen_row=data->level_length-(COL_HEIGHT*2);
+    for(i=0;i<ROW_WIDTH;i++) {
+       for(j=0;j<40;j++) {
+	  vmwPutSpriteNonTransparent(data->sprites[(int) *(data->level_data[offscreen_row+j]+i)]->data,
+		       i*20,j*10,virtual_2);
+       }
+    }
+    offscreen_row-=20;
+
+       /* Get the initial obstructions ready */
+    our_row=data->level_length-20;
+    for(j=0;j<20;j++) {
+       for(i=0;i<12;i++) {
+
+	  type=data->sprites[*(data->level_data[our_row]+i)]->type;
+	  
+          if ((type==SPRITE_OBSTRUCTION) || 
+	      (type==SPRITE_ENEMY_SHOOT) || 
+	      (type==SPRITE_ENEMY_REFLECT)) {
+	     k=0;
+//	     temp_obstruct=obstructions[j];
+//	     while(temp_obstruct->next!=NULL) temp_obstruct=temp_obstruct->next;
+//	     temp_obstruct->next=temp_obstruct+1;
+//	     temp_obstruct=temp_obstruct->next;
+//	     temp_obstruct->x=i*20;
+//	     temp_obstruct->y=j*20;
+//	     temp_obstruct->type=type;
+//	     temp_obstruct->exploding=0;
+//	     temp_obstruct->lastshot=0;
+//	     temp_obstruct->next=NULL;
+	  }
+       }
+    }
+   
+    vmwArbitraryCrossBlit(virtual_2,0,0+howmuchscroll,240,200,
+                          virtual_1,0,0);   
    
        /**** GAME LOOP ****/
     while (!levelover) { 
        ch=0;
+       
           /* Scroll the Background */
        if (speed_factor>1) howmuchscroll-=speed_factor;
        else howmuchscroll--;
+       
+          /* If used up all the buffered background, draw some more */
        if (howmuchscroll<0) {
 	  howmuchscroll=200+howmuchscroll;
+	     /* Copy half of old downward */
 	  vmwArbitraryCrossBlit(virtual_2,0,0,240,200,virtual_2,0,200);
-	  /*ggiCopyBox(vaddr2,0,0,240,200,0,200);*/
-	  for(i=0;i<12;i++) 
-	     for(j=19;j>=0;j--) {
-		our_shape=background[backrow+(19-j)][i];
-//	        printf("Shape : %i\n",our_shape);
-		vmwPutSprite(shape_table[our_shape],
+	     /* Load 20 rows of data preceding it */
+	  for(i=0;i<12;i++) {
+	     for(j=0;j<20;j++) {
+		vmwPutSprite(data->sprites[(int) *(data->level_data[offscreen_row+j]+i)]->data,
 			     i*20,j*10,virtual_2);
 	     }
-	     backrow+=20;
+	  }
+	  offscreen_row-=20;
        }
        
+
           /* Setup Obstructions */
-       our_row=rows_goneby/10;
+       if (rows_goneby%10==0) {
+
+	  /* move all rows down by one, dropping old off end */
+//	  memmove(obstructions[1],obstructions[0],19*20*sizeof(struct obstruction_type));
+//	  obstructions[0]->next=NULL;
+	  our_row--;
+	  printf("ROW %i\n",our_row);       
+//	  temp_obstruct=obstructions[0];
+	  for(i=0;i<12;i++) {
+             type=data->sprites[*(data->level_data[our_row]+i)]->type;
+	     printf("%3i ",type);
+             if ((type==SPRITE_OBSTRUCTION) || 
+	         (type==SPRITE_ENEMY_SHOOT) || 
+	         (type==SPRITE_ENEMY_REFLECT)) {
+	         printf("*");
+//		 printf("Enemy %i on row %i\n",type,our_row);
+//		 fflush(stdout);
+//	         while(temp_obstruct->next!=NULL) temp_obstruct=temp_obstruct->next;
+//	         temp_obstruct->next=temp_obstruct+1;
+//		 temp_obstruct=temp_obstruct+1;
+//		 temp_obstruct->x=i*20;
+//	         temp_obstruct->y=j*20;
+//	         temp_obstruct->type=type;
+//	         temp_obstruct->exploding=0;
+//	         temp_obstruct->lastshot=0;
+//	         temp_obstruct->next=NULL;
+	     }
+	  }
+	  printf("\n"); fflush(stdout);
+       }
+
+    #if 0
+
        if (!enemies_drawn[our_row]) {
 	  enemies_drawn[our_row]=1;
 	  for(i=0;i<12;i++) {
-	     our_shape=background[our_row][i];
+//	     our_shape=background[our_row][i];
 	     if ((our_shape>9)&&(our_shape<20)) {
 		   k=0;
 		   while ((!passive[k].dead) && (k<40)) k++;
@@ -216,14 +509,33 @@ void leveltwoengine(tb1_state *game_state)
 	     }
 	  }
        }
+#endif       
        
-       
-          /* Flip the far background to vaddr */
+          /* Flip the far background to regular background */
        vmwArbitraryCrossBlit(virtual_2,0,0+howmuchscroll,240,200,
                              virtual_1,0,0);
-             
-       
+
           /***Collision Check***/
+       for(i=0;j<bullet_root->howmany;j++) {
+//	  temp_obstruct=obstructions[ (bullet_info[i]->y)/10];
+//	  printf("%p %p\n",temp_obstruct,temp_obstruct->next);
+	  printf("Row %i\n",(bullet_info[i]->y)/10); fflush(stdout);
+//	  while (temp_obstruct->next!=NULL) {
+//	     temp_obstruct=temp_obstruct->next;
+//	     if ( ( (bullet_info[i]->x-3) >= temp_obstruct->x) &&
+//	          ( bullet_info[i]->x <= (temp_obstruct->x+20))) {
+//		  printf("BOOM\n"); fflush(stdout);
+//	     }
+//	  }
+	  
+       }
+	  
+	  
+	  
+       
+	  
+       
+#if 0       
        for(i=0;i<40;i++) 
 	  if ((!passive[i].dead) && (!passive[i].exploding)) {
 	     for(j=0;j<3;j++) {
@@ -263,9 +575,9 @@ void leveltwoengine(tb1_state *game_state)
                 passive[i].dead=1;
                 game_state->shields--;
                 if(game_state->shields<0) levelover=1;
-		vmwPutSprite(shape_table[34],
-			     passive[i].x,passive[i].y+howmuchscroll,
-			     virtual_1);
+//		vmwPutSprite(shape_table[34],
+//			     passive[i].x,passive[i].y+howmuchscroll,
+//			     virtual_1);
 		change_shields(game_state);
 		}
 	  }
@@ -288,30 +600,58 @@ void leveltwoengine(tb1_state *game_state)
        for(i=0;i<40;i++) 
           if (passive[i].exploding) { 
              passive[i].explodeprogress++;
-	     vmwPutSprite(shape_table[35+passive[i].explodeprogress],
-                          passive[i].x,passive[i].y+howmuchscroll,
-			  virtual_2);
+//	     vmwPutSprite(shape_table[35+passive[i].explodeprogress],
+  //                        passive[i].x,passive[i].y+howmuchscroll,
+//			  virtual_2);
              if (passive[i].explodeprogress>3) {
                 passive[i].dead=1;
                 passive[i].exploding=0;
-	        vmwPutSprite(shape_table[34],
-			     passive[i].x,passive[i].y+howmuchscroll,
-			     virtual_2);   
+//	        vmwPutSprite(shape_table[34],
+//			     passive[i].x,passive[i].y+howmuchscroll,
+//			     virtual_2);   
            }
         }
-       
-       /***MOVE BULLET***/
-    for(i=0;i<3;i++) {
-       if (bullet[i].out) {
-	  if (speed_factor>1) bullet[i].y-=(5*speed_factor);
-	  else bullet[i].y-=5;
-	  if (bullet[i].y<5) bullet[i].out=0;
-	  else vmwPutSprite(shape_table[20],
-                            bullet[i].x,bullet[i].y,
-                            virtual_1);
-       }
+#endif       
+       /***MOVE BULLETS***/
+    
+    temp_bullet=bullet_root->head;
+    while(temp_bullet!=NULL) {
+       if (speed_factor>1) temp_bullet->y-=(5*speed_factor);
+       else temp_bullet->y-=5;
+       if (temp_bullet->y<5) {
+	  
+	  temp_bullet->out=0;
+	  bullet_root->howmany--;
+
+	     /* Remove bullet from linked list */
+	  if (bullet_root->head==temp_bullet) {
+	     bullet_root->head=temp_bullet->next;
+	  }
+	  
+	  if (bullet_root->tail==temp_bullet) {
+	     bullet_root->tail=temp_bullet->prev;
+	  }
+	  
+	  if (temp_bullet->prev!=NULL) {
+	     if (temp_bullet->next!=NULL) 
+		temp_bullet->prev->next=temp_bullet->next;
+             else temp_bullet->prev->next=NULL;
+	  }
+	  
+	  
+	  if (temp_bullet->next!=NULL) {
+	     if (temp_bullet->prev!=NULL) 
+	        temp_bullet->next->prev=temp_bullet->prev;
+	     else temp_bullet->next->prev=NULL;
+	  }
+	
+       }	  
+       else vmwPutSprite(data->sprites[temp_bullet->type]->data,
+			 temp_bullet->x,temp_bullet->y,virtual_1);
+       temp_bullet=temp_bullet->next;
     }
-       
+    
+#if 0       
        /***MOVE ENEMIES***/
     for(j=0;j<40;j++) {
        if (!passive[j].dead) {
@@ -338,15 +678,16 @@ void leveltwoengine(tb1_state *game_state)
     
     for(j=0;j<10;j++) {
        if (enemy[j].out) {
-	  vmwPutSprite(shape_table[enemy[j].kind],
-		       enemy[j].x,enemy[j].y,
-		       virtual_1);
+//	  vmwPutSprite(shape_table[enemy[j].kind],
+//		       enemy[j].x,enemy[j].y,
+//		       virtual_1);
           if (speed_factor==1) enemy[j].y+=enemy[j].yspeed;
 	  else enemy[j].y+=(enemy[j].yspeed*speed_factor);
           if (enemy[j].y>189) enemy[j].out=0;
        }
     }
- 
+#endif
+       
        /***READ KEYBOARD***/
     if ((ch=vmwGetInput())!=0) { 
        switch(ch) {
@@ -368,31 +709,53 @@ void leveltwoengine(tb1_state *game_state)
         case VMW_F2: game_paused=1; 
 	             savegame(game_state);
 	             break;
-	case ' ':  for(j=0;j<3;j++)
-	              if (!bullet[j].out) {
-			 if ((game_state->sound_possible)&&(game_state->sound_enabled))
-			    playGameFX(SND_CC);
-			 bullet[j].out=1;
-			 bullet[j].x=shipx+21;
-			 bullet[j].y=165;
-			 vmwPutSprite(shape_table[20],
-			                bullet[j].x,bullet[j].y,virtual_1);
-			 j=4;
+	case ' ':  if (bullet_root->howmany<BULLETS_MAX) {  
+	              /* Find empty slot */
+	              for (j=0;j<bullet_root->allowed;j++) {
+			  if (!bullet_info[j]->out) {
+			     temp_bullet=bullet_info[j];
+			     break;
+			  }
 		      }
+	              bullet_root->howmany++;
+	              temp_bullet->out=1;
+	              temp_bullet->type=20;  /* FIXME */
+		      if ((game_state->sound_possible)&&(game_state->sound_enabled))
+			 playGameFX(SND_CC);
+		      temp_bullet->x=shipx+21;
+		      temp_bullet->y=165;
+	              temp_bullet->next=NULL;
+	                 /* Insert in linked list */
+	              if (bullet_root->head==NULL) {
+		         bullet_root->head=temp_bullet;
+			 bullet_root->tail=temp_bullet;
+			 temp_bullet->prev=NULL;
+		      }
+	              else {
+			 temp_bullet->prev=bullet_root->tail;
+			 bullet_root->tail->next=temp_bullet;
+			 bullet_root->tail=temp_bullet;
+		      } 
+	                 /* Draw Bullet */
+
+		       vmwPutSprite(data->sprites[temp_bullet->type]->data,
+			            temp_bullet->x,temp_bullet->y,virtual_1);
+
+	}
 	  
        }
     }
 	  
 
        /***MOVE SHIP***/
-    if (speed_factor>1) {
-       shipx+=(shipadd*speed_factor);
-       rows_goneby+=(speed_factor);
-    }
-    else {
+//    if (speed_factor>1) {
+//       shipx+=(shipadd*speed_factor);
+//       rows_goneby+=(speed_factor);
+//    }
+//    else {
        shipx+=shipadd;
        rows_goneby++;
-    }
+//    }
     if (shipx<1) shipx=1;
     if (shipx>190) shipx=190;
     switch(shipframe) {
@@ -410,34 +773,32 @@ void leveltwoengine(tb1_state *game_state)
        /* Flip Pages */
     vmwBlitMemToDisplay(game_state->graph_state,virtual_1);   
 
-       /* Calculate how much time has passed */
-    gettimeofday(&timing_info,&dontcare);
-    time_spent=timing_info.tv_usec-oldusec;
-    if (timing_info.tv_sec-oldsec) time_spent+=1000000;
-#ifdef DEBUG_ON
-    printf("%f\n",1000000/(float)time_spent);
-#endif
-       /* If time passed was too little, wait a bit */
-    while (time_spent<33000){
-       gettimeofday(&timing_info,&dontcare);
-       usleep(5);
-       time_spent=timing_info.tv_usec-oldusec;
-       if (timing_info.tv_sec-oldsec) time_spent+=1000000;
-    }
        
-       /* It game is paused, don't keep track of time */
- 
+       /* If time passed was too little, wait a bit */
+       /* 33,333 would frame rate to 30Hz */
+       /* Linux w 100Hz scheduling only gives +- 10000 accuracy */
+    done_waiting=0;
+    while (!done_waiting) {
+       
+       gettimeofday(&timing_info,&dontcare);
+       time_spent=timing_info.tv_usec-oldusec;
+       
+          /* Assume we don't lag more than a second */
+          /* Seriously, if we lag more than 10ms we are screwed anyway */
+       if (time_spent<0) time_spent+=1000000;
+       if (time_spent<30000) usleep(100);
+       else (done_waiting=1);                       
+    }
+    oldusec=timing_info.tv_usec;
+    oldsec=timing_info.tv_sec;
+       
+       /* If game is paused, don't keep track of time */
+      
     if (game_paused) {
        gettimeofday(&timing_info,&dontcare);
        oldusec=timing_info.tv_usec;
        oldsec=timing_info.tv_sec;
        game_paused=0;
-       speed_factor=1;
-    }
-    else {
-       speed_factor=(time_spent/30000);
-       oldusec=timing_info.tv_usec;
-       oldsec=timing_info.tv_sec;
     }
     
 
