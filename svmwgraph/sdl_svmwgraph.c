@@ -50,7 +50,7 @@ void *SDL_setupGraphics(int *xsize,int *ysize,int *bpp,
 }
 
 
-void SDL_FlushPalette(vmwSVMWGraphState *state) {
+void SDL_flushPalette(vmwSVMWGraphState *state) {
  
    SDL_Surface *target;
    SDL_Color temp_col[256];
@@ -237,4 +237,7 @@ int SDL_getInput() {
        }
    }
    return 0;
+}
+
+void SDL_closeGraphics() {
 }

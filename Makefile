@@ -1,7 +1,7 @@
 
 
 INCLUDE= -O2 -Wall -I/usr/local/include/SDL -I/usr/local/include
-LIBS= -lSDL -lSDL_mixer -L/usr/X11R6/lib -lX11 -lpthread
+LIBS= -lSDL -lSDL_mixer -L/usr/X11R6/lib -lX11 -lpthread -lncurses
 
 all:	tb1
 

@@ -49,7 +49,9 @@ typedef struct {
 /* Constants */
 
      /* Display Target Constants */
+#define VMW_NULLTARGET    0
 #define VMW_SDLTARGET     1
+#define VMW_CURSESTARGET  2  /* Yes I am insane */
 
      /* Error Constants */
 
@@ -69,8 +71,9 @@ typedef struct {
 #define VMW_LEFT      1029
 #define VMW_F1        1030
 #define VMW_F2        1031
-#define VMW_PGUP      1032
-#define VMW_PGDN      1033
+#define VMW_F3        1032
+#define VMW_PGUP      1050
+#define VMW_PGDN      1051
 
 
 /* Function declarations */
@@ -123,6 +126,19 @@ void vmwLoadPalette(vmwSVMWGraphState *state,unsigned char r,
 void vmwFadeToBlack(vmwSVMWGraphState *state,vmwVisual *source,int justLoadPal);
 void vmwUnFade(vmwSVMWGraphState *state,vmwVisual *source);
 
+ 
+    /* From vmw_pcx.c */
+int vmwLoadPCX(int x1,int y1,vmwVisual *target,
+		     int LoadPal,int LoadPic,char *FileName,
+		     vmwSVMWGraphState *graph_state);
+
+int vmwSavePCX(int x1,int y1,int xsize,int ysize,
+		                          vmwVisual *source,
+		                          int num_colors,
+		                          vmw24BitPal *palette,
+		                          char *FileName);
+
+
     /* From vmw_setup.c */
 
 
@@ -136,6 +152,8 @@ vmwSVMWGraphState *vmwSetupSVMWGraph(int display_type,int xsize,int ysize,
 				     int bpp,int scale,int fullscreen,
 				     int verbose);
 vmwVisual *vmwSetupVisual(int xsize,int ysize);
+
+extern void (*vmwCloseGraphics)(void);
 
     /* From vmw_sprite.c */
 

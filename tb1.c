@@ -216,7 +216,7 @@ int main(int argc,char **argv)
     
     if (scale==1) {
        if ( (game_state->graph_state=
-	                 vmwSetupSVMWGraph(VMW_SDLTARGET,
+	                 vmwSetupSVMWGraph(VMW_CURSESTARGET,
 					   320,200,
 					   0,scale,fullscreen,1))==NULL) {   
           fprintf(stderr,"ERROR: Couldn't get display set up properly.\n");

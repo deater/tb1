@@ -1,3 +1,7 @@
+15 October 2000
++ Added PCX Save/Load
++ Added NULL and NCURSES targets to svmwgraph.  I must be insane.
+
 6 October 2000
 + Fixed off-by-one error in paintpro 6.0 format, making a new 6.1 release
 + Made sure backwards compatability available
