@@ -1,3 +1,10 @@
+4 September 2000
++ Have about 90% of the game running now on SDL.  What a fun
+  way to spend labor day weekend.
+
+24 June 2000
++ Started converting to the SDL lib.  Got the title screen up
+
 7 March 1998
 * Added Level 2, mostly working
 
@@ -42,3 +49,9 @@
 * Today converted from 320x600 virtual to 3 320x200s [2 are in memory]
 * Added support so it can (almost) run in both 8bpp and 16bpp mode.
 * Broke a lot more than I fixed.
+
+1994-1996
+  Wrote Tom Bombem in pascal and inline assembly, using the
+  "Flying Toaster" demo from PCGPE as a starting point.
+  Used Ethan Brodsky's sound libs, in addition to my own
+  "Paintpro" graphics program/loader.

@@ -1,54 +1,30 @@
-##############################################################
-#  Makefile for Tom Bombem     -- by Vince Weaver            #
-#                                                            #
-#  Written on Linux 2.1.35                                   #
-#                                                            #
-#  To modify for your configuration, add or remove the #     #
-#                                                            #
-##############################################################
 
-#Your compiler.  If gcc doesn't work, try CC
-CC = gcc
-#CC = cc
 
-#On Linux, uncomment the following
-#
-PLATFORM = Linux
-C_OPTS = -O2 -Wall -DHAVE_LINUX_SOUND
-L_OPTS = -lggi
+INCLUDE= -Wall -I/usr/local/include/SDL -I/usr/local/include
+LIBS= -lSDL -lSDL_mixer -L/usr/X11R6/lib -lX11 -lpthread
 
-######################################################################
-#         THERE IS NO NEED TO EDIT ANYTHING BELOW THIS LINE          #
-######################################################################
+all:	tb1
 
-all:	tb1 
+tb1:	tb1.o sdl_svmwgraph.o vmw_sprite.o tblib.o level_1.o sound.o
+	gcc -o tb1 tb1.o sdl_svmwgraph.o vmw_sprite.o tblib.o level_1.o sound.o $(LIBS)
+	
+tb1.o:	tb1.c
+	gcc -c tb1.c $(INCLUDE)
+
+tblib.o:	tblib.c
+	gcc -c tblib.c $(INCLUDE)
+
+sdl_svmwgraph.o:	sdl_svmwgraph.c
+	gcc -c sdl_svmwgraph.c $(INCLUDE)
+
+vmw_sprite.o:	vmw_sprite.c
+	gcc -c vmw_sprite.c $(INCLUDE)
+
+level_1.o:	level_1.c
+	gcc -c level_1.c $(INCLUDE)
+
+sound.o:	sound.c
+	gcc -c sound.c $(INCLUDE)
 
 clean:
-	rm -f *.o
-	rm -f tb1
-	rm -f *~
-
-tb1:	tb1.o svmwgrap.o gtblib.o tblib.o level1.o level2.o soundIt.o
-	$(CC) $(C_OPTS) -o tb1 tb1.o svmwgrap.o gtblib.o tblib.o level1.o level2.o soundIt.o $(L_OPTS)
-	@strip tb1
-
-soundIt.o:	soundIt.c
-	$(CC) $(C_OPTS) -c soundIt.c
-
-tb1.o:	tb1.c
-	$(CC) $(C_OPTS) -c tb1.c 
-
-gtblib.o:	gtblib.c
-	$(CC) $(C_OPTS) -c gtblib.c
-	
-tblib.o:	tblib.c
-	$(CC) $(C_OPTS) -c tblib.c
-
-level1.o:	level1.c
-	$(CC) $(C_OPTS) -c level1.c
-
-level2.o:	level2.c
-	$(CC) $(C_OPTS) -c level2.c
-	
-svmwgrap.o:	svmwgrap.c
-	$(CC) $(C_OPTS) -c svmwgrap.c 
+	rm tb1 *.o *~

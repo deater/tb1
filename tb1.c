@@ -1,14 +1,16 @@
 /****************************************************************\
 \*    TOM BOMBEM AND THE INVASION OF THE INANIMATE_OBJECTS      */
-/*                    version 2.9.0      February 28, 1998      *\
+/*                    version 2.9.1      5 August 2000	        *\
 \*        by Vince Weaver       weave@eng.umd.edu               */
 /*                                                              *\
 \*  Originally written in Pascal and x86 assembly for DOS       */
-/*  Ported to Linux, C, and ggi late 1997-early 1998            *\
+/*          using the PCGPE code as an example in 1994          *\
+\*  Ported to Linux, C, and ggi late 1997-early 1998            */
+/*  Port continued to SDL in June of 2000                       *\
 \*          This source is released under the GPL               */
 /****************************************************************/
 
-#define TB1_VERSION "2.9.0"
+#define TB1_VERSION "2.9.1"
 
 #include <ctype.h>
 #include <stdio.h>
@@ -18,141 +20,37 @@
 #include <unistd.h>
 #include <sys/time.h>
 
-#include <ggi/ggi.h> 
-
-#include "svmwgrap.h"
+#include "SDL.h"
+#include "sdl_svmwgraph.h"
+#include "tb1_state.h"
 #include "tblib.h"
-
-    /* Exported Global Variables */
-ggi_visual_t vis,vaddr,vaddr2;
-vmw_font *tb1_font;
-uint white;
-ggi_color eight_bit_pal[256];     
-ggi_pixel tb1_pal[256];
-int color_depth;
-ggi_directbuffer      *dbuf_vis,*dbuf_vaddr,*dbuf_vaddr2;
-ggi_pixellinearbuffer   *plb_vis = NULL,*plb_vaddr= NULL,*plb_vaddr2=NULL;
-int stride_factor=1;
-int sound_enabled=1,sound_possible=1,read_only_mode=0;
-char path_to_data[256];
-
-struct timeval time_info;
-struct timezone dontcare;
+#include "tb_keypress.h"
+#include "sound.h"
 
     /* Setup the Graphics */
-int setup_graphics(int force_8bpp)
+int setup_graphics(struct tb1_state *state)
 {
-    int err;
-    ggi_mode mode;
-    int vx,vy,sx,sy;
    
-    if (ggiInit()) {
-       fprintf(stderr,"Cannot initialize libGGI!\n");
-       return 1;
+       /* Initialize the SDL library */
+    if ( SDL_Init(SDL_INIT_VIDEO) < 0 ) {
+       fprintf(stderr,
+	       "Couldn't initialize SDL: %s\n", SDL_GetError());
+       exit(1);
     }
-   
-    vis=ggiOpen(NULL);
-    if(!vis) {
-       fprintf(stderr,"Cannot open default visual!\n");
-       ggiExit();
-       return 1;
-    }
-       /* Do I really want to do this? */
-    ggiSetFlags(vis, GGIFLAG_ASYNC);
-   
-    if (force_8bpp)
-       err=ggiSetGraphMode(vis,320,200,320,200,GT_8BIT);
-    else
-       err=ggiSetGraphMode(vis,320,200,320,200,GGI_AUTO);
-    if (err) {
-       fprintf(stderr,"ERROR!  Problem opening 320x200 vis\n\n");
-       return 2;
-    }
-    mode.frames=3;
-    
-    if (ggiGetMode(vis,&mode)) {
-       fprintf(stderr,"Cannot set mode!\n");
-       ggiClose(vis);
-       ggiExit();
-       return 1;
+
+       /* Clean up on exit */
+    atexit(SDL_Quit);
+
+       /* Initialize the display in a 640x480 8-bit palettized mode */
+    state->sdl_screen = SDL_SetVideoMode(320, 200, 16, SDL_SWSURFACE);
+    if ( state->sdl_screen == NULL ) {
+       fprintf(stderr, "Couldn't set 320x200x8 video mode: %s\n",
+	      SDL_GetError());
+       exit(1);
     }
    
-    vx=mode.virt.x;   vy=mode.virt.y;
-    sx=mode.visible.x;sy=mode.visible.y;
-    switch (mode.graphtype) {
-      case GT_1BIT: color_depth=1;break;
-      case GT_4BIT: color_depth=4;break;
-      case GT_8BIT: color_depth=8;break;
-      case GT_15BIT: color_depth=15;break;
-      case GT_16BIT: color_depth=16;break;
-      case GT_24BIT: color_depth=24;break;
-      case GT_32BIT: color_depth=32;break;
-      default: break;
-    }
-    printf("  + Opened a %d x %d (%d x %d) mode with %d bpp\n",
-	      sx,sy,vx,vy,color_depth);
-    
-    /*dbuf_vis=ggiDBGetBuffer(vis,0);*/
-    /*err = ggiDBGetBuffer (vis, &dbuf_vis);*/
-    /*if (!(dbuf_vis=ggiDBGetBuffer(vis,0)) ) { 
-       printf("Error! Could not get directbuffer\n"); 
-       return 2;
-    }
-    */
-    /*if (!(ggiDBGetLayout (dbuf_vis) == blPixelLinearBuffer)) {
-       printf("Error! Nonlinear Display Buffer.\n");
-       return 2;
-    }*/
-    /*if (!(plb_vis = ggiDBGetPLB (dbuf_vis)) ) {
-       printf("Error! Problem getting pixel linear buffer.\n");
-       return 2;
-    }
-   */
-    vaddr=ggiOpen("display-memory",NULL);
-    err=ggiSetGraphMode(vaddr,320,200,320,200,mode.graphtype);
-    if (err) {
-       printf("ERROR! Problem opening 320x200x%d vaddr\n",color_depth);
-       return 2;
-    }
-    /*err = ggiDBGetBuffer (vaddr, &dbuf_vaddr);
-    if (err) {
-       printf("Error! Could not get directbuffer\n");
-       return 2;
-    }*/
-    /*if (!(ggiDBGetLayout (dbuf_vaddr) == blPixelLinearBuffer)) {
-       printf("Error! Nonlinear Display Buffer.\n");
-       return 2;
-    }
-     */
-    /*if (!(plb_vaddr = ggiDBGetPLB (dbuf_vaddr)) ) {
-       printf("Error! Problem getting pixel linear buffer.\n");
-       return 2;
-    }
-   
-    vaddr2=ggiOpen("display-memory",NULL);
-    err=ggiSetGraphMode(vaddr2,320,400,320,400,mode.graphtype);
-    if (err){
-       printf("ERROR! Problem opening 320x400x%d vaddr2\n",color_depth);
-       return 2;
-    }
-    err = ggiDBGetBuffer (vaddr2, &dbuf_vaddr2);
-    if (err) {
-       printf("Error! Could not get directbuffer\n");
-       return 2;
-    }
-    if (!(ggiDBGetLayout (dbuf_vaddr2) == blPixelLinearBuffer)) {
-       printf("Error! Nonlinear Display Buffer.\n");
-       return 2;
-    }
-    if (!(plb_vaddr2 = ggiDBGetPLB (dbuf_vaddr2)) ) {
-       printf("Error! Problem getting pixel linear buffer.\n");
-       return 2;
-    }
-    stride_factor=(plb_vis->stride)/320;
-    */
-    printf("  + Using a stride factor of %d\n",stride_factor);
-    printf("  + GGI Graphics Initialization successful...\n");
-    printf("  + Running TB1 in %dbpp Mode...\n",color_depth);
+    printf("  + SDL Graphics Initialization successful...\n");
+    printf("  + Running TB1 in %dbpp Mode...\n",16);
     return 0;
 }
 
@@ -174,13 +72,38 @@ int command_line_help(int show_version,char *runas)
 
 int main(int argc,char **argv)
 {
-    int i,grapherror,reloadpic=0,force_8bpp=0;
-    int ch,ch2,x,barpos,time_sec;
-    char *tempst[300];
+    int i,grapherror,reloadpic=0;
+    int custom_palette[256];
+    int ch,x,barpos,time_sec;
     FILE *fff;
+    unsigned char *virtual_1,*virtual_2; 
+   
+    struct tb1_state *game_state;
+ 
+    vmw_font *tb1_font;
+   
+    struct timeval time_info;
+    struct timezone dontcare;
    
     printf("\nTom Bombem v%s by Vince Weaver weave@eng.umd.edu\n",TB1_VERSION);
     printf("         http://www.glue.umd.edu/~weave/tb1\n\n");
+   
+       /* Setup the game state */
+   
+    if ( (game_state=calloc(1,sizeof(struct tb1_state)))==NULL) {
+       printf("You are seriously low on RAM!\n");
+       return 3;
+    }
+       /* Some sane defaults */
+    game_state->level=0;
+    game_state->shields=0;
+    game_state->score=0;
+    game_state->virtual_1=NULL;
+    game_state->virtual_2=NULL;
+    game_state->virtual_3=NULL;
+    game_state->sdl_screen=NULL;
+    game_state->sound_enabled=1;
+    game_state->tb1_font=NULL;
    
        /* Parse Command Line Arguments */
     i=1;
@@ -191,15 +114,14 @@ int main(int argc,char **argv)
 	     command_line_help(0,argv[0]); return 5; break;
 	   case 'v':
 	     command_line_help(1,argv[0]); return 5; break;
-	   case 'f':
-	     force_8bpp=1; break;
+	
 	   case 'n': 
-	     sound_enabled=0;
-	     sound_possible=0;
+	     game_state->sound_enabled=0;
+//	     sound_possible=0;
 	     printf("  + Sound totally disabled\n");
 	     break;
 	   case 'r': 
-	     read_only_mode=1;
+//	     read_only_mode=1;
 	     printf("  + Read Only mode enabled\n");
 	     break;
 	   default : command_line_help(0,argv[0]);
@@ -218,18 +140,18 @@ int main(int argc,char **argv)
        /* Find the Data */
 /* FIXME : User Defined Path Info*/
     if ( (fff=fopen("./data/data_files_here","r"))!=NULL) {
-       strncpy(path_to_data,"./data/",20);
+       strncpy(game_state->path_to_data,"./data/",20);
     }
     else if ( (fff=fopen("/usr/local/games/tb1/data/data_files_here","r"))
 	      !=NULL) {
-	strncpy(path_to_data,"/usr/local/games/tb1/data/",40);
+	strncpy(game_state->path_to_data,"/usr/local/games/tb1/data/",40);
     }
     else {
        char tempst[200];
 	
        sprintf(tempst,"%s/.tb1/data/data_files_here",getenv("HOME"));
        if ( (fff=fopen(tempst,"r"))!=NULL) {
-	  sprintf(path_to_data,"%s/.tb1/data/",getenv("HOME"));
+	  sprintf(game_state->path_to_data,"%s/.tb1/data/",getenv("HOME"));
        }
        else {
 	  printf("ERROR!  Could not find tb1 data!\n");
@@ -238,7 +160,7 @@ int main(int argc,char **argv)
           return 9;	       
        }
     }
-    printf("  + Found tb1 data in %s\n",path_to_data);
+    printf("  + Found tb1 data in %s\n",game_state->path_to_data);
    
 /* FIXME : find where writing info out to */
    
@@ -252,152 +174,146 @@ int main(int argc,char **argv)
       
        /* Randomize random number generator */
     srandom(time(NULL));
+    printf("  + Seeding random number generator...\n");
+   
+       /* Load sounds */
+    initSound(game_state->path_to_data);
+    loadSound(tb1_data_file("vmwfan.mod",game_state->path_to_data));
+   
+    printf("  + Loaded sounds...\n");
    
        /* Load the tom bombem font */
-    tb1_font=LoadVMWFont(tb1_data_file("tbfont.tb1",(char *)tempst),8,16,256);
+    game_state->tb1_font=vmwLoadFont(tb1_data_file("tbfont.tb1",game_state->path_to_data),8,16,256);
+    printf("  + Loaded tb1 font...\n");
    
        /* Setup Graphics */
-    if (setup_graphics(force_8bpp)==2) {   
+    if (setup_graphics(game_state)) {   
        fprintf(stderr,"ERROR: Couldn't get display set up properly.\n");
        return 2;
     }
      
+   
+    if ((game_state->virtual_1=calloc(320*200,2))==NULL) {
+       fprintf(stderr,"ERROR: Couldn't get RAM for virtual screen 1!\n");
+       return 3;
+    }
+    if ((game_state->virtual_2=calloc(320*400,2))==NULL) {
+       fprintf(stderr,"ERROR: Couldn't get RAM for virtual screen 2!\n");
+       return 3;
+    }
+    if ((game_state->virtual_3=calloc(320*200,2))==NULL) {
+       fprintf(stderr,"ERROR: Couldn't get RAM for virtual screen 3!\n");
+       return 3;
+    }
+   
+    printf("  + Allocated virtual screens...\n");
+
+      /* To ease typing burden */
+    virtual_1=game_state->virtual_1;
+    virtual_2=game_state->virtual_2;
+    tb1_font=game_state->tb1_font;
+   
        /* Do the VMW Software Production Logo */
-    for(x=0;x<=40;x++){
-       eight_bit_pal[100+x].r=((x+20)*4)*0x100;
-       eight_bit_pal[100+x].g=0;
-       eight_bit_pal[100+x].b=0;
-       
-       eight_bit_pal[141+x].r=0;
-       eight_bit_pal[141+x].g=0;
-       eight_bit_pal[141+x].b=((x+20)*4)*0x100;
-              
-       eight_bit_pal[182+x].r=0;
-       eight_bit_pal[182+x].g=((x+20)*4)*0x100;;
-       eight_bit_pal[182+x].b=0;
-       
-       if (color_depth!=8) {
-	  tb1_pal[100+x]=ggiMapColor(vis,&eight_bit_pal[100+x]);
-	  tb1_pal[141+x]=ggiMapColor(vis,&eight_bit_pal[141+x]);
-	  tb1_pal[182+x]=ggiMapColor(vis,&eight_bit_pal[182+x]);
-       }
-       else {
-	  for(i=0;i<256;i++) tb1_pal[i]=(ggi_pixel)i;  
-       }
+    for(x=0;x<=40;x++) {
+       custom_palette[100+x]=vmwPack3Bytes( ((x+20)*4),0,0);
+       custom_palette[141+x]=vmwPack3Bytes(0,0, ( (x+20)*4 ));
+       custom_palette[182+x]=vmwPack3Bytes(0, ( (x+20)*4),0);
     }
+
        /* Set the white color */
-    eight_bit_pal[15].r=255*0x100;
-    eight_bit_pal[15].g=255*0x100;
-    eight_bit_pal[15].b=255*0x100;
-    
+    custom_palette[15]=vmwPack3Bytes(0xff,0xff,0xff);
+   
        /* Finalize Pallette Stuff */
-    /*if (color_depth!=8) {
-       tb1_pal[15]=ggiMapColor(vis,&eight_bit_pal[15]);
-    }
-    else ggiSetPaletteVec(vis,0,256,eight_bit_pal);
-      */   
+    vmwLoadCustomPalette(custom_palette);
+    SDL_UpdateRect(game_state->sdl_screen, 0, 0, 0, 0);
+   
+   
        /* Actually draw the stylized VMW */
     for(x=0;x<=40;x++){ 
-       ggiSetGCForeground(vis,tb1_pal[100+x]);   
-       ggiDrawVLine(vis,x+40,45,2*x);
-       ggiSetGCForeground(vis,tb1_pal[141+x]);
-       ggiDrawVLine(vis,x+120,45,2*x);
-       ggiDrawVLine(vis,x+200,45,2*x);
-       ggiSetGCForeground(vis,tb1_pal[182+x]);
-       ggiDrawVLine(vis,x+80,125-(2*x),2*x);
-       ggiDrawVLine(vis,x+160,125-(2*x),2*x);
+       vmwDrawVLine(x+40,45,2*x,100+x,virtual_1);
+       vmwDrawVLine(x+120,45,2*x,141+x,virtual_1);
+       vmwDrawVLine(x+200,45,2*x,141+x,virtual_1);
+       vmwDrawVLine(x+80,125-(2*x),2*x,182+x,virtual_1);
+       vmwDrawVLine(x+160,125-(2*x),2*x,182+x,virtual_1);
     }
     for(x=40;x>0;x--){
-       ggiSetGCForeground(vis,tb1_pal[140-x]);
-       ggiDrawVLine(vis,x+80,45,80-(2*x));
-       ggiSetGCForeground(vis,tb1_pal[181-x]);
-       ggiDrawVLine(vis,x+160,45,80-(2*x));
-       ggiDrawVLine(vis,x+240,45,80-(2*x));
-       ggiSetGCForeground(vis,tb1_pal[222-x]);
-       ggiDrawVLine(vis,x+120,45+(2*x),80-(2*x));
-       ggiDrawVLine(vis,x+200,45+(2*x),80-(2*x));
+       vmwDrawVLine(x+80,45,80-(2*x),140-x,virtual_1);
+       vmwDrawVLine(x+160,45,80-(2*x),181-x,virtual_1);
+       vmwDrawVLine(x+240,45,80-(2*x),181-x,virtual_1);
+       vmwDrawVLine(x+120,45+(2*x),80-(2*x),222-x,virtual_1);
+       vmwDrawVLine(x+200,45+(2*x),80-(2*x),222-x,virtual_1);
     }
    
-    ggiSetGCForeground(vis,tb1_pal[15]);
-    VMWtextxy("A VMW SOFTWARE PRODUCTION",60,140,
-	      tb1_pal[15],tb1_pal[15],0,tb1_font,vis);   
-    ggiFlush(vis);
+    vmwTextXY("A VMW SOFTWARE PRODUCTION",60,140,
+	      15,15,0,game_state->tb1_font,virtual_1);   
+    
+    playSound();
+   
+    vmwBlitMemToSDL(game_state->sdl_screen,virtual_1);
     pauseawhile(5);
+
+    stopSound();
+    loadSound(tb1_data_file("weave1.mod",game_state->path_to_data));
+
    
        /* Clear the Screen and get ready for the Menu */
-    ggiSetGCForeground(vis,tb1_pal[0]); 
-    ggiFillscreen(vis);
+    vmwClearScreen(virtual_1,0); 
     
        /* Load the title screen */
-    grapherror=GGILoadPicPacked(0,0,vis,1,1,
-				tb1_data_file("tbomb1.tb1",(char *)tempst),
-			        (ggi_color *)&eight_bit_pal,
-				(ggi_pixel *)&tb1_pal,color_depth); 
-    grapherror=GGILoadPicPacked(0,0,vaddr2,1,1,
-				tb1_data_file("tbomb1.tb1",(char *)tempst),
-			        (ggi_color *)&eight_bit_pal,
-			        (ggi_pixel *)&tb1_pal,color_depth);
-    ggiFlush(vis);
-    ggiFlush(vaddr2);
-    pauseawhile(5); 
+    grapherror=vmwLoadPicPacked(0,0,virtual_1,1,1,
+				tb1_data_file("tbomb1.tb1",game_state->path_to_data)); 
+    grapherror=vmwLoadPicPacked(0,0,virtual_2,1,1,
+				tb1_data_file("tbomb1.tb1",game_state->path_to_data));
     
+    vmwBlitMemToSDL(game_state->sdl_screen,virtual_1);
+    
+   
        /* Main Menu Loop */
     while (1) {
        if (reloadpic) {
-          grapherror=GGILoadPicPacked(0,0,vaddr2,1,1,
-				    tb1_data_file("tbomb1.tb1",(char *)tempst),
-				    (ggi_color *)&eight_bit_pal,
-				    (ggi_pixel *)&tb1_pal,color_depth);
-          ggiFlush(vaddr2);
+          grapherror=vmwLoadPicPacked(0,0,virtual_2,1,1,
+				    tb1_data_file("tbomb1.tb1",game_state->path_to_data));
 	  reloadpic=0;
        }
-       /*vmwCrossBlit(plb_vis->write,plb_vaddr2->read,plb_vis->stride,200);*/
-       ggiFlush(vis);
+       vmwFlipVirtual(virtual_1,virtual_2);
+       playSound();
+       
+       while (!vmwGetInput()) usleep(300);
             
        barpos=0;
-       VMWtextxy("F1 HELP",0,190,tb1_pal[9],tb1_pal[7],0,tb1_font,vis);   
-       coolbox(117,61,199,140,1,vis);
-       ggiFlush(vis);
+       vmwTextXY("F1 HELP",0,190,9,7,0,tb1_font,virtual_1);   
+       coolbox(117,61,199,140,1,virtual_1);
+       vmwBlitMemToSDL(game_state->sdl_screen,virtual_1);
        ch=0;
+       
        while(ch!=TB_ENTER){
-          if (barpos==0) VMWtextxy("NEW GAME",123,67,
-				   tb1_pal[32],tb1_pal[0],1,tb1_font,vis);
-                    else VMWtextxy("NEW GAME",123,67,
-			           tb1_pal[32],tb1_pal[7],1,tb1_font,vis);
-          if (barpos==1) VMWtextxy("OPTIONS",123,77,
-				   tb1_pal[32],tb1_pal[0],1,tb1_font,vis);
-                    else VMWtextxy("OPTIONS",123,77,
-				   tb1_pal[32],tb1_pal[7],1,tb1_font,vis);
-          if (barpos==2) VMWtextxy("ABOUT",123,87,
-				   tb1_pal[32],tb1_pal[0],1,tb1_font,vis);
-                    else VMWtextxy("ABOUT",123,87,
-				   tb1_pal[32],tb1_pal[7],1,tb1_font,vis);
-          if (barpos==3) VMWtextxy("LOAD GAME",123,97,
-				   tb1_pal[32],tb1_pal[0],1,tb1_font,vis);
-                    else VMWtextxy("LOAD GAME",123,97,
-				   tb1_pal[32],tb1_pal[7],1,tb1_font,vis);
-          if (barpos==4) VMWtextxy("STORY",123,107,
-				   tb1_pal[32],tb1_pal[0],1,tb1_font,vis);
-                    else VMWtextxy("STORY",123,107,
-				   tb1_pal[32],tb1_pal[7],1,tb1_font,vis);
-          if (barpos==5) VMWtextxy("CREDITS",123,117,
-				   tb1_pal[32],tb1_pal[0],1,tb1_font,vis);
-                    else VMWtextxy("CREDITS",123,117,
-				   tb1_pal[32],tb1_pal[7],1,tb1_font,vis);
-          if (barpos==6) VMWtextxy("QUIT",123,127,
-				   tb1_pal[32],tb1_pal[0],1,tb1_font,vis);
-                    else VMWtextxy("QUIT",123,127,
-				   tb1_pal[32],tb1_pal[7],1,tb1_font,vis);
-          ggiFlush(vis); 
-          
+          if (barpos==0) vmwTextXY("NEW GAME",123,67,32,0,1,tb1_font,virtual_1);
+                    else vmwTextXY("NEW GAME",123,67,32,7,1,tb1_font,virtual_1);
+          if (barpos==1) vmwTextXY("OPTIONS",123,77,32,0,1,tb1_font,virtual_1);
+                    else vmwTextXY("OPTIONS",123,77,32,7,1,tb1_font,virtual_1);
+          if (barpos==2) vmwTextXY("ABOUT",123,87,32,0,1,tb1_font,virtual_1);
+                    else vmwTextXY("ABOUT",123,87,32,7,1,tb1_font,virtual_1);
+          if (barpos==3) vmwTextXY("LOAD GAME",123,97,32,0,1,tb1_font,virtual_1);
+                    else vmwTextXY("LOAD GAME",123,97,32,7,1,tb1_font,virtual_1);
+          if (barpos==4) vmwTextXY("STORY",123,107,32,0,1,tb1_font,virtual_1);
+                    else vmwTextXY("STORY",123,107,32,7,1,tb1_font,virtual_1);
+          if (barpos==5) vmwTextXY("CREDITS",123,117,32,0,1,tb1_font,virtual_1);
+                    else vmwTextXY("CREDITS",123,117,32,7,1,tb1_font,virtual_1);
+          if (barpos==6) vmwTextXY("QUIT",123,127,32,0,1,tb1_font,virtual_1);
+                    else vmwTextXY("QUIT",123,127,32,7,1,tb1_font,virtual_1);
+
+          vmwBlitMemToSDL(game_state->sdl_screen,virtual_1);
+	  
 	      /* If at title screen too long, run credits */
 	  gettimeofday(&time_info,&dontcare);
           time_sec=time_info.tv_sec;  	  
-	  while( ((ch=get_input())==0)) {
+	  
+	  while( ((ch=vmwGetInput())==0)) {
 	     usleep(10);
              gettimeofday(&time_info,&dontcare);
 	     if (time_info.tv_sec-time_sec>40) {
-		credits();
+		stopSound();
+		credits(game_state);
 		ch=TB_ENTER;
 		barpos=9;
 		reloadpic=1;
@@ -407,34 +323,35 @@ int main(int argc,char **argv)
 	  }
 	  
 	      /* Change menu position based on key pressed */
-	  ch2=toupper(ch);
           if ((ch==TB_DOWN)||(ch==TB_RIGHT)) barpos++;
           if ((ch==TB_UP) || (ch==TB_LEFT)) barpos--;
           if (ch==TB_F1) {barpos=10; ch=TB_ENTER;} /*F1*/
-          if (ch2=='N') barpos=0;    /*N*/
-          if (ch2=='O') barpos=1;    /*O*/
-          if (ch2=='A') barpos=2;    /*A*/
-          if (ch2=='L') barpos=3;    /*L*/
-          if (ch2=='S') barpos=4;    /*S*/
-          if (ch2=='C') barpos=5;    /*C*/
-          if (ch2=='Q') barpos=6;    /*Q*/
-          if (ch==27){ /* escape */
+          if (ch=='n') barpos=0;    /*N*/
+          if (ch=='o') barpos=1;    /*O*/
+          if (ch=='a') barpos=2;    /*A*/
+          if (ch=='l') barpos=3;    /*L*/
+          if (ch=='s') barpos=4;    /*S*/
+          if (ch=='c') barpos=5;    /*C*/
+          if (ch=='q') barpos=6;    /*Q*/
+          if (ch==TB_ESCAPE){ /* escape */
              barpos=6;
              ch=TB_ENTER;
           }
           if(barpos==7) barpos=0;
           if(barpos<0) barpos=6;
        }
+       stopSound();
+       
           /* Run whatever it was that the person pressed */
        switch (barpos) {
-        case 0: playthegame(0,0,12); reloadpic=1; break;
-	case 1: options(vis); reloadpic=1; break;
-        case 2: about(vis); reloadpic=1; break;
-        case 3: loadgame(); reloadpic=1; break;
-        case 4: story(); reloadpic=1; break;
-        case 5: credits(); reloadpic=1; break;
-	case 6: barpos=quit(vis); break;
-        case 10: help(vis); break;
+        case 0:  playthegame(game_state); reloadpic=1; break;
+	case 1:  options(game_state); reloadpic=1; break;
+        case 2:  about(game_state); reloadpic=1; break;
+        case 3:  loadgame(); reloadpic=1; break;
+        case 4:  story(game_state); reloadpic=1; break;
+        case 5:  credits(game_state);  reloadpic=1; break;
+	case 6:  barpos=quit(game_state); break;
+        case 10: help(game_state);   break;
        }
     }
 }
