@@ -58,6 +58,16 @@ void *SDL_setupGraphics(int *xsize,int *ysize,int *bpp,
     if (verbose) {
        printf("  + SDL Graphics Initialization successful...\n");
        printf("  + Using %dx%dx%dbpp Visual...\n",*xsize,*ysize,*bpp);
+#if BYTE_ORDER==LITTLE_ENDIAN
+       printf("  + Little-endian byte-order detected\n"); 
+#else       
+       printf("  + Big-endian byte-order detected\n"); 
+#endif
+       printf("  + Red: %x Green: %x Blue: %x Alpha: %x\n",
+	      sdl_screen->format->Rmask,
+	      sdl_screen->format->Gmask,
+	      sdl_screen->format->Bmask,
+	      sdl_screen->format->Amask);
     }
     return sdl_screen;
 }
@@ -104,11 +114,9 @@ void SDL_NoScale32bpp_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
    
    for (x=0;x<source->xsize;x++)
        for (y=0;y<source->ysize;y++) {
-	  
-	   color=( (target_p->actual_pal[*(s_pointer)].r<<24)+
-		   (target_p->actual_pal[*(s_pointer)].g<<16)+
-		   (target_p->actual_pal[*(s_pointer)].b<<8)+
-		  255);
+	   color=SDL_MapRGB(target->format,target_p->actual_pal[*(s_pointer)].r,		    
+		            target_p->actual_pal[*(s_pointer)].g,
+		            target_p->actual_pal[*(s_pointer)].b);
 	  
            *((Uint32 *)(t_pointer))=color;
            s_pointer++; t_pointer+=4;
@@ -148,26 +156,24 @@ void SDL_Double32bpp_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
 
    for (y=0;y<source->ysize;y++) {
        for (x=0;x<source->xsize;x++) {
-	   	   
-	  color=( (target_p->actual_pal[*(s_pointer)].r<<24)+
-		   (target_p->actual_pal[*(s_pointer)].g<<16)+
-		   (target_p->actual_pal[*(s_pointer)].b<<8)+
-		  255);
+	  	   color=SDL_MapRGB(target->format,target_p->actual_pal[*(s_pointer)].r,		    
+		            target_p->actual_pal[*(s_pointer)].g,
+		            target_p->actual_pal[*(s_pointer)].b);
 	  
 	   /* i=0, j=0 */
-	   *((Uint16 *) ( (t_pointer)))=color;
+	   *((Uint32 *) ( (t_pointer)))=color;
 	  
 	   /* i=1, j=0 */
-	   *((Uint16 *) ( (t_pointer+(2*target_p->xsize)  )))=color;
+	   *((Uint32 *) ( (t_pointer+(2*target_p->xsize)  )))=color;
 	  
 	   /* i=0, j=1 */
-	   *((Uint16 *) ( (t_pointer+2) ))=color;
+	   *((Uint32 *) ( (t_pointer+4) ))=color;
 	  
            /* i=1 j=1 */
-	    *((Uint16 *) ( (t_pointer+2+(2*target_p->xsize)  )))=color;
+	    *((Uint32 *) ( (t_pointer+4+(2*target_p->xsize)  )))=color;
 	  
 	  
-           s_pointer++; t_pointer+=4;
+           s_pointer++; t_pointer+=8;
        }
        t_pointer+=2*target_p->xsize;
    }
@@ -262,7 +268,7 @@ void SDL_Double16bpp_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
 	  
            s_pointer++; t_pointer+=4;
        }
-       t_pointer+=4*target_p->xsize;
+       t_pointer+=2*target_p->xsize;
    }
    
    
