@@ -1,19 +1,26 @@
 /* "borrowed" from gltron */
 
+#ifdef SDL_MIXER_SOUND
+#include <SDL/SDL.h>
+#include <SDL/SDL_mixer.h>
+#endif
+
 #include "sound.h"
 #include <stdlib.h>
 
   /* Function definition */
 char *tb1_data_file(char *name,char *path);
 
-
 /* linux only, at the moment */
-
-static Mix_Music *music;
 
 #define NUM_GAME_FX 8
 
+#ifdef SDL_MIXER_SOUND
+static Mix_Music *music;
+
 static Mix_Chunk *game_fx[NUM_GAME_FX];
+
+#endif
 
 static char *game_fx_names[] = {
   "sound/tb_ahh.wav",
@@ -27,6 +34,7 @@ static char *game_fx_names[] = {
 };
 
 void loadFX(char *path_to_data) {
+#ifdef SDL_MIXER_SOUND
   int i;
   char *path;
 
@@ -36,41 +44,52 @@ void loadFX(char *path_to_data) {
       game_fx[i] = Mix_LoadWAV(path);
     }
   }
+#endif
 }
  
 int initSound(char *path_to_data) {
   /* open the audio device */
+#ifdef SDL_MIXER_SOUND   
   if(Mix_OpenAudio(22050, AUDIO_U16, 1, 1024) < 0) {
     fprintf(stderr, "can't open audio: %s\n", SDL_GetError());
     return -1;
   }
   loadFX(path_to_data);
+#endif
   return 0;
 }
 
 
 void shutdownSound() {
+#ifdef SDL_MIXER_SOUND
   Mix_CloseAudio();
+#endif
 }
   
 
 int loadSound(char *name) {
+#ifdef SDL_MIXER_SOUND
   music = Mix_LoadMUS(name);
+#endif
   return 0;
 }
 
 int playSound() {
+#ifdef SDL_MIXER_SOUND
   if( ! Mix_PlayingMusic() )
     Mix_PlayMusic(music, -1);
   /* todo: remove the following once the bug in SDL_mixer is fixed */
   /* we don't want too many references to game objects here */
 //  setMusicVolume(game->settings->musicVolume);
+#endif
   return 0;
 }
 
 int stopSound() {
+#ifdef SDL_MIXER_SOUND
   if( Mix_PlayingMusic() )
     Mix_HaltMusic();
+#endif
   return 0;
 }
 
@@ -80,21 +99,27 @@ void soundIdle() {
 }
 
 void playGameFX(int fx) {
+#ifdef SDL_MIXER_SOUND
   Mix_PlayChannel(-1, game_fx[fx], 0); 
 //  fprintf(stderr, "fx on channel %d\n", Mix_PlayChannel(-1, game_fx[fx], 0));
+#endif
 }
 
 
 void setMusicVolume(float volume) {
+#ifdef SDL_MIXER_SOUND
   if(volume > 1) volume = 1;
   if(volume < 0) volume = 0;
 
   Mix_VolumeMusic((int)(volume * 128));
+#endif
 }
 
 void setFxVolume(float volume) {
+#ifdef SDL_MIXER_SOUND
   if(volume > 1) volume = 1;
   if(volume < 0) volume = 0;
 
   Mix_Volume(-1, (int)(volume * 128));
+#endif
 }

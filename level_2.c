@@ -445,7 +445,7 @@ void leveltwoengine(tb1_state *game_state)
     if (rows_goneby>1950) {
 //       printf("%i\n",rows_goneby);
        coolbox(35,85,215,110,1,virtual_1);
-       vmwTextXY("TO BE CONTINUED...",55,85,4,7,0,tb1_font,virtual_1);
+       vmwTextXY("TO BE CONTINUED...",55,95,4,7,0,tb1_font,virtual_1);
        vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
        pauseawhile(10);
        

@@ -89,10 +89,10 @@ void options(tb1_state *game_state)
        put_string("WIPE LIST",(opbarpos==5),40,80,tb1_font,game_state->virtual_1);
        
        vmwTextXY("DEFAULT DISPLAY OPTIONS:",10,90,9,8,1,tb1_font,game_state->virtual_1);
-       vmwTextXY("RUN FULLSCREEN:",40,100,10,8,1,tb1_font,game_state->virtual_1);
+       vmwTextXY("RUN DOUBLESIZE:",40,100,10,8,1,tb1_font,game_state->virtual_1);
        put_yes_no(game_state->default_double_size,(opbarpos==6),180,100,
 		  tb1_font,game_state->virtual_1);      
-       vmwTextXY("RUN DOUBLESIZE:",40,110,10,8,1,tb1_font,game_state->virtual_1);
+       vmwTextXY("RUN FULLSCREEN:",40,110,10,8,1,tb1_font,game_state->virtual_1);
        put_yes_no(game_state->default_fullscreen,(opbarpos==7),180,110,
 		  tb1_font,game_state->virtual_1);
        

@@ -1,6 +1,6 @@
 /****************************************************************\
 \*    TOM BOMBEM AND THE INVASION OF THE INANIMATE_OBJECTS      */
-/*                    version 2.9.9      23 September 2000	*\
+/*                    version 2.9.11      20 October 2000	*\
 \*        by Vince Weaver       weave@eng.umd.edu               */
 /*                                                              *\
 \*  Originally written in Pascal and x86 assembly for DOS       */
@@ -10,7 +10,7 @@
 \*          This source is released under the GPL               */
 /****************************************************************/
 
-#define TB1_VERSION "2.9.9"
+#define TB1_VERSION "2.9.11"
 
 #include <stdio.h>
 #include <stdlib.h>   /* for calloc */
@@ -130,6 +130,8 @@ int main(int argc,char **argv)
     game_state->sound_possible=1;
     game_state->music_enabled=1;
     game_state->sound_enabled=1;
+    game_state->sound_volume=5;
+    game_state->music_volume=5;
     game_state->default_double_size=0;
     game_state->default_fullscreen=0;
  
@@ -215,9 +217,6 @@ int main(int argc,char **argv)
        }
     }
     printf("  + Found tb1 data in %s\n",game_state->path_to_data);
-
-    /* FIXME -- read in options */
-   
   
 /* LEGACY OPERATION BOTTLECAP STUFF--->                 *\
 \*      --> You are not meant to understand this <--    */

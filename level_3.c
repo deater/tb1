@@ -1,23 +1,21 @@
+#include <stdio.h>
+#include <unistd.h>
 
-     Obstruction = record
-                   x,y:integer;
-                   shooting,dead,exploding:boolean;
-                   explodeprogress:byte;
-                   howmanyhits:integer;
-                   kind,lastshot:byte;
-                end;
+#include "./svmwgraph/svmwgraph.h"
+#include "tb1_state.h"
+
+#include "help.h"
+#include "loadsave.h"
+#include "graphic_tools.h"
+
+#define NORTH 0
+#define SOUTH 1
+#define EAST  2
+#define WEST  3
 
 
-     EnemyInfo = record
-               x,y:integer;
-               kind:byte;
-               out,exploding,boundarycheck,dead:boolean;
-               explodprogress:byte;
-               minx,maxx,xspeed,yspeed:integer;
-               hitsneeded:integer;
-             end;
-
-procedure loadlevel3shapes;
+void loadlevel3shapes() {
+   /*
 var x,y,i,j,shape:byte;
 begin
    clearshape;
@@ -31,8 +29,10 @@ begin
                           :=getpixel(1+x+(i*11),1+y+(j*11),vaddr);
   cls(0,vaddr);
 end;
+*/
+}
 
-
+/*
 Procedure levelthree;
 label newroom;
 type{
@@ -151,8 +151,23 @@ begin
     else for i:=0 to 20 do put10shape240(shape3array[2],vaddr2,0,i*10);
 
 end;
+*/
 
+void LevelThreeEngine(tb1_state *game_state) {
 
+    int level_over=0;
+    int ch,direction=NORTH;
+    int x_add,y_add;
+    int game_paused=0;
+   
+    vmwVisual *virtual_1,*virtual_2;
+    vmwFont *tb1_font;
+   
+    virtual_1=game_state->virtual_1;
+    virtual_2=game_state->virtual_2;
+    tb1_font=game_state->graph_state->default_font;
+    
+/*
 
 BEGIN
   {loadlevel3shapes;}
@@ -388,20 +403,18 @@ newroom:
   end;
   if (room=254) and not(levelover) then goto newroom;
 
+*/
 
 
 
+/**** GAME LOOP ****/
+/*******************/
+  
+    while (!level_over) {
 
-{**** GAME LOOP ****}
-{*******************}
-  Repeat
-    ch2:=#1;
-    ch:=#1;
-    
-    flip240(0);
 
-{***Collision Check***}
-   if numpits>0 then
+       /***Collision Check***/
+/*   if numpits>0 then
     for i:=0 to (numpits-1) do with pits[i] do
         if collision(shipx,shipy,5,4,px,py,4,4)
             then begin
@@ -511,10 +524,10 @@ newroom:
                shipx:=shipx+(4*framedir[1,shipframe]);
                shipy:=shipy+(4*framedir[0,shipframe]);
           end;
+*/
 
-
-{***DO EXPLOSIONS***}
-{    for i:=0 to 30 do
+       /***DO EXPLOSIONS***/
+/*{    for i:=0 to 30 do
         if passive[i].exploding then with passive[i] do begin
            inc(explodeprogress);
            putshape240(shape2array[35+explodeprogress],vaddr2,
@@ -526,10 +539,10 @@ newroom:
                           20,9,x,y+howmuchscroll);
            end;
         end;
-
- }
-{***MOVE BULLET***}
-    if bullet1out then begin
+*/
+ 
+       /***MOVE BULLETS***/
+/*    if bullet1out then begin
        case bullet1dir of
             1:begin dec(bullet1y,5);
                     collide:=upcollide(bullet1x,bullet1y,5,-5,3,vaddr2);
@@ -553,8 +566,9 @@ newroom:
        if bullet2y<5 then bullet2out:=false;
        if bullet2out then putshape(shape3array[76],vaddr,10,9,bullet2x,bullet2y);
     end;
-{***MOVE ENEMIES***}
-  {  for j:=0 to 30 do begin
+ */
+       /***MOVE ENEMIES***/
+/*  {  for j:=0 to 30 do begin
         if passive[j].dead=false then begin
            inc(passive[j].y);
            if(passive[j].y)>190 then passive[j].dead:=true;
@@ -587,57 +601,57 @@ newroom:
         end;
     end;
    }
-
-{***READ KEYBOARD***}
-
-    if keypressed then BEGIN
-      ch:=readkey;
-      if ch=chr(0) then ch2:=readkey;
-      if ch=#27 then levelover:=true;
-      clearkeyboardbuffer;
-
-      if ch2='M' then begin
+*/
+     
+       /***READ KEYBOARD***/
+    if ( (ch=vmwGetInput())!=0) {
+       switch(ch){
+	case VMW_ESCAPE: level_over=1;
+	                 break;
+	case VMW_RIGHT:  if (direction==EAST) x_add=2;
+	                 else direction=EAST;
+	                 break;
+	  /*
          if (shipframe=2) and (shipxadd=0) then shipxadd:=2
          else if (shipframe<>2) then shipframe:=2
          else inc(shipxadd);
-      end;
-      if ch2='K' then begin
-         if (shipframe=4) and (shipxadd=0) then shipxadd:=-2
-         else if (shipframe<>4) then shipframe:=4
-         else dec(shipxadd);
-      end;
-      if ch2='H' then begin
-         if (shipframe=1) and (shipyadd=0) then shipyadd:=-2
-         else if (shipframe<>1) then shipframe:=1
-         else dec(shipyadd);
-
-      end;
-      if ch2='P' then begin
-         if (shipframe=3) and (shipyadd=0) then shipyadd:=2
-         else if (shipframe<>3) then shipframe:=3
-         else inc(shipyadd);
-
-      end;
-      if ch2=';' then help;
-      if ch='+' then begin
-         inc(whatdelay);
-         if whatdelay>25 then whatdelay:=25;
-      end;
-      if (ch='P') or (ch='p') then begin
-         coolbox(65,85,175,110,true,vga);
-         outtextxy('GAME PAUSED',79,95,4,7,vga,false);
-         clearkeyboardbuffer;
-         repeat until keypressed;  tempch:=readkey;
-      end;
-      if ch='-' then begin
-         dec(whatdelay);
-         if whatdelay<1 then whatdelay:=1;
-      end;
-     {if (ch='S') or (ch='s') then sbeffects:=not(sbeffects);}
-
-      if ch2='<' then savegame;
-
-      end;
+         */
+	case VMW_LEFT: if (direction==WEST) x_add=-2;
+	               else direction=WEST;
+	               break;
+	case VMW_UP:       if (direction==NORTH) y_add=-2;
+	               else direction=NORTH;
+	               break;
+	case VMW_DOWN: if (direction==SOUTH) y_add=2;
+	               else direction=SOUTH;
+	               break;
+	case VMW_F1:   game_paused=1;
+	               help(game_state);
+	               break;
+	  
+        case 'P':
+	case 'p':      game_paused=1;
+                       coolbox(65,85,175,110,1,virtual_1);
+                       vmwTextXY("GAME PAUSED",79,95,4,7,0,
+				 game_state->graph_state->default_font,
+				 virtual_1);
+                       vmwClearKeyboardBuffer();
+	               vmwBlitMemToDisplay(game_state->graph_state,
+					   virtual_1);
+	               while (vmwGetInput()==0) usleep(30000); 
+	               break;
+	case 'S':
+	case 's':      if (game_state->sound_possible)
+	                  game_state->sound_enabled=!(game_state->sound_enabled);
+                       break;
+	  
+	case VMW_F2:   game_paused=1;
+	               savegame(game_state);
+	               break;
+	case ' ':      /* shoot */
+	               break;
+	  /*
+	  
       if (ch=' ') and havegun then begin
          if (bullet1out=false) then begin
             {if sbeffects then StartSound(Sound[4], 0, false);}
@@ -657,15 +671,19 @@ newroom:
             putshape(shape3array[76],vaddr,10,9,bullet2x,bullet2y);
        end;
     end;
-
-{***MOVE SHIP***}
+*/
+       }
+    }
+       
+       /***MOVE TOM***/
         
 
-        ucollide:=upcollide(shipx,shipy,abs(shipyadd),-abs(shipyadd),10,vaddr2);
+     /*   ucollide:=upcollide(shipx,shipy,abs(shipyadd),-abs(shipyadd),10,vaddr2);
         dcollide:=upcollide(shipx,shipy,abs(shipyadd),8,10,vaddr2);
         lcollide:=leftcollide(shipx,shipy,abs(shipxadd),-abs(shipxadd),8,vaddr2);
-        rcollide:=leftcollide(shipx,shipy,abs(shipxadd),0,8,vaddr2);
-        if (shipframe=1) and (ucollide<>0) then shipyadd:=0;
+        rcollide:=leftcollide(shipx,shipy,abs(shipxadd),0,8,vaddr2);*/
+       
+       /* if (shipframe=1) and (ucollide<>0) then shipyadd:=0;
         if (shipframe=3) and (dcollide<>0) then shipyadd:=0;
         if (shipframe=2) and (rcollide<>0) then shipxadd:=0;
         if (shipframe=4) and (lcollide<>0) then shipxadd:=0;
@@ -701,39 +719,21 @@ newroom:
        if (shipyadd<>0) or (shipxadd<>0) then inc(walking,4)
        else walking:=0;
        if walking>12 then walking:=0;
-
-        CASE shipframe of
+*/
+     /*   CASE shipframe of
            1   : putshape (shape3array[60+walking],vaddr,10,9,shipx,shipy);
            2   : putshape (shape3array[61+walking],vaddr,10,9,shipx,shipy);
            3   : putshape (shape3array[62+walking],vaddr,10,9,shipx,shipy);
            4   : putshape (shape3array[63+walking],vaddr,10,9,shipx,shipy);
         END;
-    waitretrace;
-    flip (vaddr,vga);
-    if odd then begin
-       pal(250,0,0,63);
-       pal(251,63,0,0);
-       odd:=not(odd);
-    end
-    else begin
-       pal(251,0,0,63);
-       pal(250,63,0,0);
-       odd:=not(odd);
-    end;
-
-
-    for i:=0 to whatdelay do waitretrace;
-
-    if changeroom then goto newroom;
-
-  until levelover;
-END;
+  */
+    }
+}
 
 
 
-
-
-procedure littleopener3;
+void littleopener3() {
+   /*
 var star_x:array[0..5]of integer;
     star_y:array[0..5]of integer;
 begin
@@ -818,4 +818,6 @@ begin
   cls(0,vga);
   unfade;
 end;
+    */
+}
 

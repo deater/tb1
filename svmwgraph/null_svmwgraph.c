@@ -6,7 +6,8 @@
 void *null_setupGraphics(int *xsize,int *ysize,int *bpp,
 			int fullscreen,int verbose)
 {
-  return NULL;
+    /* Returning NULL is considered an error */
+  return (void *)1;
 }
 
 

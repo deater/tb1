@@ -2,6 +2,7 @@
 
 #include "svmwgraph.h"
 #include <stdio.h>
+#include <math.h>
 
 #define DEBUG 1
 
@@ -76,55 +77,51 @@ void vmwDrawVLine(int xstart,int ystart,int how_long,int color,
     }
 }
 
-void vmwLine(int x1, int y1, int x2, int y2, int color, 
-	     vmwVisual *destination) {
 
-/*function sgn(a:real):integer;
-begin
-     if a>0 then sgn:=+1;
-     if a<0 then sgn:=-1;
-     if a=0 then sgn:=0;
-end;
+int sgn(float a) {
+     if (a>0)  return 1;
+     if (a<0)   return -1;
+     return 0;
+}
 
-procedure line(a,b,c,d,col:integer;where:word);
-var u,s,v,d1x,d1y,d2x,d2y,m,n:real;
-    i:integer;
-begin
-     u:= c - a;
-     v:= d - b;
-     d1x:= SGN(u);
-     d1y:= SGN(v);
-     d2x:= SGN(u);
-     d2y:= 0;
-     m:= ABS(u);
-     n := ABS(v);
-     IF NOT (M>N) then
-     BEGIN
-          d2x := 0 ;
-          d2y := SGN(v);
-          m := ABS(v);
-          n := ABS(u);
-     END;
-     s := INT(m / 2);
-     FOR i := 0 TO round(m) DO
-     BEGIN
-          putpixel(a,b,col,where);
-          s := s + n;
-          IF not (s<m) THEN
-          BEGIN
-               s := s - m;
-               a:= a +round(d1x);
-               b := b + round(d1y);
-          END
-          ELSE
-          BEGIN
-               a := a + round(d2x);
-               b := b + round(d2y);
-          END;
-     end;
-END;
-*/
 
+    /* I don't pretend to understand the following yet.  Taken
+     * from PCGPE.  Might re-write by self when get around to it */
+void vmwLine(int x1,int y1,int x2,int y2,int color,vmwVisual *destination) {
+   
+    float dx,dy,d1x,d1y,d2x,d2y,m,n,s;
+    int i;
+   
+    dx = x2 - x1;
+    dy = y2 - y1;
+   
+    d1x=sgn(dx);
+    d1y=sgn(dy);
+    d2x=sgn(dx);
+    d2y= 0.0;
+   
+    m=fabs(dx);
+    n=fabs(dy);
+    if (!(m>n)) {
+       d2x=0;
+       d2y=sgn(dy);
+       m=fabs(dy);
+       n=fabs(dx);
+    }
+    s=rint(m / 2);
+    for (i= 0;i< (int)m;i++) {
+        vmwPutPixel(x1,y1,color,destination);
+        s+=n;
+        if (!(s<m)) {
+           s-=m;
+           x1+=rint(d1x);
+           y1+=rint(d1y);
+	}
+        else {
+           x1+=rint(d2x);
+           y1+=rint(d2y);
+	}
+    }
 }
 
 void vmwDrawBox(int x1,int y1,int xsize,int ysize,int col, vmwVisual *where) {

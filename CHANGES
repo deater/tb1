@@ -1,3 +1,26 @@
+27 October 2000
++ Started writing an opengl target.  Was hoping for a cool tb1 rotating
+  on the side of a cube type deal.  Had some fights with glut and decided
+  to put that off for a while.
++ Modularized the makefiles.  Now just edit Makefile.inc.... and you
+  can compile without SDL_mixer/curses/SDL, etc... though you sacrifice
+  functionality
++ TB1 works over an ssh connection in curses [BSD-Curses] on a VT102 terminal
+  on a Solaris Ultrasparc machine!  I can even get to level2!
+
+
+19 October 2000
++ Fixed some other minor bugs.
++ Added "vmwLine" to svmwgraph.  Really it's just a port of the PCGPE line
+  routine.  I should write one of my own.
+
+18 October 2000
++ No e-mails from freshmeat submission, so I suppose that means all is well.
++ Fixed bug where ppro_view only ran in curses mode
++ Fixed bug where double/fullscreen were reversed on options menu
++ Fixed bug where "to be continued" displayed improperly.
++ Fix bug in handling of spaces in names in high score list
+
 16 October 2000
 + Finished options menu.
 + Fix up documentation, hopefully do a freshmeat release.

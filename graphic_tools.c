@@ -125,7 +125,7 @@ char *vmwGrInput(tb1_state *game_state,int x,int y,int howlong,int forecol,int b
           num_chars--;
 	  tempst[num_chars]=0;
        }
-       if (num_chars<10) {
+       else if (num_chars<10) {
           if ((ch>31) && (ch<128)) { 
 	     tempst[num_chars]=(char)ch;
 	     tempst[num_chars+1]=0;

@@ -12,4 +12,8 @@ Other aspirations:
 SVMWGraph todo:
    Color Averaging in the curses target?
    Implement non 320x200x8 PCX loading?
+   Make sprite code RLE?
    
+Known Bugs:
+   8bpp palette switching not as smooth as it could be.
+   Volume controls on option menu don't do anything yet

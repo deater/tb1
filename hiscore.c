@@ -26,7 +26,11 @@ int showhiscore(tb1_state *game_state,int showchart,int return_highest)
        return 0;
     }
     
-    for (i=0;i<10;i++) fscanf(hilist,"%s",names[i]);
+    for(i=0;i<10;i++) {
+       fgets(names[i],11,hilist);
+          /* There has to be a cleaner way of getting rid of that '\n' */
+       names[i][strlen(names[i])-1]='\0';
+    }
     for (i=0;i<10;i++) fscanf(hilist,"%i",&scores[i]);
     fclose(hilist);
     if (!showchart) {
@@ -59,11 +63,14 @@ void write_hs_list(tb1_state *game_state,int score,char *hiname,int wipe)
 
     int i,place,in_place;
     FILE *hilist;
-    vmwHighScore old_list[10];
-    vmwHighScore new_list[10];
+    vmwHighScore old_list[12];
+    vmwHighScore new_list[12];
    
     hilist=fopen(tb1_data_file("hiscore.tb1",game_state->path_to_data),"r");
-    for (i=0;i<10;i++) fscanf(hilist,"%s",old_list[i].name);
+    for(i=0;i<10;i++) {
+       fgets(old_list[i].name,12,hilist);
+       old_list[i].name[strlen(old_list[i].name)-1]='\0';
+    }
     for (i=0;i<10;i++) fscanf(hilist,"%i",&old_list[i].score);
     fclose(hilist);
    

@@ -11,7 +11,7 @@
               
                             Vince Weaver
 
-Version 2.9.10
+Version 2.9.11
 ---------------------------------------------------------------------
 
 Contents
@@ -32,9 +32,9 @@ Contents
 
 Sorry, there is no "configure" file as of yet.
 
-If you have SDL or ncurses in non-standard places, you'll
-   have to edit the Makefiles.
-
+If you have a non-standard (ie non-Linux, or Linux w/o SDL/curses/SDL_mixer)
+   you will have to edit the "Makefile.inc" file to match your config.
+   
 You need the SDL game development library, 1.1.4 or newer:
    http://www.libsdl.org/download-1.1.html   
    
@@ -267,7 +267,7 @@ ___________________________________________________________________
 
 Remember:  Watch for the newest version of Tom Bombem... and have fun.
 
-           Vince Weaver         16 October 2000 23:05:59 EDT
+           Vince Weaver         27 October 2000 20:05:59 EDT
 
 
 

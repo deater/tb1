@@ -2,7 +2,7 @@
 /* Also will re-save them */
 
 #include <stdio.h>
-#include "svmwgraph/svmwgraph.h"
+#include "svmwgraph.h"
 #include <string.h> /* for strdup */
 #include <unistd.h> /* for usleep() */
 
@@ -17,16 +17,23 @@ int main(int argc,char **argv)
     char save_string[BUFSIZ];
     char *extension,*temp_string1,*temp_string2;
     int xsize,ysize;
-    int is_pcx=0;
+    int is_pcx=0,target=VMW_SDLTARGET;
    
     vmwSVMWGraphState *graph_state;
    
+    printf("HI %i\n\n",argc);
+   
+   
     if (argc<2) {
-       printf("\nUsage: %s filename\n\n",argv[0]);
+       printf("\nUsage: [-curses] %s filename\n\n",argv[0]);
        return -1;
     }
    
-    filename=strdup(argv[1]);
+    filename=strdup(argv[argc-1]);
+   
+    if (!strncmp(argv[1],"-curses",10)) {
+       target=VMW_CURSESTARGET;
+    }
    
        /* Hacky way to grab the extension.  I am sure this is a cleaner way */
     temp_string1=strdup(filename);
@@ -69,7 +76,7 @@ int main(int argc,char **argv)
 	
        /* Setup Graphics */
 
-    if ( (graph_state=vmwSetupSVMWGraph(VMW_CURSESTARGET,
+    if ( (graph_state=vmwSetupSVMWGraph(target,
 					xsize,
 					ysize,
 					0,scale,fullscreen,1))==NULL) {   

@@ -52,6 +52,7 @@ typedef struct {
 #define VMW_NULLTARGET    0
 #define VMW_SDLTARGET     1
 #define VMW_CURSESTARGET  2  /* Yes I am insane */
+#define VMW_OPENGLTARGET  3  /* Even Moreso */
 
      /* Error Constants */
 

@@ -1,0 +1,23 @@
+0,0
+RLE_BLIT
+Blitting 100000 5x5 blocks took 0s 374448us
+Blitting 100000 10x10 blocks took 0s 390829us
+Blitting 100000 20x20 blocks took 1s 454441us
+Blitting 100000 50x50 blocks took 7s 43651us
+Blitting 100000 75x75 blocks took 14s 687811us
+
+0,100
+MEMSET
+Blitting 100000 5x5 blocks took 0s 275407us
+Blitting 100000 10x10 blocks took 0s 700047us
+Blitting 100000 20x20 blocks took 0s 761301us
+Blitting 100000 50x50 blocks took 2s 352337us
+Blitting 100000 75x75 blocks took 7s 337732us
+
+0,100
+RLE_BLIT
+Blitting 100000 5x5 blocks took 0s 277307us
+Blitting 100000 10x10 blocks took 0s 310614us
+Blitting 100000 20x20 blocks took 0s 281589us
+Blitting 100000 50x50 blocks took 2s 364685us
+Blitting 100000 75x75 blocks took 6s 762143us

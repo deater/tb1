@@ -4,6 +4,7 @@
 #include "sdl_svmwgraph.h"  /* Make this dynamic somehow? */
 #include "null_svmwgraph.h"
 #include "curses_svmwgraph.h"
+#include "opengl_svmwgraph.h"
 
 #include <stdio.h>  /* For printf */
 #include <stdlib.h> /* For Memory Allocation */
@@ -29,11 +30,23 @@ vmwSVMWGraphState *vmwSetupSVMWGraph(int display_type,int xsize,int ysize,
     }
        /* Setup Setup routines */
     switch (display_type) {
-        case VMW_NULLTARGET:   vmwSetupGraphics=null_setupGraphics;
+        case VMW_NULLTARGET:   
+                               vmwSetupGraphics=null_setupGraphics;
                                break;
-        case VMW_CURSESTARGET: vmwSetupGraphics=curses_setupGraphics;
+        case VMW_CURSESTARGET: 
+#ifdef CURSES_TARGET
+                               vmwSetupGraphics=curses_setupGraphics;
+#endif
                                break;
-        case VMW_SDLTARGET:  vmwSetupGraphics=SDL_setupGraphics;
+        case VMW_OPENGLTARGET: 
+#ifdef OPENGL_TARGET
+                               vmwSetupGraphics=openGL_setupGraphics;
+#endif
+                               break;
+        case VMW_SDLTARGET:    
+#ifdef SDL_TARGET
+                               vmwSetupGraphics=SDL_setupGraphics;
+#endif
                                break;
         default: printf("ERROR! Unknown Display Target %i.\n",display_type);
                  return NULL;
@@ -62,6 +75,7 @@ vmwSVMWGraphState *vmwSetupSVMWGraph(int display_type,int xsize,int ysize,
 					       &temp_state->ysize,
 					       &temp_state->bpp,
 					       fullscreen,verbose);
+   if (temp_state->output_screen==NULL) return NULL;
        /* Setup proper blitter and others*/   
     switch (display_type) {
        case VMW_NULLTARGET: 
@@ -71,14 +85,26 @@ vmwSVMWGraphState *vmwSetupSVMWGraph(int display_type,int xsize,int ysize,
                vmwGetInput=null_getInput;
                vmwCloseGraphics=null_closeGraphics;
                break;
+       case VMW_OPENGLTARGET:
+#ifdef OPENGL_TARGET
+               vmwFlushPalette=openGL_flushPalette;
+               vmwClearKeyboardBuffer=openGL_clearKeyboardBuffer;
+               vmwBlitMemToDisplay=openGL_BlitMem;
+               vmwGetInput=openGL_getInput;
+               vmwCloseGraphics=openGL_closeGraphics;
+#endif
+               break;
        case VMW_CURSESTARGET:
+#ifdef CURSES_TARGET
                vmwFlushPalette=curses_flushPalette;
                vmwClearKeyboardBuffer=curses_clearKeyboardBuffer;
                vmwBlitMemToDisplay=curses_BlitMem;
                vmwGetInput=curses_getInput;
                vmwCloseGraphics=curses_closeGraphics;
+#endif
                break;
        case VMW_SDLTARGET: 
+#ifdef SDL_TARGET
                if (temp_state->bpp==8) {
 		  if (scale==1) {
 		     vmwBlitMemToDisplay=SDL_NoScale8bpp_BlitMem;
@@ -97,6 +123,7 @@ vmwSVMWGraphState *vmwSetupSVMWGraph(int display_type,int xsize,int ysize,
                vmwClearKeyboardBuffer=SDL_clearKeyboardBuffer;
                vmwGetInput=SDL_getInput;
                vmwCloseGraphics=SDL_closeGraphics;
+#endif
                break;
     default: printf("ERROR! Unknown Display Target %i.\n",display_type);
              return NULL;

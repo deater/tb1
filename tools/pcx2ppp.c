@@ -2,7 +2,7 @@
 /* Also will re-save them */
 
 #include <stdio.h>
-#include "svmwgraph/svmwgraph.h"
+#include "svmwgraph.h"
 #include <string.h> /* for strdup */
 #include <unistd.h> /* for usleep() */
 

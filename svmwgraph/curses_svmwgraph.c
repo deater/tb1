@@ -3,7 +3,13 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <ctype.h>
+
+#if (CURSES_TARGET==2)
+#include "curses.h"
+#else
 #include "ncurses.h"
+#endif
+
 #include "svmwgraph.h"
 #include <stdlib.h>  /* For atexit() */
 
@@ -76,7 +82,8 @@ void *curses_setupGraphics(int *xsize,int *ysize,int *bpp, int fullscreen,int ve
        our_COLS=(320/our_cols_stride);
     }
        
-    return NULL;
+      /* Returning NULL would be an error */
+    return &our_colors;
 }
 
 
