@@ -21,9 +21,9 @@ void about(tb1_state *game_state)
     vmwClearScreen(target1,0);
          
     vmwLoadPicPacked(0,0,target2,1,1,
-		    tb1_data_file("register.tb1",game_state->path_to_data)); 
+		    tb1_data_file("./about/register.tb1",game_state->path_to_data)); 
     vmwLoadPicPacked(0,0,target1,1,0,     /* Load Palette */
-		     tb1_data_file("register.tb1",game_state->path_to_data));
+		     tb1_data_file("./about/register.tb1",game_state->path_to_data));
    
     while ((ch!=VMW_ESCAPE)&&(ch!='q')){
        while(( (ch=vmwGetInput())==0) && (firstime));

@@ -5,9 +5,16 @@
 #include <stdlib.h>  /* For atexit() */
 
     /* Setup the Graphics */
-void *SDL_setupGraphics(int xsize,int ysize,int bpp,int verbose)
+void *SDL_setupGraphics(int xsize,int ysize,int bpp,int scale,
+			int fullscreen,int verbose)
 {
     SDL_Surface *sdl_screen;
+    int mode;
+   
+   
+    mode=SDL_SWSURFACE;
+    if (fullscreen) mode|=SDL_FULLSCREEN;
+   
    
        /* Initialize the SDL library */
     if ( SDL_Init(SDL_INIT_VIDEO) < 0 ) {
@@ -20,10 +27,10 @@ void *SDL_setupGraphics(int xsize,int ysize,int bpp,int verbose)
     atexit(SDL_Quit);
    
        /* Initialize the display */
-    sdl_screen = SDL_SetVideoMode(xsize, ysize, 16, SDL_SWSURFACE);
+    sdl_screen = SDL_SetVideoMode(xsize, ysize, 16, mode);
     if ( sdl_screen == NULL ) {
        fprintf(stderr, "Couldn't set %dx%dx%d video mode: %s\n",
-	       xsize,ysize,bpp,SDL_GetError());
+	       xsize*scale,ysize*scale,bpp,SDL_GetError());
        exit(1);
     }
     if (verbose) {
@@ -71,6 +78,64 @@ void SDL_NoScale16bpp_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
    
       /* Write this out to the screen */
    SDL_UpdateRect(target, 0, 0, source->xsize, source->ysize);
+   
+}
+
+   /* I should make this generic, but it makes it really slow */
+void SDL_Double16bpp_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
+   
+   int x,y,Bpp,scale;
+   
+   unsigned char *s_pointer,*t_pointer;
+   
+   SDL_Surface *target;
+   
+   target=(SDL_Surface *)target_p->output_screen;
+   
+   scale=target_p->scale;
+   
+   if ( SDL_MUSTLOCK(target) ) {
+      if ( SDL_LockSurface(target) < 0 )
+      return;
+   }
+   
+   Bpp=target->format->BytesPerPixel;
+   
+   s_pointer=source->memory;
+   t_pointer=((Uint8 *)target->pixels);
+
+   for (y=0;y<source->ysize;y++) {
+       for (x=0;x<source->xsize;x++) {
+	   
+	   /* i=0, j=0 */
+	   *((Uint16 *) ( (t_pointer)))=
+	                                  source->palette[*(s_pointer)];
+	  
+	   /* i=1, j=0 */
+	   *((Uint16 *) ( (t_pointer+(2*target_p->xsize)  )))=
+	                                  source->palette[*(s_pointer)];
+	   /* i=0, j=1 */
+	   *((Uint16 *) ( (t_pointer+2) ))=
+	                                  source->palette[*(s_pointer)];
+	  
+           /* i=1 j=1 */
+	    *((Uint16 *) ( (t_pointer+2+(2*target_p->xsize)  )))=
+	                                  source->palette[*(s_pointer)];
+	  
+	  
+           s_pointer++; t_pointer+=4;
+       }
+       t_pointer+=2*target_p->xsize;
+   }
+   
+   
+     /* Update the display */
+      if ( SDL_MUSTLOCK(target) ) {
+	 SDL_UnlockSurface(target);
+      }
+   
+      /* Write this out to the screen */
+   SDL_UpdateRect(target, 0, 0, target_p->xsize, target_p->ysize);
    
 }
 

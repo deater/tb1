@@ -109,6 +109,9 @@ char *vmwGrInput(tb1_state *game_state,int x,int y,int howlong,int forecol,int b
    
     ch=-1;
    
+    vmwTextXY("          ",x,y,forecol,backcol,1,tb1_font,vis);
+    vmwBlitMemToDisplay(game_state->graph_state,vis);
+   
     while (ch!=VMW_ENTER) {
        while ((ch=vmwGetInput())==0) usleep(30);
 

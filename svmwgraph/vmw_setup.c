@@ -6,13 +6,15 @@
 #include <stdio.h>  /* For printf */
 #include <stdlib.h> /* For Memory Allocation */
 
-void *(*vmwSetupGraphics)(int xsize,int ysize, int bpp, int verbose);
+void *(*vmwSetupGraphics)(int xsize,int ysize, int bpp, 
+			  int scale, int fullscreen,int verbose);
 void (*vmwBlitMemToDisplay)(vmwSVMWGraphState *display, vmwVisual *source);
 void (*vmwClearKeyboardBuffer)(void);
 int (*vmwGetInput)(void);
 
 vmwSVMWGraphState *vmwSetupSVMWGraph(int display_type,int xsize,int ysize,
-				     int bpp,int verbose) {
+				     int bpp,int scale,int fullscreen,
+				     int verbose) {
    
    vmwSVMWGraphState *temp_state;
    
@@ -23,11 +25,16 @@ vmwSVMWGraphState *vmwSetupSVMWGraph(int display_type,int xsize,int ysize,
    
    switch (display_type) {
     case VMW_SDLTARGET: vmwSetupGraphics=SDL_setupGraphics;
-                        vmwBlitMemToDisplay=SDL_NoScale16bpp_BlitMem;
+                        if (scale==1) 
+                           vmwBlitMemToDisplay=SDL_NoScale16bpp_BlitMem;
+                        else 
+	                   vmwBlitMemToDisplay=SDL_Double16bpp_BlitMem;
+      
                         vmwClearKeyboardBuffer=SDL_clearKeyboardBuffer;
                         vmwGetInput=SDL_getInput;
                         temp_state->output_screen=
-	                          vmwSetupGraphics(xsize,ysize,bpp,verbose);
+	                          vmwSetupGraphics(xsize,ysize,bpp,scale,
+						   fullscreen,verbose);
                         break;
     default: printf("ERROR! Unknown Display Target %i.\n",display_type);
              return NULL;
@@ -36,6 +43,7 @@ vmwSVMWGraphState *vmwSetupSVMWGraph(int display_type,int xsize,int ysize,
    temp_state->xsize=xsize;
    temp_state->ysize=ysize;
    temp_state->bpp=bpp;
+   temp_state->scale=scale;
    temp_state->default_font=NULL;
    
    return temp_state;

@@ -93,12 +93,9 @@ void leveltwoengine(tb1_state *game_state)
     game_state->begin_score=game_state->score;
     game_state->begin_shields=game_state->shields;
     
-    printf("Starting level 2\n"); fflush(stdout);
-   
-   
           /* Load Sprites */
     grapherror=vmwLoadPicPacked(0,0,virtual_1,1,1,
-			        tb1_data_file("ships.tb1",
+			        tb1_data_file("level1/ships.tb1",
 					      game_state->path_to_data));
    
     ship_shape[0]=vmwGetSprite(0,0,48,30,virtual_1);
@@ -107,21 +104,19 @@ void leveltwoengine(tb1_state *game_state)
 
    
     if (game_state->level==2) vmwLoadPicPacked(0,0,virtual_1,1,1,
-				 tb1_data_file("tbaship.tb1",game_state->path_to_data));
+				 tb1_data_file("level2/tbaship.tb1",game_state->path_to_data));
     if (game_state->level==4) vmwLoadPicPacked(0,0,virtual_1,1,1,
-				 tb1_data_file("tbeerm.tb1",game_state->path_to_data));
+				 tb1_data_file("level4/tbeerm.tb1",game_state->path_to_data));
       
     for(j=0;j<4;j++)
        for(i=0;i<10;i++) 
           shape_table[j*10+i]=vmwGetSprite(1+i*21,1+j*11,20,10,virtual_1);
 
-   printf("Sprites Loaded\n"); fflush(stdout);
-   
        /* Load Background Data */
     if (game_state->level==2) 
-       f=fopen(tb1_data_file("level2.dat",game_state->path_to_data),"r");
+       f=fopen(tb1_data_file("level2/level2.dat",game_state->path_to_data),"r");
     if (game_state->level==4) 
-       f=fopen(tb1_data_file("level4.dat",game_state->path_to_data),"r");
+       f=fopen(tb1_data_file("level4/level4.dat",game_state->path_to_data),"r");
     if (f==NULL) 
        printf("ERROR! Could't open level %d data!\n",game_state->level);
   
@@ -442,7 +437,13 @@ void leveltwoengine(tb1_state *game_state)
 
     /*printf("%i\n",rows_goneby);*/
     if (rows_goneby>1950) {
-       printf("%i\n",rows_goneby);
+//       printf("%i\n",rows_goneby);
+       coolbox(35,85,215,110,1,virtual_1);
+       vmwTextXY("TO BE CONTINUED...",55,85,4,7,0,tb1_font,virtual_1);
+       vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
+       pauseawhile(10);
+       
+	 
        /*
      clearkeyboardbuffer;
      pauseawhile(200);
@@ -562,22 +563,17 @@ void leveltwoengine(tb1_state *game_state)
 
   
 
-void littleopener2()
-{
-//    char tempst[300];
-/*   
-    ggiSetGCForeground(vis,tb1_pal[0]);
-    ggiDrawBox(vis,0,0,320,200);
-    ggiSetGCForeground(vaddr,tb1_pal[0]);
-    ggiDrawBox(vaddr,0,0,320,200);
-    GGILoadPicPacked(0,0,vis,1,1,
-		     tb1_data_file("tbl2ship.tb1",(char *)tempst),
-		     (ggi_color *)&eight_bit_pal,
-		     (ggi_pixel *)&tb1_pal,color_depth);
-    VMWtextxy("Hmmmm... ",10,10,tb1_pal[4],tb1_pal[0],0,tb1_font,vis);
-    VMWtextxy("This Might Be Harder Than I Thought.",10,20,tb1_pal[4],tb1_pal[0],0,tb1_font,vis);
+void littleopener2(tb1_state *game_state) {
+   
+    vmwDrawBox(0,0,319,199,0,game_state->virtual_1);
+    vmwLoadPicPacked(0,0,game_state->virtual_1,1,1,
+		     tb1_data_file("level2/tbl2ship.tb1",game_state->path_to_data));
+    vmwTextXY("Hmmmm... ",10,10,4,0,0,game_state->graph_state->default_font,
+	      game_state->virtual_1);
+    vmwTextXY("This Might Be Harder Than I Thought.",10,20,4,0,0,
+	      game_state->graph_state->default_font,game_state->virtual_1);
+    vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
     pauseawhile(13); 
-    ggiSetGCForeground(vis,tb1_pal[0]);
-    ggiDrawBox(vis,0,0,320,200);
- */  
+    vmwDrawBox(0,0,319,199,0,game_state->virtual_1);
+ 
 }

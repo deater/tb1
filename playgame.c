@@ -23,7 +23,7 @@ void playthegame(tb1_state *game_state)
    
     if (game_state->level==1) {
        levelone(game_state);
-//       if(level==2) littleopener2();
+       if (game_state->level==2) littleopener2(game_state);
     }
     if (game_state->level==2) {
        leveltwoengine(game_state);
@@ -51,7 +51,7 @@ void playthegame(tb1_state *game_state)
        vmwTextXY("ENTER YOUR NAME (10 Chars)",30,90,0,7,0,
 		 game_state->graph_state->default_font,game_state->virtual_1);
        vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
-       hiname=vmwGrInput(game_state,110,110,10,11,7,game_state->graph_state->default_font,
+       hiname=vmwGrInput(game_state,110,110,10,11,0,game_state->graph_state->default_font,
 			 game_state->virtual_1);
        write_hs_list(game_state,game_state->score,hiname,0);
     }

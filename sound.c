@@ -13,14 +13,14 @@ static Mix_Music *music;
 static Mix_Chunk *game_fx[NUM_GAME_FX];
 
 static char *game_fx_names[] = {
-  "tb_ahh.wav",
-  "tb_cc.wav",
-  "tb_kapow.wav",
-  "tb_scream.wav",
-  "tb_bonk.wav",
-  "tb_click.wav",
-  "tb_ow.wav",
-  "tb_zrrp.wav"
+  "sound/tb_ahh.wav",
+  "sound/tb_cc.wav",
+  "sound/tb_kapow.wav",
+  "sound/tb_scream.wav",
+  "sound/tb_bonk.wav",
+  "sound/tb_click.wav",
+  "sound/tb_ow.wav",
+  "sound/tb_zrrp.wav"
 };
 
 void loadFX(char *path_to_data) {

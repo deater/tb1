@@ -29,6 +29,7 @@ typedef struct {
    int xsize;
    int ysize;
    int bpp;
+   int scale;
    void *output_screen;
    vmwFont *default_font;
 } vmwSVMWGraphState;
@@ -107,12 +108,14 @@ void vmwUnFade(vmwVisual *source);
     /* From vmw_setup.c */
 
 
-extern void *(*vmwSetupGraphics)(int xsize,int ysize, int bpp, int verbose);
+extern void *(*vmwSetupGraphics)(int xsize,int ysize, int bpp, int scale, 
+				 int fullscreen,int verbose);
 extern void (*vmwBlitMemToDisplay)(vmwSVMWGraphState *display, vmwVisual *source);
 extern void (*vmwClearKeyboardBuffer)(void);
 extern int (*vmwGetInput)(void);
 vmwSVMWGraphState *vmwSetupSVMWGraph(int display_type,int xsize,int ysize,
-				     int bpp,int verbose);
+				     int bpp,int scale,int fullscreen,
+				     int verbose);
 vmwVisual *vmwSetupVisual(int xsize,int ysize,int palette_size);
 
     /* From vmw_sprite.c */
@@ -123,8 +126,11 @@ vmwSprite *vmwGetSprite(int x, int y,
 void vmwPutSprite(vmwSprite *sprite,int x,int y,
 		  vmwVisual *screen);
 
+void vmwPutSpriteNonTransparent(vmwSprite *sprite,int x,int y,
+		  vmwVisual *screen);
+
 void vmwPutPartialSprite(vmwVisual *destination,
-			 vmwSprite *sprite,
-			 int x_start,int y_start,
-			 int x_stop, int y_stop);
+			 vmwSprite *sprite,int x,int y,
+			 int x_start,int x_stop,
+			 int y_start,int y_stop);
 

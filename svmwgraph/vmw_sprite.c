@@ -46,23 +46,52 @@ void vmwPutSprite(vmwSprite *sprite,int x,int y,
    }
 }
 
+void vmwPutSpriteNonTransparent(vmwSprite *sprite,int x,int y,
+		  vmwVisual *screen) {
+      
+   unsigned char *temp_source,*temp_destination;
+   int xx,yy;
+   
+   temp_source=sprite->spritedata;
+   temp_destination= (unsigned char *)(screen->memory)+(y*screen->xsize+x);
+  
+   for (yy=0;yy<sprite->ysize;yy++) {
+       for (xx=0;xx<sprite->xsize;xx++) {
+	      *(temp_destination)=*(temp_source);
+	   temp_source++;
+	   temp_destination++;
+       }
+       temp_destination+=((screen->xsize-sprite->xsize));
+   }
+}
+
 void vmwPutPartialSprite(vmwVisual *destination,
-			                          vmwSprite *sprite,
-			                          int x_start,int y_start,
-			                          int x_stop, int y_stop)
- {                          /* x_start/stop not implemented yet */
-//       int xx,yy;
-      /*
-       *     dest+=(dest_stride*y);
-       *     for(yy=0;yy<h;yy++){
-       *        for(xx=0;xx<w;xx++)
-       *           if ((*(src+xx)) && ((yy>=y_start) && (yy<=y_stop)) )
-       *              memcpy(dest+(stride_factor*(xx+x)),(src+xx),stride_factor);
-       *          // **(dest+xx+x)=15;
-       *    src+=w;
-       *    dest+=dest_stride;
-       *     }
-       *     */
-     return;
+			 vmwSprite *sprite,int x,int y,
+			 int x_start,int x_stop,
+		         int y_start, int y_stop)
+ {                     
+    
+    unsigned char *temp_source,*temp_destination;
+    int xx,yy;
+    
+    temp_source=sprite->spritedata;
+    temp_destination=(unsigned char *)(destination->memory)+(y*destination->xsize+x);
+
+    for (yy=0;yy<sprite->ysize;yy++) {
+       for (xx=0;xx<sprite->xsize;xx++) {
+	      /* Only draw if in bounds */
+	   if ( (yy+y>=y_start) && (yy+y<=y_stop) &&
+	        (xx+x>=x_start) && (xx+x<=x_stop) ) {
+	      
+	      if (*temp_source!=0) {
+	         *(temp_destination)=*(temp_source);
+	      }
+           }
+	   temp_source++;
+	   temp_destination++;
+       }
+       temp_destination+=((destination->xsize-sprite->xsize));
+   }
+   return;
    
 }

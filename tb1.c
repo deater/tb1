@@ -1,6 +1,6 @@
 /****************************************************************\
 \*    TOM BOMBEM AND THE INVASION OF THE INANIMATE_OBJECTS      */
-/*                    version 2.9.2      15 September 2000	*\
+/*                    version 2.9.5      16 September 2000	*\
 \*        by Vince Weaver       weave@eng.umd.edu               */
 /*                                                              *\
 \*  Originally written in Pascal and x86 assembly for DOS       */
@@ -10,7 +10,7 @@
 \*          This source is released under the GPL               */
 /****************************************************************/
 
-#define TB1_VERSION "2.9.2"
+#define TB1_VERSION "2.9.5"
 
 #include <stdio.h>
 #include <stdlib.h>   /* for calloc */
@@ -36,13 +36,15 @@
 int command_line_help(int show_version,char *runas)
 {
     if (!show_version) {   
-       printf("Usage:  %s [-force8bpp] [-nosound] [-readonly]"
+       printf("Usage:  %s [-8bpp] [-double] [-fullscreen] [-nosound] [-readonly]"
 	                  " [-version] [-?]\n\n",runas);
-       printf("  -force8bpp : force to run in 8bpp mode\n");
-       printf("  -nosound   : disables sound within game\n");
-       printf("  -readonly  : don't try to write files to disk\n");
-       printf("  -version   : print version\n");
-       printf("  -?         : print this help message\n");
+       printf("  -8bpp       : force to run in 8bpp mode\n");
+       printf("  -double     : play in 640x480 mode\n");
+       printf("  -fullscreen : play in fullscreen mode (if available)\n");
+       printf("  -nosound    : disables sound within game\n");
+       printf("  -readonly   : don't try to write files to disk\n");
+       printf("  -version    : print version\n");
+       printf("  -?          : print this help message\n");
        printf("\n");
     }
    return 0;
@@ -54,7 +56,7 @@ int main(int argc,char **argv)
     int i,grapherror,reloadpic=0;
     int custom_palette[256];
     int ch,x,barpos,time_sec;
-    int scale=1;
+    int scale=1,fullscreen=0;
     FILE *fff;
     vmwVisual *virtual_1,*virtual_2,*virtual_3; 
    
@@ -92,7 +94,10 @@ int main(int argc,char **argv)
 	     command_line_help(0,argv[0]); return 5; break;
 	   case 'v':
 	     command_line_help(1,argv[0]); return 5; break;
-	
+	   case 'f':
+	     fullscreen=1; break;
+	   case 'd':
+	     scale=2; break;
 	   case 'n': 
 	     game_state->sound_enabled=0;
 	     printf("  + Sound totally disabled\n");
@@ -116,17 +121,17 @@ int main(int argc,char **argv)
       
        /* Find the Data */
 /* FIXME : User Defined Path Info*/
-    if ( (fff=fopen("./data/data_files_here","r"))!=NULL) {
+    if ( (fff=fopen("./data/tb1_data_files_here","r"))!=NULL) {
        strncpy(game_state->path_to_data,"./data/",20);
     }
-    else if ( (fff=fopen("/usr/local/games/tb1/data/data_files_here","r"))
+    else if ( (fff=fopen("/usr/local/games/tb1/data/tb1_data_files_here","r"))
 	      !=NULL) {
 	strncpy(game_state->path_to_data,"/usr/local/games/tb1/data/",40);
     }
     else {
        char tempst[200];
 	
-       sprintf(tempst,"%s/.tb1/data/data_files_here",getenv("HOME"));
+       sprintf(tempst,"%s/.tb1/data/tb1_data_files_here",getenv("HOME"));
        if ( (fff=fopen(tempst,"r"))!=NULL) {
 	  sprintf(game_state->path_to_data,"%s/.tb1/data/",getenv("HOME"));
        }
@@ -155,16 +160,27 @@ int main(int argc,char **argv)
    
        /* Load sounds */
     initSound(game_state->path_to_data);
-    loadSound(tb1_data_file("vmwfan.mod",game_state->path_to_data));
+    loadSound(tb1_data_file("music/vmwfan.mod",game_state->path_to_data));
    
     printf("  + Loaded sounds...\n");
    
        /* Setup Graphics */
+     
+    if (scale==1) {
     if ( (game_state->graph_state=vmwSetupSVMWGraph(VMW_SDLTARGET,
-						 320*scale,200*scale,
-						 16,1))==NULL) {   
+						 320,200,
+						 16,scale,fullscreen,1))==NULL) {   
        fprintf(stderr,"ERROR: Couldn't get display set up properly.\n");
        return VMW_ERROR_DISPLAY;
+    }
+    }
+    else {
+        if ( (game_state->graph_state=vmwSetupSVMWGraph(VMW_SDLTARGET,
+						  640,480,
+						  16,scale,fullscreen,1))==NULL) {
+	          fprintf(stderr,"ERROR: Couldn't get display set up properly.\n");
+	          return VMW_ERROR_DISPLAY;
+	}
     }
   
        /* Load the tom bombem font */
@@ -234,7 +250,7 @@ int main(int argc,char **argv)
     pauseawhile(5);
 
     stopSound();
-    loadSound(tb1_data_file("weave1.mod",game_state->path_to_data));
+    loadSound(tb1_data_file("music/weave1.mod",game_state->path_to_data));
 
    
        /* Clear the Screen and get ready for the Menu */
