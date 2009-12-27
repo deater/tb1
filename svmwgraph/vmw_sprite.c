@@ -8,7 +8,7 @@
     /* It is used both to get size of the sprite, then to actually get it */
 int fakeGetSprite(int x,int y,int xsize,int ysize,
 			 vmwVisual *screen,int capture,
-		         char *spritedata) {
+		         unsigned char *spritedata) {
    
     int oldcolor,xtemp,ytemp=0,color,numacross,pointer=0;
 

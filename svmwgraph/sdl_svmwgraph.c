@@ -154,30 +154,30 @@ void SDL_Double32bpp_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
     s_pointer=source->memory;
     t_pointer=((Uint8 *)target->pixels);
      
-    for (y=0;y<source->ysize;y++) {
-       for (x=0;x<source->xsize;x++) {
-          color=SDL_MapRGB(target->format,target_p->actual_pal[*(s_pointer)].r,
+    for(y=0;y<source->ysize;y++) {
+       for(x=0;x<source->xsize;x++) {
+          color=SDL_MapRGB(target->format,
+			   target_p->actual_pal[*(s_pointer)].r,
 			   target_p->actual_pal[*(s_pointer)].g,
                            target_p->actual_pal[*(s_pointer)].b);
-	              
+
              /* i=0, j=0 */
           *((Uint32 *) ( (t_pointer)))=color;
-	              
+
              /* i=1, j=0 */
-          *((Uint32 *) ( (t_pointer+(2*target_p->xsize)  )))=color;
-	              
+          *((Uint32 *) ( (t_pointer+(4*target_p->xsize)  )))=color;
+
              /* i=0, j=1 */
           *((Uint32 *) ( (t_pointer+4) ))=color;
-	              
+
              /* i=1 j=1 */
-          *((Uint32 *) ( (t_pointer+4+(2*target_p->xsize)  )))=color;
-	              	                
+          *((Uint32 *) ( (t_pointer+4+(4*target_p->xsize)  )))=color;
+
           s_pointer++; t_pointer+=8;          
        }
-       t_pointer+=2*target_p->xsize;
+       t_pointer+=4*target_p->xsize;
     }
-        
-          
+
        /* Update the display */
     if ( SDL_MUSTLOCK(target) ) {
        SDL_UnlockSurface(target);

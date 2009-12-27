@@ -1,3 +1,11 @@
+27 December 2009
++ Fix credits to scroll properly
++ Fix URLs
+
+26 December 2009
++ Update to 2.9.16, remove warnings, straighten out some of
+  the coding style.
+
 27 October 2004
 + Of course instead of finishing things up, used the library to display
   pcx files so I can give presentations using an old 486 laptop.

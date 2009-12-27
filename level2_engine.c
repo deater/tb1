@@ -91,17 +91,12 @@ int map_string_to_type(char *string) {
 struct level2_data *parse_data_file(char *filename) {
    
     
-    FILE *fff;
-     
+    FILE *fff;     
     char tempst[255],sprite_file[255],throwaway[255];
-
     char type[255];
-   
     int number,shoots,explodes,count,i,numsprites,tempint;
-   
     struct level2_data *data;
-   
-   
+
     fff=fopen(filename,"r");
     if (fff==NULL) {
        printf("Cannot open %s\n",filename);
@@ -109,9 +104,7 @@ struct level2_data *parse_data_file(char *filename) {
     }
    
     data=(struct level2_data *)malloc(sizeof(struct level2_data));
-   
-   
-   
+     
        /* Pass 1 */
     do {
        fgets(tempst,254,fff);
@@ -209,7 +202,6 @@ struct level2_data *parse_data_file(char *filename) {
 #ifdef DEBUG     
     print_level(data);
    
-
     printf("Sprite File: %s\n",sprite_file);
     printf("Sprite size:  %ix%i\n",data->xsize,data->ysize);
     printf("Sprite array: %ix%i\n",data->rows,data->cols);

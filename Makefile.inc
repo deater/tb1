@@ -51,5 +51,5 @@ SDL_INCLUDE= `sdl-config --cflags`
 # DO NOT EDIT BELOW THIS LINE
 ##############################
 
-INCLUDE_GLOBAL= -Wall -O2 $(SDL_INCLUDE)
+INCLUDE_GLOBAL= -Wall -Werror -O2 $(SDL_INCLUDE)
 LIBS_GLOBAL= -lm $(SDL_MIXER_LIBS) $(SDL_LIBS) $(CURSES_LIBS) $(OPENGL_LIBS)

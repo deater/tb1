@@ -14,10 +14,10 @@ int main(int argc,char **argv)
     int grapherror;
     int scale=1,fullscreen=0;
     vmwVisual *virtual_1; 
-    vmwPaintProHeader *ppro_header;
-    char *filename;
+//    vmwPaintProHeader *ppro_header;
+//    char *filename;
     char ch=0;
-    char save_string[BUFSIZ];
+//    char save_string[BUFSIZ];
     char *extension,*temp_string1,*temp_string2;
     int xsize,ysize,type;
     int is_pcx=0,target=VMW_SDLTARGET;
