@@ -1,0 +1,121 @@
+Tom Bombem: Obfuscated!
+~~~~~~~~~~~~~~~~~~~~~~~
+
+by Vince Weaver <vince@deater.net>
+                http://www.deater.net/weave/
+		
+"Homework is the mother of procrastination."
+
+
+COMPILING/RUNNING:
+~~~~~~~~~~~~~~~~~~
+   gcc -ansi tbo.c -O2 -o tbo
+
+Has been tested on x86 FreeBSD, x86 Linux, PPC Linux, and Tru64 Alpha.
+
+Needs at least VT102 emulated terminal support.  
+Should run in Color on color xterm or ansi-color (Linux) terminals.
+
+Runs fine in all X-terms tested.  Unfortunately has high flicker-rate on 
+unaccelerated Linux framebuffer console (but runs fine on stock text console).
+
+
+NEAT THINGS:
+~~~~~~~~~~~~
+The C code is designed to look like a box-cover if this game were
+commercially sold at a store.
+
+
+BACKGROUND:
+~~~~~~~~~~~
+The Tom Bombem series of games [http://www.deater.net/weave/vmwprod/tb1/]
+are scrolling space-shooters that I've written over the years.  From
+Turbo-Pascal in DOS, to SDL under Linux, to an 8k-text-mode-hand-assembled
+-Linux-x86 binary, to a 4k Apple IIe 6502 game.
+
+But now he reaches the final frontier:  Obfuscation!
+
+
+STORY:
+~~~~~~
+You are Tom Bombem, guardian of Earth!  One day you are on routine patrol
+in your crudely rendered spaceship when evil objects shaped like T's start
+attacking!  Destroy as many as you can to save the day!
+
+
+GAMEPLAY:
+~~~~~~~~~
+Use , and . [or the arrow keys if you have a proper terminal emulator]
+to steer.  The spacebar shoots.
+
+The game gradually gets harder the higher your score is.  Every 30 points
+or so your shields will increase.
+
+OBFUSCATIONS:
+~~~~~~~~~~~~~
+This was a hard program to obfuscate.  
+
+Some of the obfuscations done:
+
+ * Pseudo random number generator [actually a very horrible one]
+ * All collision detection and "sprite" drawing done entirely with
+   bitwise operations.  While a bit convoluted looking it was much easier
+   to get right than typical collision detection routines.
+ * the text strings are all more-or-less rot-4 encoded just to make
+   things less obvious
+ * Made all variable and function names single characters.
+ * Removed as many parenthesis as operator precedence would allow.
+ * Random other obfuscations as was prudent.
+ * Arranged into the screen-shot format.
+
+
+Common Complaints:
+~~~~~~~~~~~~~~~~~~
+
+Complaint:  I can't shoot things in the right-most column!
+ 
+Response:   That is by design.  Otherwise a wall-hugging strategy makes 
+            the game trivially easy.
+
+
+Complaint:  What are those ugly dots falling from above?
+
+Response:   Stars scrolling by!  You are either moving really quickly,
+            or else you are just looping in a big circle.
+	    
+	    
+Complaint:  I miss the typical "Tom Bombem" sliding ship motion
+            [ie pressing left starts your ship moving left, not
+	    moving a discrete distance like this game].
+	     
+Response:   I can't make everyone happy!  Usually people complain 
+            that I _do_ have the sliding motion.  Only being 16
+	    chars wide it should be OK the way things are, though
+	    your keyboard might get a workout.
+
+
+Personal High Score
+~~~~~~~~~~~~~~~~~~~
+ (after not much trying, really)
+
+ SCORE:   185
+ HIT RATIO: 46%
+
+
+Special Thanks to:
+~~~~~~~~~~~~~~~~~~
+ KRG
+
+
+--
+
+vmw
+27 February 2004
+
+--
+
+/*  Vince Weaver  vince@deater.net  vmw5@cornell  www.deater.net/weave  */
+
+main(){char O,o[66]="|\n\\/_  ",*I=o+7,l[]="B!FhhBHCWE9C?cJFKET$+h'Iq*chT"
+,i=0,_;while(_=l[i++])for(O=0;O++<_>>5;)*I=*(I++-(_&31));*I=0;puts(o+5);}
+
