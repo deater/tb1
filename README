@@ -1,0 +1,11 @@
+This is the git repository for all Tom Bombem related projects.
+
+tb1_dos -- the original Pascal/Assembly DOS version
+tb1_linux -- the SDL Linux version
+tb_6502 -- the Apple II assembly language version
+tb_asm -- the x86 assembly language version
+tbo -- the IOCCC Obfuscated C Code Version
+tb_snes -- the Super Nintento 65c816 version
+
+http://www.deater.net/weave/vmwprod/tb1/
+
