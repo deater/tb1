@@ -1,0 +1,86 @@
+25 December 2002
++ Get idea from friend
++ Start implementing in C
+
+?? January 2003
++ Finish title, about, story options
+
+?? January 2003
++ Add "quit, are you sure" display
+
+?? February 2003
++ Port all of C version at time to assembler
+
+?? February 2003
++ Add help screen to C version
++ Add help screen to asm version
+
+?? February 2003
++ Add ansi-code sound effects to C version
+
+?? February 2003
++ Finish varied enemies and boss on C version
+
+?? February 2003
++ Add save game support to C version
+
+4 March 2003
++ Started adding actual game support to assembler
++ Frame limiter and pause/sound/help work
+
+6 March 2003
++ Added pseudo-random number generator
++ Added scrolling star background
++ Added missiles
+
+10 March 2003
++ Added int->ascii routine
++ Added bottom status bar
+
+11 March 2003
++ Simple enemy movement.
+
+12 March 2003
++ Added collision detection.
+
+17 March 2003
++ Added enemy behavior
+
+18 March 2003
++ Added sound
++ Added hi-score support
++ Added level announce
+
+19 March 2003
++ Added boss
++ Polished a bit
++ Put rep / stosb on separate lines so works with as 2.9.1
+
+20 March 2003
++ Added "restore colors" at exit time
++ Removed extra spaces from strings... saves 100 bytes
++ Lots of infrastructute to compress data segment... saves 2k
++ Change all the cool "bt/btr/bts/btc" op-codes to equivelant
+  or/and/xor.  The former was cool, but slightly longer.  Sad, sad.
++ Found if I remove ".data" the text+data segments are merged saving
+  3k.  Cool, especially as I don't write to the data segment at all anymore.
++ Use sstrip.  There are random file lengths that either "strip" or
+  "sstrip" don't handle well.  May have to pad things out in the end
+  
+21 March 2003
++ convert "get_char" and "get_a_char" to return status in the carry flag.
++ Much optimization.  See "optimization" file.
++ Now under 8k ;)
+
+23 March 2003
++ Extensive play-testing to make sure optimization didn't break game.
++ Fix "sstrip" program so it puts the bss on the proper boundry.
+  Hope this isn't "as" version specific.
++ Game balancing.  Moved up to 6 enemies.  Slight shifts in
+  game engine constants.
++ Fix problem where enemies get stuck at level 4.  As a result
+  level 7 never ends, as we do tricks where we use level*16 and
+  over 7 that overflows to negative.
++ Play tested.  Seems ok.  Release 0.32!
+
+

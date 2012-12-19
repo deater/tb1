@@ -1,0 +1,57 @@
+Chart of size optimization
+Using gas  2.11.93.0.2
+
+goal = 8192 bytes
+
+Version         Size (bytes)		Notes
+~~~~~~~~	~~~~~~~~~~~~~		~~~~~~
+ 0.26              25422                 First working version
+ 0.26              13260		 Stripped
+ 0.27		   13172		 Removing extraneous spaces from strings
+ 0.27		   11076		 Compressed Data Segment
+ 0.28		    8940		 Removed ".data" line to force data+text in same segment
+ 0.28		    8668 		 Using sstrip "super-strip"
+ 0.29		    8656		 move get_char to return status in carry flag
+ 		    			 1 byte immediate moves -> push/pop
+ 0.29		    8620		 make "blit_219"
+ 0.29		    8592		 Optimizing "do_story" routine to remove %bp use
+ 0.29		    8556		 Optimize "do_menu" to use lea
+ 0.29		    8544		 convert verify_quit to use zero flag result 
+ 0.29		    8528		 convert check_inside to use carry flag for status
+ 0.29		    8452		 move sound_freq to one 32bit value rather than 16 f/d pair
+ 0.29		    8448		 optimize high score routines
+ 0.29		    8440		 change cmp $0/jl to just js
+ 0.30		    8312		 messing with new_game
+ 0.30		    8283		 more removal of bx->bp in new_game
+ 0.30		    8231		 cheat, have functions called at end of other functions instead have them follow and thus shave the end saving a call
+ 0.30		    8228		 remove extraneous phobos_sprite line
+ 0.30		    8193		 Messing with jmping midway into functions for code re-use 
+ 0.30		    8187		 merging the ioctl commands ;)
+ 0.31		    8151		 fixing the game to work again, culling unneeded code
+ 0.32		    8174		 Added some game balancing stuff bloating it back up a bit
+  
+I am guessing with further code manipulation could get another 100-200
+bytes off.  But have become lazy.
+
+Why optimize for size?  It makes you realize how wasteful high level
+code is even with optimizing compilers.  Also on x86 optimizing for size is
+the same from 386 on up.  Optimizing for speed is so convoluted you have to
+pick a particular generation of processor and even then it takes lots
+of tuning because speed can depent on other things such as cache hits.
+One nice thing about programs under 8k, they most likely fit in
+the icache entirely ;)
+
+Big lessons here.  Function calls are killer!  They take up 6 bytes!
+Avoid them whenever possible.
+
+Also, loading 32bit constants is also a pain.  Also take 6 bytes!
+Not as bad as on RISC where can take up to 8 bytes.  Luckily x86
+allows push imm/pop reg to load 8bit constant into 32 bit register
+in 3 bytes.
+
+Doing anything in memory rather than register is at least 6+ bytes!
+Not as bad as RISC where you must often load/modify/store (12bytes)
+but still a pain.  Would possibly be mitigated if more registers 
+available, but that would probably make code-size bigger to accomodate
+extra opcodes [waiting for x86-64 to see].
+

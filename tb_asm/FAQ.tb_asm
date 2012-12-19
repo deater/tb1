@@ -1,0 +1,168 @@
+Q. Why?
+
+A.  My friend <A href="http://www.deater.net/john">John</A> got a Gameboy
+    Advance for Christmas.  He suggested I port my game 
+    <A href="http://www.deater.net/weave/vmwprod/tb1">Tom Bombem</A> to it.
+    
+    In actuality the specs of the GBA are similar to the machine I
+    originally wrote TB1 on.  It was on a 386-33 with 320x200x256 graphics
+    and constrained to 640kB of RAM.  The game was written in 16-bit
+    PASCAL with some 32-bit assembly.
+    
+    I thought I should attempt a x86 assembly version before I go and learn
+    ARM assembly.
+
+
+
+Q.  How did you do the graphics.
+
+A.  With <A href="http://www.thegimp.org">The Gimp</A>.  Used 16 color indexed
+    palette.  Saved as xpm.  Edited with text editor.
+
+
+
+Q.  Why text mode?
+
+A.  Because doing graphics in Linux is a pain.  And I didn't feel like
+    messing with the framebuffer.  This was a proof-of-concept, not a
+    designed-for-release game.
+
+
+
+Q.  Why 40x20 resolution?
+
+A.  Because I'd like to port it to Apple IIe low-res graphics mode.
+
+
+
+Q.  Why not a DOS version?
+
+A.  Should be technically possible, although it's been a while and gas
+    isn't the best assembler for it.  Also doing things like reading
+    the keyboard/getting timestamps/speaker noise are more complicated.
+    
+    More interesting would be a version using Windows console syscalls.
+    
+
+
+Q.  What is the high score?
+
+A.  A bit of a silly question as anyone can edit a text file and lie.  The
+    highest score I've gotten is 14170 on level 4.
+    But this isn't saying much, I tend to be debugging more than playing.
+
+    The highest _possible_ score is 2^31 or about 2 billion.  Actually
+    it might be 4 billion, I am not sure how my int->ascii code handles
+    signed numbers.
+
+
+Q.  Why does the ship have its engines constantly on, even though
+    it is moving at a constant velocity?
+
+A.  Ummmm... friction.  Yeah... space friction.    
+    
+
+
+Q.  Why are the stars moving so quickly?  Are you going faster than light?
+
+A.  If you look closely you'll notice the stars repeat.  Hence you
+    are really flying very fast in a big circle.  Hey, maybe that's
+    why the engine is constantly firing!
+
+
+
+Q.  Where in that tiny ship are all of those missiles stored?
+
+A.  In the seventh dimension.
+
+
+Q.  Why the seventh dimension?
+
+A.  The others were all full.
+
+
+Q.  Why is there a guinea pig in the game?
+
+A.  A local guinea pig threatened me with violence if I did not include
+    a picture of her.
+
+
+Q.  What have you learned from all this assembly programming?
+
+A.  I'm just reminded what Professor Jacob always said...
+    A computer is just a state machine.
+
+
+Q.  What do you hate most about the GNU Assembler "gas"?
+
+A.  It doesn't warn you when a "loop" instruction overflows
+    128 thus causing your program to go off into la-la land.
+    It also doesn't do type checking causing you headaches if
+    you forget the "b" on cmpb.
+    
+    But you can't really blame it, it's used to dealing with
+    gcc which is a very good and proper assembler-producer,
+    unlike the author.
+
+
+Q.  Why are there only 6 enemies / 2 missiles / shields go up at 320/ etc?
+
+A.  Game balance.  Just trying to keep it challenging yet not overwhlmingly
+    so.  [For the original tb1 it was "because my 386 can't keep up" but
+    that should be less of a problem these days].
+    
+    If you _must_ have it some other way, feel free to mess with the constants
+    on the first page of the tb_asm.s file, but I cannot guarantee what
+    the consequences might be!
+    
+    
+Q.  Will there be a sequel?
+
+A.  Yes, it will be released shortly before either the release of
+    "Duke Nukem Forever (tm)" or the heat death of the universe,
+    which ever happens first.
+    
+    
+Q.  Why can't Vince stay consitent between "HISCORE" and "HIGH SCORE"
+    including all possibly variations of "HI-SCORE" "HIGH_SCORE" usw?
+    
+A.  The world may never know.
+
+
+Q.  What does "usw" mean?
+
+A.  Und So Weiter.
+
+
+Q.  That wasn't helpful.
+
+A.  This isn't a question.
+
+
+Q.  What's the highest level you can get to?
+
+A.  No matter how you try, once you get to level 7 it will
+    keep repeating.  This is because I multiply the level
+    by 16 in various places for enemy movement, and it it goes
+    above 7 then the byte will be negative causing
+    Bad Things(tm) to happen.
+    
+   
+Q.  Well why don't you modify the code so it doesn't go haywire
+    after level 7?
+    
+A.  I am lazy.  Also it should be too hard to get to level 7 anyway
+    
+    
+Q.  What are the enemies supposed to be?
+
+A.  An envelope, a clip-board, a cigarette, a telephone, a dollar-bill,
+    and an un-identified yellow thing, possibly a banana.  All things
+    malicious marketers might have in excess.
+    
+
+Q.  How come the stars appear in straight bands insteas of scattered in the
+    sky?
+    
+A.  Because my pseudo-random number algorithm is at times more pseudo
+    than random.

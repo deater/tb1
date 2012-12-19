@@ -1,0 +1,99 @@
+TOM BOMBEM: Merciless Marauding Malicious Marketers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+http://www.deater.net/weave/vmwprod/tb1/tb_asm.html
+   
+       by Vince Weaver <vince@deater.net>
+
+         version 0.24 -- 19 March 2003
+       
+       
+Background:
+~~~~~~~~~~~
+You are Tom Bombem, a shy new intern on Moonbase Alpha.
+Somewhat against your will it has become your job to
+defend Earth!  See the "Story" option in the game
+for the rest of the story.
+
+tb_asm comes before "tb1: Invasion of the Inanimate Objects"
+chronologically, for those who might care.
+
+
+Compiling / Running:
+~~~~~~~~~~~~~~~~~~~~
+    Just run "make".  If you have a supported architecture "tb_asm"
+       will be created.
+      
+    If you don't have an ix86 or ppc computer, you can try in the
+       "c" subdirectory and do "make" there to run a "C" version of the game
+       that should run on and architecture.  The "C" version is not
+       as feature-complete.
+      
+    After compiling just run "./tb_asm"   
+      
+    tb_asm will run _ONLY_ on Linux.  A DOS/w32 port could be possible
+       but I really don't have the time or desire to mess with it.
+      
+    tb_asm should be run at the text_console [if in X press CTRL-ALT-F1].
+       It will run to some extent in an x-term, but w/o sound.
+      
+      
+Keybindings:
+~~~~~~~~~~~
+  Use arrow keys, or i,j,k,m to manuever and navigate menus.
+  ' ' shoots and selects.
+  'h' displays help.  's' toggles sound   'p' pauses
+
+Options/Hiscore File:
+~~~~~~~~~~~~~~~~~~~~~
+    tb_asm will create the file "/tmp/tb_asm.hsc" to store the hiscore.
+    
+    tb_asm will only write the file if it's not there, or if there
+       is a file there that is at least 12 bytes long and starts
+       with "tb".
+       
+    Besides the hiscore tb_asm also stores the "sound on/sound off"
+       state in this file.
+    
+Game Play:
+~~~~~~~~~~
+    Manuever your ship avoiding the falling objects.  Shoot them.
+     
+    Only 2 missiles can be in the air at the time [this is _not_ a bug.
+       it's a limit of your ship's missile guidance system].
+	 
+    Every 320 points your shields will increase.
+     
+    There are special bonuses you can earn at the end of each level.
+       + No Shields Hit :        going through an entire level without
+                                 having an enemy hit your ship
+       + All Enemies Destroyed : all enemies were destroyed before
+                                 scrolling off the screen.  [Note, 
+				 ramming an enemy with your ship
+				 _DOES_ count as destroying it.  Just
+				 don't let them get by you]
+       + Perfect Shot:           Every missile fired hits an enemy.
+
+
+    At the end each level you fight the boss.  Then the game starts over
+       with the enemies moving faster!
+
+
+About:
+~~~~~~
+    (see also the FAQ.asm file)
+    
+    This was done as an exercise to see if I could make a Tom-Bombem
+    class game entirely in assembly language.  I've optimized for
+    size rather than speed.  And most likely it's not _completely_
+    optimized for size yet.
+    
+    The hope is maybe eventually using this as a stepping-board to
+    creating a Game Boy Advance TomBombem game.
+    
+Author:
+~~~~~~~
+   Vince Weaver <vince@deater.net>
+   http://www.deater.net/weave/
+   Special Thanks to KRG
+   19 March 2003
+   
