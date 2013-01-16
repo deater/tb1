@@ -5,7 +5,8 @@ LFLAGS =
 all:	bin2byte color_convert convert_font convert_font_bin \
 	dump_font make_pal pcx_to_sprite \
 	pcx_to_tiles_4bpp pcx_to_tiles_8bpp \
-	ansi_to_tile string_to_bytes convert_font_4bpp
+	ansi_to_tile string_to_bytes convert_font_4bpp \
+	snes_checksum
 	
 	
 ansi_to_tile:	ansi_to_tile.o
@@ -94,11 +95,18 @@ string_to_bytes.o:	string_to_bytes.c
 	$(CC) $(CFLAGS) -c string_to_bytes.c
 
 
+snes_checksum:	snes_checksum.o
+	$(CC) $(LFLAGS) -o snes_checksum snes_checksum.o
+
+snes_checksum.o:	snes_checksum.c
+	$(CC) $(CFLAGS) -c snes_checksum.c
+
+
 clean:	
 	rm -f *.o *~ bin2byte color_convert convert_font \
 		convert_font_bin dump_font make_pal pcx_to_sprite \
 		pcx_to_tiles_4bpp pcx_to_tiles_8bpp \
 		 ansi_to_tile string_to_bytes \
-		convert_font_4bpp
+		convert_font_4bpp snes_checksum
 
 

@@ -293,8 +293,10 @@ output:
         .byte   $01			; Country Code (1=NTSC,2=PAL)
 	.byte	$00			; License Code (0=unassigned)
         .byte   $00			; Version
-        .byte   $7f, $73, $80, $8c	; Unsigned 16-bit sum of ROM
-        .byte   $ff, $ff, $ff, $ff	; Complement of checksum
+        .word   $37f8		; Unsigned 16-bit sum of ROM
+        .word	$c807		; Complement of checksum
+
+	.word   $0,$0		; unknown?
 
 	; Interrupt Vectors!
 
