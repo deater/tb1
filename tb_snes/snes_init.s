@@ -220,7 +220,7 @@ _Loop09:
 
 	ldx	#$8008
 	stx	$4300         ;Set DMA mode to fixed source, BYTE to $2180
-	ldx	#wram_fill_byte
+	ldx	#.LOWORD(wram_fill_byte)
 	stx	$4302         ;Set source offset
 	lda	#^wram_fill_byte
 	sta	$4304         ;Set source bank

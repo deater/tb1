@@ -46,15 +46,6 @@ start_program:
 	sep	#$20	; mem/A = 8 bit
 .a8
 
-	rep	#$10	; X/Y = 16 bit
-.i16
-	sep	#$20	; mem/A = 8 bit
-.a8
-
-	lda     #0		; set data bank back to 0
-	pha			;
-	plb			;
-
 
 ;===============================================
 ;===============================================
@@ -62,24 +53,28 @@ start_program:
 ;===============================================
 ;===============================================
 
-
-
 	;==========================
 	; Setup Background
 	;==========================
 
-        lda     #$04            ; BG1 Tilemap starts at VRAM 0400
-	; 0000 0100
-	; aaaa aass   a=0000 01 << 11 = 0800
-	; ss = size of screen in tiles 00 = 32x32
+	; we want the BG1 Tilemap to start at VRAM $F000 (60k)
+	; Format is
+	; aaaa aass   a is shifted by 10 for address
+	;             ss = size of screen in tiles 00 = 32x32
+	;
+	; 1111 0000
+
+        lda     #$f0            ; BG1 Tilemap starts at VRAM $F000
         sta     $2107           ; bg1 src
 
-	; 0000 0100
+
 	; aaaa bbbb  a= BG2 tiles, b= BG1 tiles
 	; bbbb<<13
+	; 0000 0000
+	; our BG1 tiles are stored starting in VRAM $0000
 
-	lda	#$04
-        sta	$210b           ; bg1 tile data starts at VRAM 8000
+	lda	#$00
+        sta	$210b           ; bg1 tile data starts at VRAM 0000
 
 	;==============
 	; Load Palettes
@@ -88,11 +83,11 @@ start_program:
 .i16
         stz     $2121           ; CGRAM color-generator read/write address
 
-        ldy     #$0020          ; we only have 16 colors / 32 bytes
+        ldy     #$0200          ; we have 256 colors / 512 bytes
 
         ldx     #$0000          ; pointer
 copypal:
-;        lda     tile_palette, x	; load byte of palette
+        lda     f:tile_palette, x	; load byte of palette
         sta     $2122           ; store to color generator
         inx
         dey
@@ -109,23 +104,23 @@ copypal:
 	rep     #$20            ; set accumulator/mem to 16bit
 .a16
 .i16
-	lda     #$4000          ;
+	lda     #$0000          ;
         sta     $2116           ; set adddress for VRAM read/write
-				; multiply by 2, so 0x8000
+				; multiply by 2, so 0x0000
 
-        ldy     #$1690          ; Copy 361 tiles, which are 32 bytes each
-                                ;  8x8 tile with 4bpp (four bits per pixel)
+        ldy     #$7000		; Copy 896 tiles, which are 64 bytes each
+				;  8x8 tile with 8bpp (four bits per pixel)
 				; in 2-byte chunks, so
-				; (361*32)/2 = 5776 = 0x1690
+				; (896*64)/2 = 28672 = 0x7000
 
         ldx     #$0000
 copy_tile_data:
-        lda     f:tile_data, x
-        sta     $2118           ; write the data
-        inx                     ; increment by 2 (16-bits)
-        inx
-        dey                     ; decrement counter
-        bne     copy_tile_data
+	lda     f:tile_data, x
+	sta     $2118           ; write the data
+	inx                     ; increment by 2 (16-bits)
+	inx
+	dey                     ; decrement counter
+	bne     copy_tile_data
 
 
 	;=====================
@@ -165,22 +160,20 @@ copy_font_data:
 
 clear_linear_tilemap:
 
-	lda	#$0400		; we set tilemap to be at VRAM 0x0400 earlier
+	lda	#$f000		; we set tilemap to be at VRAM 0xf000 earlier
 	sta	$2116
 
         ldy     #$0000          ; clear counters
-	ldx	#$ffff
-
 				; store to VRAM
                                 ; the bottom 8 bits is the tile to use
                                 ; the top 8 bits is vhopppcc
                                 ; vert flip, horiz flip o=priority
                                 ; p = palette, c=top bits of tile#
-	;
-	; 0001 1000
-	; vhop ppcc
-	; so 1800 = v=0 h=0 o=0 ppp = 2
-	;           c=0x0
+
+	; 8-bit color so ppp is 0
+	; and we have a linear tilemap
+	; 0000 0000
+	; vhop ppcc cccc cccc
 
 .a16
 .i16
@@ -192,20 +185,8 @@ fill_screen_loop:
         sta     $2118
 
 	iny
-	inx
 
-	cpx	#30
-	bne	no_skip
-
-	lda	#$0
-	sta	$2118
-	sta	$2118
-
-	ldx	#0
-
-no_skip:
-
-	cpy	#$0169			; 30x12 = 360 = 0x168
+	cpy	#$0380			; 32x28 = 896 = 0x380
 
 	bne     fill_screen_loop
 
@@ -213,53 +194,6 @@ no_skip:
 
 
         ; Write String to Background
-put_string:
-
-        lda     #$05a9          ; set VRAM address
-                                ; 0400 = upper left (0,0)
-                                ; 0420 =            (0,1)
-                                ; 05a0 =            (0,13)
-                                ; 05a9 =            (9,13)
-
-        sta     $2116           ; set VRAM r/w address
-                                ; 2116 = 05
-                                ; 2117 = a9
-
-        ldy     #$000d          ; length of string
-
-
-        ldx     #$0000          ; string index
-
-        lda     #$0200          ; clear A
-
-copy_string:
-
-        sep     #$20            ; set accumulator to 8 bit
-                                ; as we only want to do an 8-bit load
-.a8
-        lda     hello_string, x       ; load string character
-                                ; while leaving top 8-bits alone
-        beq     done_copy_string
-
-	sec
-	sbc	#$20
-
-        rep     #$20            ; set accumulator back to 16 bit
-.a16
-        sta     $2118           ; store to VRAM
-                                ; the bottom 8 bits is the tile to use
-                                ; the top 8 bits is vhopppcc
-                                ; vert flip, horiz flip o=priority
-                                ; p = palette, c=top bits of tile#
-
-        inx                     ; increment string pointer
-
-        bra     copy_string
-done_copy_string:
-
-
-
-
 
 setup_video:
 
@@ -291,8 +225,8 @@ setup_video:
 	; abcd = 8 (0) or 16 width for BG1234
 	; e = priority for BG3
 	; fff = background mode
-	lda	#$01
-	sta	$2105		; set Mode 1
+	lda	#$04
+	sta	$2105		; set Mode 4
 
 	; a000 bbbb
 	; a = screen on/off (0=on), ffff = brightness
@@ -305,12 +239,12 @@ setup_video:
 ;	sta	$4200		;
 
 
-main_loop:
+overflowing:
 
 	; repeat forever
 	; stp?
 
-	bra	main_loop
+	bra	overflowing
 
 
 ;============================================================================
@@ -321,8 +255,12 @@ wram_fill_byte:
 hello_string:
         .asciiz "HELLO,_WORLD!"
 
+.segment "HIGHROM"
+
 ;tb_font:
 ;.include "tbfont.inc"
+
+.include "tb1_title.tiles"
 
 .segment "BSS"
 
@@ -340,23 +278,23 @@ logo_pointer:
 screen_byte:
 .res 8*4	; 8 bytes, times four
 
-tile_data:
-.res	32
-tile_data2:
-.res (30*12)*32
-
 output:
 .res 4096
 
 .segment "CARTINFO"
-        .byte   "TOM BOMBEM 1          "        ; Game Title
-        .byte   $01                             ; 0x01:HiRom, 0x30:FastRom(3.57MHz)
-        .byte   $05                             ; ROM Size (2KByte * N)
-        .byte   $00                             ; RAM Size (8KByte * N)
-        .word   $0001                           ; Developper ID ?
-        .byte   $00                             ; Version
-        .byte   $7f, $73, $80, $8c              ; Security Key ?
-        .byte   $ff, $ff, $ff, $ff              ; Security Key ?
+        .byte   "TOM BOMBEM 1         " ; Game Title (21 bytes)
+        .byte   $21			; ROM Layout
+					;   0x20:LowRom
+					;   0x21:HiRom
+					;   0x30/0x31:FastRom
+	.byte	$00			; Cartridge Type (00 == only ROM)
+        .byte   $09			; ROM Size (2^N KB)
+        .byte   $00			; RAM Size
+        .byte   $01			; Country Code (1=NTSC,2=PAL)
+	.byte	$00			; License Code (0=unassigned)
+        .byte   $00			; Version
+        .byte   $7f, $73, $80, $8c	; Unsigned 16-bit sum of ROM
+        .byte   $ff, $ff, $ff, $ff	; Complement of checksum
 
 	; Interrupt Vectors!
 
@@ -374,6 +312,6 @@ output:
         .word   $0000   ;
         .word   $0000   ; Emulation:ABORT
         .word   $0000   ; Emulation:NMI
-        .word   Reset   ; Emulation:RESET
+        .word   .LOWORD(Reset)   ; Emulation:RESET
         .word   $0000   ; Emulation:IRQ/BRK
 

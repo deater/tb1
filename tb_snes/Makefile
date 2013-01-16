@@ -18,5 +18,5 @@ tools/pcx_to_tiles_8bpp:
 	cd tools && make
 
 clean:
-	rm -f *~ *.o *.lst *.sfc
+	rm -f *~ *.o *.lst *.sfc *.tiles
 	cd tools && make clean
