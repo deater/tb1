@@ -225,8 +225,8 @@ setup_video:
 	; abcd = 8 (0) or 16 width for BG1234
 	; e = priority for BG3
 	; fff = background mode
-	lda	#$04
-	sta	$2105		; set Mode 4
+	lda	#$03
+	sta	$2105		; set Mode 3
 
 	; a000 bbbb
 	; a = screen on/off (0=on), ffff = brightness
