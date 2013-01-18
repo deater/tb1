@@ -54,7 +54,7 @@ display_title:
 
         ldx     #$0000          ; pointer
 copypal:
-        lda     f:tile_palette, x	; load byte of palette
+        lda     f:title_screen_palette, x	; load byte of palette
         sta     $2122           ; store to color generator
         inx
         dey
@@ -82,7 +82,7 @@ copypal:
 
         ldx     #$0000
 copy_tile_data:
-	lda     f:tile_data, x
+	lda     f:title_screen_tile_data, x
 	sta     $2118           ; write the data
 	inx                     ; increment by 2 (16-bits)
 	inx
