@@ -62,9 +62,9 @@ opening_copypal:
         bne     opening_copypal
 
 	; make last color white
-	lda	#$7f
-	sta	$2122
 	lda	#$ff
+	sta	$2122
+	lda	#$7f
 	sta	$2122
 
 
@@ -264,15 +264,27 @@ opening_setup_video:
 
 
 ;	lda	#$81		; Enable NMI (VBlank Interrupt) and joypads
-;	sta	$4200		;
+	lda	#$01		; enable joypad
+	sta	$4200		;
 
 
 less:
 
-	; repeat forever
-	; stp?
+joypad_read:
+	lda     $4212           ; get joypad status
+        and #%00000001          ; if joy is not ready
+        bne joypad_read         ; wait
 
-	bra	less
+        lda     $4219           ; read joypad (BYSTudlr)
+
+        and     #%11110000      ; see if a button pressed
+
+        beq     less     ; if so, skip and don't move ball
+
+	lda	#$80
+	sta	$2100		; Turn off screen
+
+	rts
 
 
 opening_string:
