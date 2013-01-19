@@ -1,0 +1,5 @@
+Tile compressor.  Look for flipped too.  Compare new tilemap size to
+  size w/o compress.
+  
+Sort out how to best get colored fonts.
+

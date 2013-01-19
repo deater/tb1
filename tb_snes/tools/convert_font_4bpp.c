@@ -3,7 +3,7 @@
 /* mainly for use converting my TB1 font               */
 
 #define COLOR 15
-#define START_FONT 0x20
+#define START_FONT 0x00
 #define END_FONT   0x80
 
 #include <stdio.h>
