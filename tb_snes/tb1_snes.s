@@ -39,10 +39,13 @@ Reset:
 
 start_program:
 
+	jsr	display_opening
+
 	jsr	display_title
 
 
 .include "title_screen.s"
+.include "opening.s"
 
 ;============================================================================
 
