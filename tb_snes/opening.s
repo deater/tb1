@@ -19,7 +19,7 @@ display_opening:
 	;
 	; 1111 0000
 
-        lda     #$f0            ; BG1 Tilemap starts at VRAM $F000
+        lda     #$78            ; BG1 Tilemap starts at VRAM $F000
         sta     $2107           ; bg1 src
 
 	; we want the BG2 Tilemap to start at VRAM $F800
@@ -27,11 +27,10 @@ display_opening:
 	; aaaa aass   a is shifted by 10 for address
 	;             ss = size of screen in tiles 00 = 32x32
 	;
-	; 1111 0000
+	; 1111 1000
 
-;        lda     #$f8            ; BG2 Tilemap starts at VRAM $F800
- ;       sta     $2108           ; bg1 src
-
+	lda     #$7c            ; BG2 Tilemap starts at VRAM $F800
+	sta     $2108           ; bg2 src
 
 
 	; aaaa bbbb  a= BG2 tiles, b= BG1 tiles
@@ -40,8 +39,7 @@ display_opening:
 	; our BG1 tiles are stored starting in VRAM $0000
 	; our BG2 tiles are stored starting in VRAM $e000
 
-;	lda	#$e0
-	lda	#$00
+	lda	#$70
         sta	$210b           ; bg1 tile data starts at VRAM 0000
 
 
@@ -53,7 +51,7 @@ display_opening:
 .i16
         stz     $2121           ; CGRAM color-generator read/write address
 
-        ldy     #$0200          ; we have 256 colors / 512 bytes
+        ldy     #$00fe          ; we have 127 colors / 512 bytes
 
         ldx     #$0000          ; pointer
 opening_copypal:
@@ -62,6 +60,13 @@ opening_copypal:
         inx
         dey
         bne     opening_copypal
+
+	; make last color white
+	lda	#$7f
+	sta	$2122
+	lda	#$ff
+	sta	$2122
+
 
 
 	;=====================
@@ -99,26 +104,26 @@ opening_copy_tile_data:
 
 	; replace with DMA!
 
-;	rep	#$20            ; set accumulator/mem to 16bit
-;.a16
-;.i16
-;	lda     #$7000          ;
-;	sta	$2116           ; set adddress for VRAM read/write
-;				; multiply by 2, so 0xe000
-;
-;	ldy	#$0800		; Copy 128 tiles, which are 32 bytes each
-;				;  8x8 tile with 4bpp (four bits per pixel)
-;;;				; in 2-byte chunks, so
-;				; (128*32)/2 = 2048 = 0x0800
-;
-;	ldx	#$0000
+	rep	#$20            ; set accumulator/mem to 16bit
+.a16
+.i16
+	lda     #$7000          ;
+	sta	$2116           ; set adddress for VRAM read/write
+				; multiply by 2, so 0xe000
+
+	ldy	#$0800		; Copy 128 tiles, which are 32 bytes each
+				;  8x8 tile with 4bpp (four bits per pixel)
+				; in 2-byte chunks, so
+				; (128*32)/2 = 2048 = 0x0800
+
+	ldx	#$0000
 opening_copy_font_data:
-;	lda	f:tb_font, x
-;	sta	$2118		; write the data
-;	inx			; increment by 2 (16-bits)
-;	inx
-;	dey			; decrement counter
-;	bne	opening_copy_font_data
+	lda	f:tb_font, x
+	sta	$2118		; write the data
+	inx			; increment by 2 (16-bits)
+	inx
+	dey			; decrement counter
+	bne	opening_copy_font_data
 
 
 	;===================================
@@ -127,11 +132,14 @@ opening_copy_font_data:
 .a16
 .i16
 
+
 opening_clear_linear_tilemap:
 
 	; 6 down, 1 right = (6*32)+1 = 97 = 0xc1
 
-	lda	#$f0c1		; we set tilemap to be at VRAM 0xf000 earlier
+	; 1111 0000 1100 0001
+	lda	#$78c1		; we set tilemap to be at VRAM 0xf000 earlier
+				; f0c1
 	sta	$2116
 
 	ldy     #$0001		; clear counters
@@ -177,45 +185,40 @@ opening_check_end:
 
         ; Write String to Background
 
-;opening_put_string:
-
-;        lda     #$fd08          ; set VRAM address
+opening_put_string:
+        ; 1111 1101 0000 1000
+	lda     #$7e44          ; set VRAM address
 				; f800 = upper left
 				; want 4x20, so (20 * 64) + 4*2 = 1288 = 0x508
 				; fd08
 
- ;       sta     $2116           ; set VRAM r/w address
+	sta     $2116           ; set VRAM r/w address
 
-  ;      ldy     #$000d          ; length of string
+	ldx     #$0000          ; string index
 
-
-   ;     ldx     #$0000          ; string index
-
-    ;    lda     #$0200          ; clear A
+	; vhop ppcc cccc cccc
+	lda     #$1c00          ; clear A
 
 opening_copy_string:
 
-     ;   sep     #$20            ; set accumulator to 8 bit
+	sep     #$20            ; set accumulator to 8 bit
                                 ; as we only want to do an 8-bit load
 .a8
-  ;      lda     opening_string, x       ; load string character
+	lda     opening_string, x       ; load string character
                                 ; while leaving top 8-bits alone
-   ;     beq     opening_done_copy_string
+	beq     opening_done_copy_string
 
-    ;    sec
-     ;   sbc     #$20
-
-      ;  rep     #$20            ; set accumulator back to 16 bit
+	rep     #$20            ; set accumulator back to 16 bit
 .a16
-     ;   sta     $2118           ; store to VRAM
+	sta     $2118           ; store to VRAM
                                 ; the bottom 8 bits is the tile to use
                                 ; the top 8 bits is vhopppcc
                                 ; vert flip, horiz flip o=priority
                                 ; p = palette, c=top bits of tile#
 
-     ;   inx                     ; increment string pointer
+	inx                     ; increment string pointer
 
-     ;   bra     opening_copy_string
+	bra     opening_copy_string
 opening_done_copy_string:
 
 
@@ -239,7 +242,7 @@ opening_setup_video:
 	; a = object, b=BG4 c=BG3 d=BG2 e=BG1
 ;	lda	#%00010001	; Enable BG1
 ;	lda	#%00000011	; Enable BG1
-	lda	#%00000001	; Enable BG1
+	lda	#%00000011	; Enable BG1 & BG2
 
 	sta	$212c
 
@@ -278,7 +281,7 @@ opening_string:
 .segment "HIGHROM"
 
 tb_font:
-;.include "tbfont.inc"
+.include "tbfont.inc"
 
 .include "tb1_opening.tiles"
 
