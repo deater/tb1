@@ -7,6 +7,18 @@
 #include <sys/stat.h> /* for file modes */
 #include <stdlib.h>  /* exit() */
 
+static unsigned int hflip_byte(unsigned int byte) {
+
+   int new_byte=0,i;
+
+   for(i=0;i<8;i++) {
+      new_byte<<=1;
+      if (byte&(1<<i)) new_byte|=1;
+   }
+
+   return new_byte;
+}
+
 /* Convert to 15-bpp bgr */
 static int rgb2bgr(int r,int g, int b) {
   int r2,g2,b2,bgr;
@@ -26,10 +38,8 @@ static char symbol_name[BUFSIZ]="temp";
 #define MAX_TILE_Y 32
 
 static unsigned short tilemap[MAX_TILE_X*MAX_TILE_Y]; /* 2k */
-static int uncompressed_size=0;
-static int compressed_size=0;
-static unsigned short tiledata[MAX_TILE_X][MAX_TILE_Y][8][4];
-static unsigned short tiledata_hflip[MAX_TILE_X][MAX_TILE_Y][8][4];
+static unsigned short tiledata[MAX_TILE_X*MAX_TILE_Y][8][4];
+static unsigned short tiledata_hflip[MAX_TILE_X*MAX_TILE_Y][8][4];
 static unsigned short temp_tile[8][4];
 static int total_tiles=0;
 static int compressed_tiles=0;
@@ -204,26 +214,112 @@ static int vmwLoadPCX(int pcx_fd) {
 //	   printf("\t.word $%02x%02x\n",plane7,plane6);
 	}
 
-	for(x=0;x<4;x++) {
-	   printf("\t; Tile %d %d, Plane %d Plane %d\n",xchunk,ychunk,
-			x*2,(x*2)+1);
-	   for(y=0;y<Y_CHUNKSIZE;y++) {
-	      printf("\t.word $%04x\n",temp_tile[y][x]);
+
+	int i,plane,v=0,h=0,o=0,pal=0,found_tile=0,found=0,match;
+
+        /* see if the new tile matches an existing one */
+
+	for(i=0;i<compressed_tiles;i++) {
+           /* see if matches direct */
+           match=1;
+           for(plane=0;plane<4;plane++) {
+              for(y=0;y<8;y++) {
+                 if (temp_tile[y][plane]!=tiledata[i][y][plane]) match=0;
+              }
            }
+           if (match) {
+              v=0; h=0;
+              found_tile=i;
+              found=1;
+              break;
+           }
+
+           /* see if matches with vflip */
+           match=1;
+           for(plane=0;plane<4;plane++) {
+              for(y=0;y<8;y++) {
+                 if (temp_tile[y][plane]!=tiledata[i][7-y][plane]) match=0;
+              }
+           }
+           if (match) {
+              v=1; h=0;
+              found_tile=i;
+              found=1;
+              break;
+           }
+
+           /* see if matches with hflip */
+           match=1;
+           for(plane=0;plane<4;plane++) {
+              for(y=0;y<8;y++) {
+                 if (temp_tile[y][plane]!=tiledata_hflip[i][y][plane]) match=0;
+              }
+           }
+           if (match) {
+              v=0; h=1;
+              found_tile=i;
+              found=1;
+              break;
+           }
+           /* see if matches with hflip and vflip */
+           match=1;
+           for(plane=0;plane<4;plane++) {
+              for(y=0;y<8;y++) {
+                 if (temp_tile[y][plane]!=tiledata_hflip[i][7-y][plane]) match=0;
+              }
+           }
+           if (match) {
+              v=1; h=1;
+              found_tile=i;
+              found=1;
+              break;
+           }
+
         }
 
-	int v=0,h=0,o=0,pal=0;
+        if (!found) {
+
+           /* print tile data */
+	   for(x=0;x<4;x++) {
+	      printf("\t; Tile %d %d, Plane %d Plane %d\n",xchunk,ychunk,
+	             x*2,(x*2)+1);
+	      for(y=0;y<Y_CHUNKSIZE;y++) {
+	         printf("\t.word $%04x\n",temp_tile[y][x]);
+              }
+           }
+           found_tile=compressed_tiles;
+
+           /* put data in lookup table */
+           for(plane=0;plane<4;plane++) {
+              for(y=0;y<8;y++) {
+                 tiledata[compressed_tiles][y][plane]=temp_tile[y][plane];
+              }
+           }
+           /* put hflip in lookup table */
+           for(plane=0;plane<4;plane++) {
+              for(y=0;y<8;y++) {
+                 tiledata_hflip[compressed_tiles][y][plane]=
+			(hflip_byte( (temp_tile[y][plane]>>8)&0xff)<<8) |
+                         hflip_byte( temp_tile[y][plane]&0xff);
+              }
+           }
+
+
+           compressed_tiles++;
+
+        }
+	else {
+        }
 
 	tilemap[total_tiles]=
 	   ( ((v&1)<<15) |
              ((h&1)<<14) |
              ((o&1)<<13) |
              ((pal&7)<<10) |
-             (total_tiles&0x3ff));
+             (found_tile&0x3ff));
 
 
 	total_tiles++;
-	compressed_tiles++;
       }
    }
 

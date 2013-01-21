@@ -75,10 +75,10 @@ copypal:
         sta     $2116           ; set adddress for VRAM read/write
 				; multiply by 2, so 0x0000
 
-        ldy     #$7000		; Copy 896 tiles, which are 64 bytes each
+        ldy     #$3bc0		; Copy 478 tiles, which are 64 bytes each
 				;  8x8 tile with 8bpp (four bits per pixel)
 				; in 2-byte chunks, so
-				; (896*64)/2 = 28672 = 0x7000
+				; (478*64)/2 = 15296 = 0x3bc0
 
         ldx     #$0000
 copy_tile_data:
