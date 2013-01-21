@@ -203,15 +203,24 @@ setup_video:
 
 
 ;	lda	#$81		; Enable NMI (VBlank Interrupt) and joypads
-;	sta	$4200		;
+	lda	#$01		; Enable joypad
+	sta	$4200		;
 
+title_joypad_read:
+        lda     $4212           ; get joypad status
+        and     #%00000001              ; if joy is not ready
+        bne     title_joypad_read     ; wait
 
-overflowing:
+        lda     $4219           ; read joypad (BYSTudlr)
 
-	; repeat forever
-	; stp?
+        and     #%11110000      ; see if a button pressed
 
-	bra	overflowing
+        beq     title_joypad_read
+
+        lda     #$80
+        sta     $2100           ; Turn off screen
+
+        rts
 
 
 ;============================================================================

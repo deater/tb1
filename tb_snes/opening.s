@@ -268,18 +268,17 @@ opening_setup_video:
 	sta	$4200		;
 
 
-less:
-
-joypad_read:
+opening_joypad_read:
 	lda     $4212           ; get joypad status
-        and #%00000001          ; if joy is not ready
-        bne joypad_read         ; wait
+        and	#%00000001		; if joy is not ready
+        bne	opening_joypad_read	; wait
 
         lda     $4219           ; read joypad (BYSTudlr)
 
         and     #%11110000      ; see if a button pressed
 
-        beq     less     ; if so, skip and don't move ball
+        beq     opening_joypad_read
+				; if so, skip and don't move ball
 
 	lda	#$80
 	sta	$2100		; Turn off screen

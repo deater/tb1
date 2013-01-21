@@ -41,7 +41,7 @@ start_program:
 
 	jsr	display_opening
 
-;	jsr	display_title
+	jsr	display_title
 
 	jsr	level_1
 
