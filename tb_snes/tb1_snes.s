@@ -41,11 +41,14 @@ start_program:
 
 	jsr	display_opening
 
-	jsr	display_title
+;	jsr	display_title
 
+	jsr	level_1
 
 .include "title_screen.s"
 .include "opening.s"
+.include "level_1.s"
+.include "svmwgraph.s"
 
 ;============================================================================
 
@@ -72,6 +75,7 @@ wram_fill_byte:
         .word   $0000	; Native:COP
         .word   $0000	; Native:BRK
         .word   $0000	; Native:ABORT
+vblank_vector:
         .word   $0000	; Native:NMI
         .word   $0000	;
         .word   $0000	; Native:IRQ

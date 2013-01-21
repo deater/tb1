@@ -190,26 +190,10 @@ ClearPaletteLoop:
  	plx
 
 	;=================================
-	;**** clear Sprite tables ********
+	; Clear Sprite Table
 	;=================================
 
-	stz	$2102	;sprites initialized to be off the screen, palette 0, character 0
-	stz	$2103
-	ldx	#$0080
-	lda	#$F0
-_Loop08:
-	sta	$2104	;set X = 240
-	sta	$2104	;set Y = 240
-	stz	$2104	;set character = $00
-	stz	$2104	;set priority=0, no flips
-	dex
-	bne	_Loop08
-
-	ldx	#$0020
-_Loop09:
-	stz	$2104		;set size bit=0, x MSB = 0
-	dex
-	bne	_Loop09
+	jsr	svmw_move_sprites_offscreen
 
 	;=====================
 	;**** clear WRAM *****

@@ -8,7 +8,9 @@ all:	checksum.inc
 tb1_snes.sfc:	tb1_snes.o snes-hirom.cfg
 	$(LD) -o tb1_snes.sfc --config snes-hirom.cfg --obj tb1_snes.o
 
-tb1_snes.o:	tb1_snes.s snes_init.s opening.s title_screen.s \
+tb1_snes.o:	tb1_snes.s \
+	snes_init.s opening.s title_screen.s level_1.s \
+	svmwgraph.s \
 	tb1_title.tiles tb1_opening.tiles tbfont.inc
 	$(AS) -t none -o tb1_snes.o -l tb1_snes.lst -c tb1_snes.s
 
