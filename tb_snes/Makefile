@@ -23,8 +23,8 @@ level1_pal0.sprites:	graphics/level1_pal0.pcx tools/pcx_to_tiles_4bpp
 tb1_opening.tiles:	graphics/vmw_logo.pcx ./tools/pcx_to_tiles_8bpp
 	./tools/pcx_to_tiles_8bpp vmw_logo < graphics/vmw_logo.pcx > tb1_opening.tiles
 
-tb1_title.tiles:	graphics/tb1_title.pcx ./tools/pcx_to_tiles_8bpp
-	./tools/pcx_to_tiles_8bpp title_screen < graphics/tb1_title.pcx > tb1_title.tiles
+tb1_title.tiles:	graphics/tb1_title.pcx ./tools/pcx_to_compressed_tilemap_8bpp
+	./tools/pcx_to_compressed_tilemap_8bpp title_screen < graphics/tb1_title.pcx > tb1_title.tiles
 
 checksum.inc:	./tools/snes_checksum tb1_snes.sfc
 	./tools/snes_checksum < tb1_snes.sfc > checksum.inc

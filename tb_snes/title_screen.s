@@ -90,37 +90,8 @@ copy_tile_data:
 	bne     copy_tile_data
 
 
-	;=====================
-	; Load TB_FONT Data
-	;=====================
-
-	; replace with DMA!
-
-
-;	rep     #$20            ; set accumulator/mem to 16bit
-;.a16
-;.i16
-;	lda     #$6000          ;
-;        sta     $2116           ; set adddress for VRAM read/write
-;				; multiply by 2, so 0xc000
-;
- ;       ldy     #$600		; Copy 96 tiles, which are 32 bytes each
-;                                ;  8x8 tile with 4bpp (four bits per pixel)
-;				; in 2-byte chunks, so
-;				; (96*32)/2 = 1536 = 0x600
-;
- ;       ldx     #$0000
-copy_font_data:
-;        lda     f:tb_font, x
- ;       sta     $2118           ; write the data
-  ;      inx                     ; increment by 2 (16-bits)
-   ;     inx
-    ;    dey                     ; decrement counter
-     ;   bne     copy_font_data
-
-
 	;===================================
-	; clear background to linear tilemap
+	; Load Tile Map
 	;===================================
 .a16
 .i16
@@ -130,37 +101,18 @@ clear_linear_tilemap:
 	lda	#$f000		; we set tilemap to be at VRAM 0xf000 earlier
 	sta	$2116
 
-        ldy     #$0000          ; clear counters
-				; store to VRAM
-                                ; the bottom 8 bits is the tile to use
-                                ; the top 8 bits is vhopppcc
-                                ; vert flip, horiz flip o=priority
-                                ; p = palette, c=top bits of tile#
-
-	; 8-bit color so ppp is 0
-	; and we have a linear tilemap
-	; 0000 0000
-	; vhop ppcc cccc cccc
-
-.a16
-.i16
+        ldx	#$0000          ; clear offset
 
 fill_screen_loop:
 
-	tya
-
+	lda	f:title_screen_tilemap,X
         sta     $2118
+	inx
+	inx
 
-	iny
-
-	cpy	#$0380			; 32x28 = 896 = 0x380
-
+	cpx	#$0700			; 32x28 = 896 * 2 = 0x700
 	bne     fill_screen_loop
 
-
-
-
-        ; Write String to Background
 
 setup_video:
 
