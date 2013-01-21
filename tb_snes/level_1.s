@@ -12,7 +12,9 @@ ball_x = $0000
 level_1:
 
 	rep	#$20	; mem/A = 16 bit
+	rep	#$10	; X/Y = 16 bit
 .a16
+.i16
 
 
 	;==========================
@@ -45,8 +47,8 @@ level_1:
 
 	lda	#128
 	sta	$2121       		; Start at START color
-	lda	#^sprite_palette        ; Using ^ before the parameter gets its bank.
-	ldx	#sprite_palette         ;
+	lda	#^level1_pal0_palette	; Using ^ before the parameter gets its bank.
+	ldx	#.LOWORD(level1_pal0_palette)
 	ldy	#(16 * 2)   		; 2 bytes for every color
 
 	; In: A:X  -- points to the data
@@ -58,7 +60,7 @@ level_1:
 	php         ; Preserve Registers
 
 	sep	#$20
-
+.a8
 	stx	$4302   ; Store data offset into DMA source offset
 	sta	$4304   ; Store data bank into DMA source bank
 	sty	$4305   ; Store size of data block
@@ -75,13 +77,14 @@ level_1:
 	pla
 
 	; Load sprite data to VRAM
-	lda	#$80
+	lda	#$80		; increment after writing $2119
 	sta	$2115
 	ldx	#$0000		; DEST
 	stx	$2116		; $2116: Word address for accessing VRAM.
-	lda	#^sprite_data	; SRCBANK
-	ldx	#sprite_data	; SRCOFFSET
-	ldy	#$0100		; SIZE
+	lda	#^level1_pal0_data		; SRCBANK
+	ldx	#.LOWORD(level1_pal0_data)	; SRCOFFSET
+	ldy	#$0800				; SIZE
+				; 32 bytes * 64 tiles
 
 	; In: A:X  -- points to the data
 	;     Y     -- Number of bytes to copy (0 to 65535)  (assumes 16-bit index)
@@ -90,7 +93,7 @@ level_1:
 	php         ; Preserve Registers
 
 	sep	#$20
-
+.a8
 	stx	$4302   ; Store Data offset into DMA source offset
 	sta	$4304   ; Store data Bank into DMA source bank
 	sty	$4305   ; Store size of data block
@@ -100,7 +103,7 @@ level_1:
 	lda	#$18    ; Set the destination register (VRAM write register)
 	sta	$4301
 	lda	#$01    ; Initiate DMA transfer (channel 1)
-	sta	$420B
+	sta	$420b
 
 	plp         ; restore registers
 	plb
@@ -115,28 +118,34 @@ level_1:
 
 	sep	#$20	; mem/A = 8 bit
 .a8
-	lda	#($0)
-	sta	$0000
+	stz	$0000		; set sprite 0 X to 0
 
-	lda	#(224/2 - 16)
+	lda	#100		; set sprite 0 Y to 100
 	sta	$0001
 
-	stz	$0002
-	lda	#%01110000
+	; Xxxxxxxxx yyyyyyy cccccccc vhoopppN
+	;
+
+	stz	$0002		; set sprite 0
+
+	; 00000000
+	; no flip, priority 0, N=0 palette=0 (128)
+
+	lda	#$00
 	sta	$0003
 
-;	rep	#$20	; mem/A = 16 bit
-;.a16
+	; X high bit = 0 for sprite 0
+	; sprite size = 0 (smaller)
 
-	lda	#%01010100
+	lda	#%01010110
 	sta	$0200
 
 	; Enable sprite
 	; sssnnbbb
-	; ss = size (8x8 in our case)
+	; sss = size (16x16 and 32x32 in our case)
 	; nn = name
-	; bb = base selection
-	lda	#%00000000
+	; bbb = base selection
+	lda	#%01100000
 	sta	$2101
 
 	jsr	svmw_transfer_sprite
@@ -276,12 +285,11 @@ done_vblank:
 ; Sprite Data
 ;============================================================================
 
-; sprite data
-    .include "sphere.sprite"
+.segment "HIGHROM"
 
-; tile data
-;tile_pal:
-;.include "tb1.pal"
+; sprite data
+    .include "level1_pal0.sprites"
+
 
 .segment "BSS"
 x_direction:	.word 0
