@@ -125,36 +125,11 @@ level_1:
 	lda	#%01110000
 	sta	$0003
 
+;	rep	#$20	; mem/A = 16 bit
+;.a16
+
 	lda	#%01010100
 	sta	$0200
-
-	jsr	svmw_transfer_sprite
-
-
-SetupVideo:
-	rep #$10
-	sep #$20
-
-;    stz $2102
-;    stz $2103
-
-	;=============================
-	;*********transfer sprite data
-	;=============================
-
-	stz	$2102		; set OAM address to 0
-	stz	$2103
-
-	ldy	#$0400
-	sty	$4300		; CPU -> PPU, auto increment, write 1 reg, $2104 (OAM Write)
-	stz	$4302
-	stz	$4303		; source offset
-	ldy	#$0220
-	sty	$4305		; number of bytes to transfer
-	lda	#$7E
-	sta	$4304		; bank address = $7E  (work RAM)
-	lda	#$01
-	sta	$420B		; start DMA transfer
 
 	; Enable sprite
 	; sssnnbbb
@@ -163,6 +138,13 @@ SetupVideo:
 	; bb = base selection
 	lda	#%00000000
 	sta	$2101
+
+	jsr	svmw_transfer_sprite
+
+
+SetupVideo:
+	rep #$10
+	sep #$20
 
 	lda	#%00010001	; Enable BG1 and sprites
 	sta	$212C
@@ -176,11 +158,11 @@ SetupVideo:
 ;	sta	$4200		;
 
 
-main_loop:
+level1_loop:
 
 	; all work done in interrupt handler
 
-	bra	main_loop
+	bra	level1_loop
 
 
 ;=============================

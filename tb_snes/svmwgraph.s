@@ -57,9 +57,10 @@ set_top:
 svmw_transfer_sprite:
 	php			; save status word
 
-	rep	#$30	; 16bit mem/A, 16 bit X/Y
-.a16
+	rep	#$10	; 16 bit X/Y
 .i16
+	sep	#$20	; 8 bit A
+.a8
 
 	; p------b	p=special object priority
 	; aaaaaaaa	baaaaaaaa = OAM address
