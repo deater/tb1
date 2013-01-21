@@ -195,6 +195,11 @@ int main(int argc, char **argv) {
 
     int result;
 
+    /* parse command line args */
+    if (argc>1) {
+       strncpy(label_prefix,argv[1],BUFSIZ);
+    }
+
     /* read from stdin */
 
     result=vmwLoadPCX(fileno(stdin));
