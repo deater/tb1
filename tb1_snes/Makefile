@@ -23,8 +23,8 @@ level1_pal0.sprites:	graphics/level1_pal0.pcx tools/pcx_to_tiles_4bpp
 level1_background.tiles:	graphics/level1_background.pcx ./tools/pcx_to_compressed_tilemap
 	./tools/pcx_to_compressed_tilemap level1_background 4  < graphics/level1_background.pcx > level1_background.tiles
 
-tb1_opening.tiles:	graphics/vmw_logo.pcx ./tools/pcx_to_tiles_8bpp
-	./tools/pcx_to_tiles_8bpp vmw_logo < graphics/vmw_logo.pcx > tb1_opening.tiles
+tb1_opening.tiles:	graphics/vmw_logo.pcx ./tools/pcx_to_compressed_tilemap
+	./tools/pcx_to_compressed_tilemap vmw_logo 8 < graphics/vmw_logo.pcx > tb1_opening.tiles
 
 tb1_title.tiles:	graphics/tb1_title.pcx ./tools/pcx_to_compressed_tilemap
 	./tools/pcx_to_compressed_tilemap title_screen 8 < graphics/tb1_title.pcx > tb1_title.tiles
