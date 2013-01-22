@@ -242,8 +242,8 @@ static int vmwLoadPCX(int pcx_fd) {
 
            /* print tile data */
 	   for(x=0;x<max_planes/2;x++) {
-	      printf("\t; Tile %d %d, Plane %d Plane %d\n",xchunk,ychunk,
-	             x*2,(x*2)+1);
+	     printf("\t; Tile #%d %d %d, Plane %d Plane %d\n",compressed_tiles,
+		    xchunk,ychunk,x*2,(x*2)+1);
 	      for(y=0;y<Y_CHUNKSIZE;y++) {
 	         printf("\t.word $%04x\n",temp_tile[y][x]);
               }
@@ -322,6 +322,20 @@ static int vmwLoadPCX(int pcx_fd) {
        printf("\t.word $%x\t; r=%x g=%x b=%x\n",rgb2bgr(r,g,b),r,g,b);
      }
    }
+
+#if 0
+   printf("\n");
+   printf("%s_info:\n",symbol_name);
+   printf("%s_tile_data_addr:\t.word .LOWORD(%s_tile_data)\n",symbol_name,
+	  symbol_name);
+   printf("%s_tile_data_len:\t.word %d\n",symbol_name,100);
+   printf("%s_tilemap_addr:\t.word .LOWORD(%s_tilemap)\n",symbol_name,
+          symbol_name);
+   printf("%s_tilemap_len:\t.word %d\n",symbol_name,100);
+   printf("%s_palette_addr:\t.word .LOWORD(%s_palette)\n",symbol_name,
+          symbol_name);
+   printf("%s_palette_len_bytes:\t.word %d\n",symbol_name,512);
+#endif
 
     return 0;
 }

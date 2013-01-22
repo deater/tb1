@@ -14,9 +14,49 @@ display_opening:
         sep     #$20    ; mem/A = 8 bit
 .a8
 
+        ;==========================
+        ; Load Opening Screen Palette
+        ;==========================
+	stz	$2121		; start with color 0
+	ldy	#(128*2)	; we have 128 colors
+	lda	#^vmw_logo_palette
+	ldx	#.LOWORD(vmw_logo_palette)
+	jsr	svmw_load_palette
+
 	;==========================
-	; Setup Backgrounds
+	; Load Opening Tile Data
 	;==========================
+	lda     #$0000          ;
+        sta     $2116           ; set adddress for VRAM read/write
+				; multiply by 2, so 0x0000
+
+        lda     #^vmw_logo_tile_data
+        ldx     #.LOWORD(vmw_logo_tile_data)
+        ldy     #$12c0		; Copy 75 tiles, which are 64 bytes each
+				;  8x8 tile with 8bpp (four bytess per pixel)
+				; (75*64) = 4800 = 0x12c0
+
+        jsr     svmw_load_vram
+
+
+	;===================================
+	; Load Opening Tilemap
+	;===================================
+
+	; 6 down, 0 right = (6*32) = 96 = 0xc0
+
+	; 1111 0000 1100 0000
+	ldx	#$78c0		; we set tilemap to be at VRAM 0xf000 earlier
+				; f0c0
+	stx	$2116
+
+        lda     #^vmw_logo_tilemap
+        ldx     #.LOWORD(vmw_logo_tilemap)
+	ldy	#640		; 32*10*2 = 640 tiles
+	jsr	svmw_load_vram
+
+
+
 
 	; we want the BG1 Tilemap to start at VRAM $F000 (60k)
 	; Format is
@@ -27,6 +67,7 @@ display_opening:
 
         lda     #$78            ; BG1 Tilemap starts at VRAM $F000
         sta     $2107           ; bg1 src
+
 
 	; we want the BG2 Tilemap to start at VRAM $F800
 	; Format is
@@ -50,58 +91,6 @@ display_opening:
 
 
 
-	;==============
-	; Load Palettes
-	;==============
-.a8
-.i16
-        stz     $2121           ; CGRAM color-generator read/write address
-
-        ldy     #$00fe          ; we have 127 colors / 512 bytes
-
-        ldx     #$0000          ; pointer
-opening_copypal:
-        lda     f:vmw_logo_palette, x	; load byte of palette
-        sta     $2122           ; store to color generator
-        inx
-        dey
-        bne     opening_copypal
-
-	; make last color white
-	lda	#$ff
-	sta	$2122
-	lda	#$7f
-	sta	$2122
-
-
-
-	;=====================
-	; Load Tile Data
-	;=====================
-
-	; replace with DMA!
-
-
-	rep     #$20            ; set accumulator/mem to 16bit
-.a16
-.i16
-	lda     #$0020          ;
-        sta     $2116           ; set adddress for VRAM read/write
-				; multiply by 2, so 0x0000
-
-        ldy     #$2580		; Copy 300 tiles, which are 64 bytes each
-				;  8x8 tile with 8bpp (four bits per pixel)
-				; in 2-byte chunks, so
-				; (300*64)/2 = 9600 = 0x2580
-
-	ldx     #$0000
-opening_copy_tile_data:
-	lda     f:vmw_logo_tile_data, x
-	sta     $2118           ; write the data
-	inx                     ; increment by 2 (16-bits)
-	inx
-	dey                     ; decrement counter
-	bne     opening_copy_tile_data
 
 
 	;=====================
@@ -132,62 +121,7 @@ opening_copy_font_data:
 	bne	opening_copy_font_data
 
 
-	;===================================
-	; clear background to linear tilemap
-	;===================================
-.a16
-.i16
 
-
-opening_clear_linear_tilemap:
-
-	; 6 down, 1 right = (6*32)+1 = 97 = 0xc1
-
-	; 1111 0000 1100 0001
-	lda	#$78c1		; we set tilemap to be at VRAM 0xf000 earlier
-				; f0c1
-	sta	$2116
-
-	ldy     #$0001		; clear counters
-				; store to VRAM
-				; the bottom 8 bits is the tile to use
-				; the top 8 bits is vhopppcc
-				; vert flip, horiz flip o=priority
-				; p = palette, c=top bits of tile#
-
-	ldx	#$0001
-
-	; 8-bit color so ppp is 0
-	; and we have a linear tilemap
-	; 0000 0000
-	; vhop ppcc cccc cccc
-
-.a16
-.i16
-
-opening_fill_screen_loop:
-
-	cpx	#31
-	bne	opening_not_thirty
-
-	stz	$2118
-	stz	$2118
-	ldx	#$0000
-	bra	opening_check_end
-
-opening_not_thirty:
-	tya
-
-        sta     $2118
-
-	iny
-
-opening_check_end:
-	inx
-
-	cpy	#$0140			; (10*32) = 0x140
-
-	bne     opening_fill_screen_loop
 
         ; Write String to Background
 

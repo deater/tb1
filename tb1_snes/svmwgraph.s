@@ -104,15 +104,6 @@ svmw_transfer_sprite:
 
 	rts
 
-
-;==================================
-;==================================
-; Load Compressed Tilemap
-;   This loads a tilemap made with my pcx_to_compressed_tilemap tool
-;==================================
-;==================================
-
-
 ;==============
 ;==============
 ; Load Palette
@@ -138,6 +129,38 @@ svmw_load_palette:
         lda     #$22    ; Set destination register ($2122 - CGRAM Write)
         sta     $4301
         lda     #$01    ; Initiate DMA transfer
+        sta     $420b
+
+	plp		; restore status
+	rts
+
+;===================
+;===================
+svmw_load_vram:
+;===================
+;===================
+; set 2116/2117 for destination in advance
+; A:X = address of data
+; Y = length
+
+	php		; save status on stack
+
+	rep	#$10	; 16 bit X/Y
+.i16
+	sep	#$20	; 8 bit A
+.a8
+
+	stx	$4302	; Store data offset into DMA source offset
+        sta	$4304	; Store data bank into DMA source bank
+        sty	$4305	; Store size of data block
+
+	lda	#$01	; Set DMA Mode (word, normal increment)
+        sta	$4300   ;
+
+        lda	#$18	; Set destination register ($2118 - VRAM Write)
+        sta	$4301
+
+        lda     #$01	; Initiate DMA transfer
         sta     $420b
 
 	plp		; restore status

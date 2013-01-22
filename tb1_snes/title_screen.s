@@ -43,87 +43,56 @@ display_title:
 	lda	#$00
         sta	$210b           ; bg1 tile data starts at VRAM 0000
 
-	;==============
-	; Load Palettes
-	;==============
+	;==========================
+	; Load Title Screen Palette
+	;==========================
 	stz	$2121		; start with color 0
-        ldy     #(256*2)	; we have 256 colors
+	ldy	#(256*2)	; we have 256 colors
 	lda	#^title_screen_palette
 	ldx	#.LOWORD(title_screen_palette)
 	jsr	svmw_load_palette
 
 	;=====================
-	; Load Tile Data
+	; Load Title Tile Data
 	;=====================
-
-	; replace with DMA!
-
-
-	rep     #$20            ; set accumulator/mem to 16bit
-.a16
-.i16
-	lda     #$0000          ;
-        sta     $2116           ; set adddress for VRAM read/write
+	ldx	#$0000		;
+	stx	$2116		; set adddress for VRAM read/write
 				; multiply by 2, so 0x0000
 
-        ldy     #$3bc0		; Copy 478 tiles, which are 64 bytes each
-				;  8x8 tile with 8bpp (four bits per pixel)
-				; in 2-byte chunks, so
-				; (478*64)/2 = 15296 = 0x3bc0
+	lda	#^title_screen_tile_data
+	ldx	#.LOWORD(title_screen_tile_data)
+	ldy	#$7780		; Copy 478 tiles, which are 64 bytes each
+				;  8x8 tile with 8bpp
+				; (478*64) = 30592 = 0x7780
 
-        ldx     #$0000
-copy_tile_data:
-	lda     f:title_screen_tile_data, x
-	sta     $2118           ; write the data
-	inx                     ; increment by 2 (16-bits)
-	inx
-	dey                     ; decrement counter
-	bne     copy_tile_data
+	jsr	svmw_load_vram
+
+	;===================================
+	; Load Title Tile Map
+	;===================================
+	ldx	#$7000		;
+	stx	$2116		; set adddress for VRAM read/write
+				; multiply by 2, so 0xe000
+
+	lda	#^title_screen_tilemap
+	ldx	#.LOWORD(title_screen_tilemap)
+	ldy	#$0700		; 32x28 = 896 * 2 = 0x700
+	jsr	svmw_load_vram
 
 
 	;===================================
-	; Load Tile Map
+	; Setup Video
 	;===================================
-.a16
-.i16
 
-clear_linear_tilemap:
-
-	lda	#$f000		; we set tilemap to be at VRAM 0xf000 earlier
-	sta	$2116
-
-        ldx	#$0000          ; clear offset
-
-fill_screen_loop:
-
-	lda	f:title_screen_tilemap,X
-        sta     $2118
-	inx
-	inx
-
-	cpx	#$0700			; 32x28 = 896 * 2 = 0x700
-	bne     fill_screen_loop
-
-
-setup_video:
+title_setup_video:
 
         sep     #$20            ; set accumulator to 8 bit
                                 ; as we only want to do an 8-bit load
 .a8
 .i16
 
-
-	; Enable sprite
-	; sssnnbbb
-	; ss = size (8x8 in our case)
-	; nn = name
-	; bb = base selection, VRAM >> 14
-;	lda	#%00000010	; point at 0x4000 in VRAM
-;	sta	$2101
-
 	; 000abcde
 	; a = object, b=BG4 c=BG3 d=BG2 e=BG1
-;	lda	#%00010001	; Enable BG1
 	lda	#%00000001	; Enable BG1
 
 	sta	$212c
@@ -174,6 +143,4 @@ title_joypad_read:
 ;.include "tbfont.inc"
 
 .include "tb1_title.tiles"
-
-
 
