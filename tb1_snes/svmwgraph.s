@@ -3,9 +3,10 @@
 
 .segment "STARTUP"
 
-
+;====================================
 ;====================================
 ; Move Sprites Offscreen
+;====================================
 ;====================================
 
 svmw_move_sprites_offscreen:
@@ -49,10 +50,12 @@ set_top:
 	plp
 
 
-	;=====================================
-	; transfer sprite
-	;  assumes sprite_data starts at $7e:0000
-	;=====================================
+;========================================
+;========================================
+; transfer sprite
+;  assumes sprite_data starts at $7e:0000
+;========================================
+;========================================
 
 svmw_transfer_sprite:
 	php			; save status word
@@ -99,4 +102,43 @@ svmw_transfer_sprite:
 
 	plp			; restore status word
 
+	rts
+
+
+;==================================
+;==================================
+; Load Compressed Tilemap
+;   This loads a tilemap made with my pcx_to_compressed_tilemap tool
+;==================================
+;==================================
+
+
+;==============
+;==============
+; Load Palette
+;   Bank in A
+;   Address in X
+;   Colors in Y*2
+;   Color offset written to $2121 in advance
+;==============
+;==============
+
+svmw_load_palette:
+	php		; save status on stack
+
+	rep	#$10	; 16 bit X/Y
+.i16
+	sep	#$20	; 8 bit A
+.a8
+	stx     $4302   ; Store data offset into DMA source offset
+        sta     $4304   ; Store data bank into DMA source bank
+        sty     $4305   ; Store size of data block
+
+        stz     $4300   ; Set DMA Mode (byte, normal increment)
+        lda     #$22    ; Set destination register ($2122 - CGRAM Write)
+        sta     $4301
+        lda     #$01    ; Initiate DMA transfer
+        sta     $420b
+
+	plp		; restore status
 	rts

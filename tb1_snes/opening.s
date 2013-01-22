@@ -1,3 +1,9 @@
+; Fade in
+; Display the Opening VMW Logo
+; eventually play music
+; wait until button pressed
+; Fade out
+
 .segment "STARTUP"
 
 

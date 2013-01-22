@@ -46,20 +46,11 @@ display_title:
 	;==============
 	; Load Palettes
 	;==============
-.a8
-.i16
-        stz     $2121           ; CGRAM color-generator read/write address
-
-        ldy     #$0200          ; we have 256 colors / 512 bytes
-
-        ldx     #$0000          ; pointer
-copypal:
-        lda     f:title_screen_palette, x	; load byte of palette
-        sta     $2122           ; store to color generator
-        inx
-        dey
-        bne     copypal
-
+	stz	$2121		; start with color 0
+        ldy     #(256*2)	; we have 256 colors
+	lda	#^title_screen_palette
+	ldx	#.LOWORD(title_screen_palette)
+	jsr	svmw_load_palette
 
 	;=====================
 	; Load Tile Data
