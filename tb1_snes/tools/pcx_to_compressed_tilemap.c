@@ -1,12 +1,15 @@
-/* Converts a 24-bit PCX file to 256-color SNES background tiles */
+/* Converts a 24-bit PCX file to SNES background tiles    */
+/* It is "compressed", that is it detects identical tiles */
+/* instead of using just a plain linear tilemap           */
 
-#include <stdio.h>  /* For FILE I/O */
-#include <string.h> /* For strncmp */
-#include <fcntl.h>  /* for open()  */
-#include <unistd.h> /* for lseek() */
+#include <stdio.h>    /* For FILE I/O */
+#include <string.h>   /* For strncmp */
+#include <fcntl.h>    /* for open()  */
+#include <unistd.h>   /* for lseek() */
 #include <sys/stat.h> /* for file modes */
-#include <stdlib.h>  /* exit() */
+#include <stdlib.h>   /* exit() */
 
+/* Horizontally flip the bits in a byte */
 static unsigned int hflip_byte(unsigned int byte) {
 
    int new_byte=0,i;
@@ -36,14 +39,17 @@ static char symbol_name[BUFSIZ]="temp";
 
 #define MAX_TILE_X 32
 #define MAX_TILE_Y 32
+#define MAX_PLANES_DIV2 4
+#define Y_SIZE 8
 
 static unsigned short tilemap[MAX_TILE_X*MAX_TILE_Y]; /* 2k */
-static unsigned short tiledata[MAX_TILE_X*MAX_TILE_Y][8][4];
-static unsigned short tiledata_hflip[MAX_TILE_X*MAX_TILE_Y][8][4];
-static unsigned short temp_tile[8][4];
+static unsigned short tiledata[MAX_TILE_X*MAX_TILE_Y][Y_SIZE][MAX_PLANES_DIV2];
+static unsigned short 
+       tiledata_hflip[MAX_TILE_X*MAX_TILE_Y][Y_SIZE][MAX_PLANES_DIV2];
+static unsigned short temp_tile[Y_SIZE][MAX_PLANES_DIV2];
 static int total_tiles=0;
 static int compressed_tiles=0;
-
+static int max_planes=8;
 
 
 /* File already open */
@@ -146,83 +152,38 @@ static int vmwLoadPCX(int pcx_fd) {
 #define Y_CHUNKSIZE 8
 
 
-   unsigned int plane0,plane1,plane2,plane3;
-   unsigned int plane4,plane5,plane6,plane7,offset;
+   unsigned int plane0,plane1,offset;
+   int ychunk,xchunk;
 
    printf("%s_tile_data:\n",symbol_name);
-   int ychunk,xchunk;
+
    for(ychunk=0;ychunk<ysize/Y_CHUNKSIZE;ychunk++) {
       for(xchunk=0;xchunk<xsize/X_CHUNKSIZE;xchunk++) {
 
-//	printf("\t; Tile %d %d, Plane 0 Plane 1\n",xchunk,ychunk);
-
-        for(y=0;y<Y_CHUNKSIZE;y++){
-           plane0=0;plane1=0;
-           for(x=0;x<X_CHUNKSIZE;x++) {
-              plane0<<=1;
-              plane1<<=1;
-	      offset=((ychunk*Y_CHUNKSIZE+y)*xsize)+(xchunk*X_CHUNKSIZE)+x;
-              plane0|=(output[offset])&1;
-              plane1|=(((output[offset])&2)>>1);
-	   }
-	   temp_tile[y][0]=(plane1<<8)|plane0;
-//           printf("\t.word $%02x%02x\n",plane1,plane0);
-        }
-
-//        printf("\t; Plane 2 Plane 3\n");
-        for(y=0;y<Y_CHUNKSIZE;y++){
-           plane2=0;plane3=0;
-           for(x=0;x<X_CHUNKSIZE;x++) {
-              plane2<<=1;
-              plane3<<=1;
-
-	      offset=((ychunk*Y_CHUNKSIZE+y)*xsize)+(xchunk*X_CHUNKSIZE)+x;
-              plane2|=(((output[offset])&4)>>2);
-              plane3|=(((output[offset])&8)>>3);
-	   }
-	   temp_tile[y][1]=(plane3<<8)|plane2;
-//	   printf("\t.word $%02x%02x\n",plane3,plane2);
-	}
-
-//        printf("\t; Plane 4 Plane 5\n");
-        for(y=0;y<Y_CHUNKSIZE;y++){
-           plane4=0;plane5=0;
-           for(x=0;x<X_CHUNKSIZE;x++) {
-              plane4<<=1;
-              plane5<<=1;
-
-	      offset=((ychunk*Y_CHUNKSIZE+y)*xsize)+(xchunk*X_CHUNKSIZE)+x;
-              plane4|=(((output[offset])&16)>>4);
-              plane5|=(((output[offset])&32)>>5);
-	   }
-	   temp_tile[y][2]=(plane5<<8)|plane4;
-//           printf("\t.word $%02x%02x\n",plane5,plane4);
-        }
-
-//        printf("\t; Plane 6 Plane 7\n");
-        for(y=0;y<Y_CHUNKSIZE;y++){
-           plane6=0;plane7=0;
-           for(x=0;x<X_CHUNKSIZE;x++) {
-              plane6<<=1;
-              plane7<<=1;
-
-	      offset=((ychunk*Y_CHUNKSIZE+y)*xsize)+(xchunk*X_CHUNKSIZE)+x;
-              plane6|=(((output[offset])&64)>>6);
-              plane7|=(((output[offset])&128)>>7);
-	   }
-	   temp_tile[y][3]=(plane7<<8)|plane6;
-//	   printf("\t.word $%02x%02x\n",plane7,plane6);
-	}
+	 for(i=0;i<max_planes/2;i++) {
+            for(y=0;y<Y_CHUNKSIZE;y++){
+               plane0=0;plane1=0;
+               for(x=0;x<X_CHUNKSIZE;x++) {
+                  plane0<<=1;
+                  plane1<<=1;
+	          offset=((ychunk*Y_CHUNKSIZE+y)*xsize)+(xchunk*X_CHUNKSIZE)+x;
+		  plane=i*2;
+                  plane0|=(((output[offset])&(1<<(plane)))  >> plane);
+                  plane1|=(((output[offset])&(1<<(plane+1)) )>>(plane+1));
+	       }
+	       temp_tile[y][i]=(plane1<<8)|plane0;
+	    }
+	 }
 
 
-	int i,plane,v=0,h=0,o=0,pal=0,found_tile=0,found=0,match;
+	int v=0,h=0,o=0,pal=0,found_tile=0,found=0,match;
 
         /* see if the new tile matches an existing one */
 
 	for(i=0;i<compressed_tiles;i++) {
            /* see if matches direct */
            match=1;
-           for(plane=0;plane<4;plane++) {
+           for(plane=0;plane<max_planes/2;plane++) {
               for(y=0;y<8;y++) {
                  if (temp_tile[y][plane]!=tiledata[i][y][plane]) match=0;
               }
@@ -236,7 +197,7 @@ static int vmwLoadPCX(int pcx_fd) {
 
            /* see if matches with vflip */
            match=1;
-           for(plane=0;plane<4;plane++) {
+           for(plane=0;plane<max_planes/2;plane++) {
               for(y=0;y<8;y++) {
                  if (temp_tile[y][plane]!=tiledata[i][7-y][plane]) match=0;
               }
@@ -250,7 +211,7 @@ static int vmwLoadPCX(int pcx_fd) {
 
            /* see if matches with hflip */
            match=1;
-           for(plane=0;plane<4;plane++) {
+           for(plane=0;plane<max_planes/2;plane++) {
               for(y=0;y<8;y++) {
                  if (temp_tile[y][plane]!=tiledata_hflip[i][y][plane]) match=0;
               }
@@ -263,7 +224,7 @@ static int vmwLoadPCX(int pcx_fd) {
            }
            /* see if matches with hflip and vflip */
            match=1;
-           for(plane=0;plane<4;plane++) {
+           for(plane=0;plane<max_planes/2;plane++) {
               for(y=0;y<8;y++) {
                  if (temp_tile[y][plane]!=tiledata_hflip[i][7-y][plane]) match=0;
               }
@@ -280,7 +241,7 @@ static int vmwLoadPCX(int pcx_fd) {
         if (!found) {
 
            /* print tile data */
-	   for(x=0;x<4;x++) {
+	   for(x=0;x<max_planes/2;x++) {
 	      printf("\t; Tile %d %d, Plane %d Plane %d\n",xchunk,ychunk,
 	             x*2,(x*2)+1);
 	      for(y=0;y<Y_CHUNKSIZE;y++) {
@@ -290,13 +251,13 @@ static int vmwLoadPCX(int pcx_fd) {
            found_tile=compressed_tiles;
 
            /* put data in lookup table */
-           for(plane=0;plane<4;plane++) {
+           for(plane=0;plane<max_planes/2;plane++) {
               for(y=0;y<8;y++) {
                  tiledata[compressed_tiles][y][plane]=temp_tile[y][plane];
               }
            }
            /* put hflip in lookup table */
-           for(plane=0;plane<4;plane++) {
+           for(plane=0;plane<max_planes/2;plane++) {
               for(y=0;y<8;y++) {
                  tiledata_hflip[compressed_tiles][y][plane]=
 			(hflip_byte( (temp_tile[y][plane]>>8)&0xff)<<8) |
@@ -351,7 +312,7 @@ static int vmwLoadPCX(int pcx_fd) {
    }
    else {
      int r,g,b;
-     for(i=0;i<256;i++) {
+     for(i=0;i<(1<<max_planes);i++) {
        read(pcx_fd,&temp_byte,1);
        r=temp_byte;
        read(pcx_fd,&temp_byte,1);
@@ -372,6 +333,10 @@ int main(int argc, char **argv) {
 
     if (argc>1) {
        strncpy(symbol_name,argv[1],BUFSIZ);
+    }
+
+    if (argc>2) {
+       max_planes=atoi(argv[2]);
     }
 
     /* read from stdin */

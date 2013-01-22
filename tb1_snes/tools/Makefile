@@ -5,7 +5,7 @@ LFLAGS =
 all:	bin2byte color_convert convert_font convert_font_bin \
 	dump_font make_pal \
 	pcx_to_tiles_4bpp pcx_to_tiles_8bpp \
-	pcx_to_compressed_tilemap_8bpp \
+	pcx_to_compressed_tilemap \
 	ansi_to_tile string_to_bytes convert_font_4bpp \
 	snes_checksum
 	
@@ -80,11 +80,11 @@ pcx_to_tiles_8bpp.o:	pcx_to_tiles_8bpp.c
 	$(CC) $(CFLAGS) -c pcx_to_tiles_8bpp.c
 
 
-pcx_to_compressed_tilemp_8bpp:	pcx_to_compressed_tilemap_8bpp.o
-	$(CC) $(LFLAGS) -o pcx_to_compressed_tilemap_8bpp pcx_to_compressed_tilemap_8bpp.o
+pcx_to_compressed_tilemap:	pcx_to_compressed_tilemap.o
+	$(CC) $(LFLAGS) -o pcx_to_compressed_tilemap pcx_to_compressed_tilemap.o
 
-pcx_to_compressed_tilemap_8bpp.o:	pcx_to_compressed_tilemap_8bpp.c
-	$(CC) $(CFLAGS) -c pcx_to_compressed_tilemap_8bpp.c
+pcx_to_compressed_tilemap.o:	pcx_to_compressed_tilemap.c
+	$(CC) $(CFLAGS) -c pcx_to_compressed_tilemap.c
 
 
 
@@ -106,7 +106,7 @@ clean:
 	rm -f *.o *~ bin2byte color_convert convert_font \
 		convert_font_bin dump_font make_pal \
 		pcx_to_tiles_4bpp pcx_to_tiles_8bpp \
-		pcx_to_compressed_tilemap_8bpp \
+		pcx_to_compressed_tilemap \
 		ansi_to_tile string_to_bytes \
 		convert_font_4bpp snes_checksum
 
