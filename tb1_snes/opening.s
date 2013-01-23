@@ -56,6 +56,24 @@ display_opening:
 	jsr	svmw_load_vram
 
 
+	;=======================
+	; Load TB_FONT Tile Data
+	;=======================
+	ldx	#$7000		;
+	stx	$2116           ; set adddress for VRAM read/write
+				; multiply by 2, so 0xe000
+
+	ldy	#$1000		; Copy 128 tiles, which are 32 bytes each
+				; (128*32) = 4096 = 0x1000
+
+        lda     #^tb_font
+        ldx     #.LOWORD(tb_font)
+
+        jsr     svmw_load_vram
+
+
+
+
 	;=====================================
 	; Set the BG1 and BG2 Tilemap Location
 	;=====================================
@@ -82,35 +100,8 @@ display_opening:
 				; BG2 tile data starts at VRAM e000
 
 
-
-	;=====================
-	; Load TB_FONT Data
-	;=====================
-
-	; replace with DMA!
-
-	rep	#$20            ; set accumulator/mem to 16bit
+	rep	#$20	; mem/A = 8 bit
 .a16
-.i16
-	lda     #$7000          ;
-	sta	$2116           ; set adddress for VRAM read/write
-				; multiply by 2, so 0xe000
-
-	ldy	#$0800		; Copy 128 tiles, which are 32 bytes each
-				;  8x8 tile with 4bpp (four bits per pixel)
-				; in 2-byte chunks, so
-				; (128*32)/2 = 2048 = 0x0800
-
-	ldx	#$0000
-opening_copy_font_data:
-	lda	f:tb_font, x
-	sta	$2118		; write the data
-	inx			; increment by 2 (16-bits)
-	inx
-	dey			; decrement counter
-	bne	opening_copy_font_data
-
-
 
 
         ; Write String to Background
@@ -152,28 +143,18 @@ opening_copy_string:
 opening_done_copy_string:
 
 
+
 opening_setup_video:
 
         sep     #$20            ; set accumulator to 8 bit
                                 ; as we only want to do an 8-bit load
 .a8
-.i16
 
 
-	; Enable sprite
-	; sssnnbbb
-	; ss = size (8x8 in our case)
-	; nn = name
-	; bb = base selection, VRAM >> 14
-;	lda	#%00000010	; point at 0x4000 in VRAM
-;	sta	$2101
-
+	; Enable Backgrounds
 	; 000abcde
 	; a = object, b=BG4 c=BG3 d=BG2 e=BG1
-;	lda	#%00010001	; Enable BG1
-;	lda	#%00000011	; Enable BG1
 	lda	#%00000011	; Enable BG1 & BG2
-
 	sta	$212c
 
 	; disable subscreen
@@ -186,11 +167,8 @@ opening_setup_video:
 	lda	#$03
 	sta	$2105		; set Mode 3
 
-	; a000 bbbb
-	; a = screen on/off (0=on), ffff = brightness
 
-	lda	#$0f
-	sta	$2100		; Turn on screen, full Brightness
+	jsr	svmw_fade_in
 
 
 ;	lda	#$81		; Enable NMI (VBlank Interrupt) and joypads
@@ -210,8 +188,10 @@ opening_joypad_read:
         beq     opening_joypad_read
 				; if so, skip and don't move ball
 
-	lda	#$80
-	sta	$2100		; Turn off screen
+	jsr	svmw_fade_out
+
+;	lda	#$80
+;	sta	$2100		; Turn off screen
 
 	rts
 

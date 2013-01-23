@@ -165,3 +165,73 @@ svmw_load_vram:
 
 	plp		; restore status
 	rts
+
+
+	;=========================
+        ;=========================
+        ; Fade in
+        ;=========================
+	;=========================
+svmw_fade_in:
+
+	php			; save status registers
+
+        sep     #$20            ; set accumulator to 8 bit
+.a8
+
+
+        lda     #$00
+fade_in_loop:
+				; a000 bbbb a=!enable bbbb=brightness
+        sta     $2100           ; Turn on screen, update brightnes
+
+        wai			; wait until next interrupt
+
+        cmp     #$0f		; are we at full brightness?
+        beq     done_fade_in
+
+        ina			; increment brightness and loop
+        bra     fade_in_loop
+
+done_fade_in:
+
+	plp			; restore status
+
+	rts			; return
+
+
+
+	;=========================
+        ;=========================
+        ; Fade out
+        ;=========================
+	;=========================
+svmw_fade_out:
+
+	php			; save status registers
+
+        sep     #$20            ; set accumulator to 8 bit
+.a8
+
+
+        lda     #$0f
+fade_out_loop:
+				; a000 bbbb a=!enable bbbb=brightness
+        sta     $2100           ; Turn on screen, update brightnes
+
+        wai			; wait until next interrupt
+
+        cmp     #$00		; are we at full darkness?
+        beq     done_fade_out
+
+        dea			; increment brightness and loop
+        bra     fade_out_loop
+
+done_fade_out:
+
+	lda	#$80
+	sta	$2100		; disable screen
+
+	plp			; restore status
+
+	rts			; return
