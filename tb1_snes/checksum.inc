@@ -1,2 +1,2 @@
-	.word	$702f		; Complement of checksum
-	.word	$8fd0		; Unsigned 16-bit sum of ROM
+	.word	$7a38		; Complement of checksum
+	.word	$85c7		; Unsigned 16-bit sum of ROM

@@ -56,40 +56,30 @@ display_opening:
 	jsr	svmw_load_vram
 
 
-
-
-	; we want the BG1 Tilemap to start at VRAM $F000 (60k)
+	;=====================================
+	; Set the BG1 and BG2 Tilemap Location
+	;=====================================
 	; Format is
 	; aaaa aass   a is shifted by 10 for address
 	;             ss = size of screen in tiles 00 = 32x32
 	;
-	; 1111 0000
 
-        lda     #$78            ; BG1 Tilemap starts at VRAM $F000
+        lda     #$78            ; BG1 Tilemap starts at VRAM $F000 (/2)
         sta     $2107           ; bg1 src
 
-
-	; we want the BG2 Tilemap to start at VRAM $F800
-	; Format is
-	; aaaa aass   a is shifted by 10 for address
-	;             ss = size of screen in tiles 00 = 32x32
-	;
-	; 1111 1000
-
-	lda     #$7c            ; BG2 Tilemap starts at VRAM $F800
+	lda     #$7c            ; BG2 Tilemap starts at VRAM $F800 (/2)
 	sta     $2108           ; bg2 src
 
+	;========================================
+	; Set the BG1 and BG2 Tile Data Locations
+	;========================================
 
 	; aaaa bbbb  a= BG2 tiles, b= BG1 tiles
 	; bbbb<<13
-	; 0000 0000
-	; our BG1 tiles are stored starting in VRAM $0000
-	; our BG2 tiles are stored starting in VRAM $e000
 
 	lda	#$70
-        sta	$210b           ; bg1 tile data starts at VRAM 0000
-
-
+	sta	$210b		; BG1 tile data starts at VRAM 0000
+				; BG2 tile data starts at VRAM e000
 
 
 

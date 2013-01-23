@@ -43,7 +43,7 @@ start_program:
 
 	jsr	display_title
 
-	jsr	level_1
+;	jsr	level_1
 
 .include "title_screen.s"
 .include "opening.s"
