@@ -29,11 +29,10 @@ display_title:
 	; aaaa aass   a is shifted by 10 for address
 	;             ss = size of screen in tiles 00 = 32x32
 	;
-	; 1111 0000
+	; 0111 0000
 
-        lda     #$f0            ; BG1 Tilemap starts at VRAM $F000
+        lda     #$70		; BG1 Tilemap starts at VRAM $e000/2
         sta     $2107           ; bg1 src
-
 
 	; aaaa bbbb  a= BG2 tiles, b= BG1 tiles
 	; bbbb<<13
@@ -86,26 +85,22 @@ display_title:
 
 title_setup_video:
 
-        sep     #$20            ; set accumulator to 8 bit
-                                ; as we only want to do an 8-bit load
-.a8
-.i16
-
-	; 000abcde
-	; a = object, b=BG4 c=BG3 d=BG2 e=BG1
-	lda	#%00000001	; Enable BG1
-
-	sta	$212c
-
-	; disable subscreen
-	stz	$212d
-
 	; abcd efff
 	; abcd = 8 (0) or 16 width for BG1234
 	; e = priority for BG3
 	; fff = background mode
 	lda	#$03
 	sta	$2105		; set Mode 3
+
+
+	; 000abcde
+	; a = object, b=BG4 c=BG3 d=BG2 e=BG1
+	lda	#$01		; Enable BG1
+	sta	$212c
+
+	; disable subscreen
+	stz	$212d
+
 
 	; a000 bbbb
 	; a = screen on/off (0=on), ffff = brightness
@@ -115,36 +110,33 @@ title_setup_video:
 
 
 ;	lda	#$81		; Enable NMI (VBlank Interrupt) and joypads
-;	lda	#$01		; Enable joypad
-	lda	#$00
+	lda	#$01		; Enable joypad
+;	lda	#$00
 	sta	$4200		;
 
-big:
-	bra big
+;big:
+;	bra big
 
-;title_joypad_read:
- ;       lda     $4212           ; get joypad status
-  ;      and     #%00000001              ; if joy is not ready
-   ;     bne     title_joypad_read     ; wait
-;
- ;       lda     $4219           ; read joypad (BYSTudlr)
-;
- ;       and     #%11110000      ; see if a button pressed
+title_joypad_read:
+        lda     $4212           ; get joypad status
+        and     #%00000001              ; if joy is not ready
+        bne     title_joypad_read     ; wait
 
-;        beq     title_joypad_read
-;
- ;       lda     #$80
-  ;      sta     $2100           ; Turn off screen
+       lda     $4219           ; read joypad (BYSTudlr)
 
-   ;     rts
+        and     #%11110000      ; see if a button pressed
+
+        beq     title_joypad_read
+
+        lda     #$80
+        sta     $2100           ; Turn off screen
+
+        rts
 
 
 ;============================================================================
 
 .segment "HIGHROM"
-
-;tb_font:
-;.include "tbfont.inc"
 
 .include "tb1_title.tiles"
 

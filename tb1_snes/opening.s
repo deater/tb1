@@ -167,13 +167,17 @@ opening_setup_video:
 	lda	#$03
 	sta	$2105		; set Mode 3
 
+	lda	#$81		; Enable NMI (VBlank Interrupt) and joypads
+;	lda	#$01		; enable joypad
+	sta	$4200		;
+
 
 	jsr	svmw_fade_in
 
 
-;	lda	#$81		; Enable NMI (VBlank Interrupt) and joypads
-	lda	#$01		; enable joypad
-	sta	$4200		;
+
+;forever:
+;	bra	forever
 
 
 opening_joypad_read:

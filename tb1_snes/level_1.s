@@ -11,9 +11,9 @@ ball_x = $0000
 
 level_1:
 
-	rep	#$20	; mem/A = 16 bit
+	sep	#$20	; mem/A = 8 bit
+.a8
 	rep	#$10	; X/Y = 16 bit
-.a16
 .i16
 
 
@@ -21,20 +21,74 @@ level_1:
 	; Setup VBLANK routine
 	;==========================
 
-	sei		; disable interrupts
+;	sei		; disable interrupts
 
-	lda	#level1_vblank
-	sta	vblank_vector
+;	lda	#level1_vblank
+;	sta	vblank_vector
 
-	cli		; enable interrupts
+;	cli		; enable interrupts
 
-	sep	#$20	; mem/A = 8 bit
-.a8
 
 
 	;==========================
 	; Setup Background
 	;==========================
+
+	; we want the BG1 Tilemap to start at VRAM $e000
+	; Format is
+	; aaaa aass   a is shifted by 10 for address
+	;             ss = size of screen in tiles 00 = 32x32
+	;
+	; 0111 0000
+
+        lda	#$70		; BG1 Tilemap starts at VRAM $e000/2
+        sta	$2107		; bg1 src
+
+	; aaaa bbbb  a= BG2 tiles, b= BG1 tiles
+	; bbbb<<13
+	; 0000 0000
+	; our BG1 tiles are stored starting in VRAM $0000
+
+	lda	#$02
+	sta	$210b		; bg1 tile data starts at VRAM 4000/2
+
+
+        ;===============================
+        ; Load Level1 Background Palette
+        ;===============================
+	stz	$2121		; start with color 0
+	ldy	#(16*2)		; we have 16 colors
+	lda	#^level1_background_palette
+	ldx	#.LOWORD(level1_background_palette)
+	jsr	svmw_load_palette
+
+	;======================
+	; Load Level1 Tile Data
+	;======================
+	ldx	#$2000		;
+	stx	$2116		; set adddress for VRAM read/write
+				; multiply by 2, so 0x4000
+
+	lda	#^level1_background_tile_data
+	ldx	#.LOWORD(level1_background_tile_data)
+	ldy	#1824		; Copy 57 tiles, which are 32 bytes each
+				;  8x8 tile with 4bpp
+				; (57*32) = 1824 = ????
+
+	jsr	svmw_load_vram
+
+	;===================================
+	; Load Level1 Tile Map
+	;===================================
+	ldx	#$7000		;
+	stx	$2116		; set adddress for VRAM read/write
+				; multiply by 2, so 0xe000
+
+	lda	#^level1_background_tilemap
+	ldx	#.LOWORD(level1_background_tilemap)
+	ldy	#$0700		; 32x28 = 896 * 2 = 0x700
+	jsr	svmw_load_vram
+
 
 
 	;==========================
@@ -45,68 +99,29 @@ level_1:
 
 	; Sprite Palettes start at color 128
 
-	lda	#128
-	sta	$2121       		; Start at START color
-	lda	#^level1_pal0_palette	; Using ^ before the parameter gets its bank.
+	lda	#128		; start with color 128
+	sta	$2121		;
+	ldy	#(16*2)		; we have 16 colors
+	lda	#^level1_pal0_palette
 	ldx	#.LOWORD(level1_pal0_palette)
-	ldy	#(16 * 2)   		; 2 bytes for every color
+	jsr	svmw_load_palette
 
-	; In: A:X  -- points to the data
-	;      Y   -- Size of data
-
-	pha
-	phx
-	phb
-	php         ; Preserve Registers
-
-	sep	#$20
-.a8
-	stx	$4302   ; Store data offset into DMA source offset
-	sta	$4304   ; Store data bank into DMA source bank
-	sty	$4305   ; Store size of data block
-
-	stz	$4300   ; Set DMA Mode (byte, normal increment)
-	lda	#$22    ; Set destination register ($2122 - CGRAM Write)
-	sta	$4301
-	lda	#$01    ; Initiate DMA transfer
-	sta	$420B
-
-	plp         ; Restore registers
-	plb
-	plx
-	pla
-
+	;=========================
 	; Load sprite data to VRAM
+	;=========================
+
 	lda	#$80		; increment after writing $2119
 	sta	$2115
-	ldx	#$0000		; DEST
-	stx	$2116		; $2116: Word address for accessing VRAM.
-	lda	#^level1_pal0_data		; SRCBANK
-	ldx	#.LOWORD(level1_pal0_data)	; SRCOFFSET
-	ldy	#$0800				; SIZE
-				; 32 bytes * 64 tiles
 
-	; In: A:X  -- points to the data
-	;     Y     -- Number of bytes to copy (0 to 65535)  (assumes 16-bit index)
+	ldx	#$0000		;
+	stx	$2116		; set adddress for VRAM read/write
+				; multiply by 2, so 0x0000
 
-	phb
-	php         ; Preserve Registers
+	lda	#^level1_pal0_data
+	ldx	#.LOWORD(level1_pal0_data)
+	ldy	#$0800		; 32 bytes * 64 tiles
 
-	sep	#$20
-.a8
-	stx	$4302   ; Store Data offset into DMA source offset
-	sta	$4304   ; Store data Bank into DMA source bank
-	sty	$4305   ; Store size of data block
-
-	lda	#$01
-	sta	$4300   ; Set DMA mode (word, normal increment)
-	lda	#$18    ; Set the destination register (VRAM write register)
-	sta	$4301
-	lda	#$01    ; Initiate DMA transfer (channel 1)
-	sta	$420b
-
-	plp         ; restore registers
-	plb
+	jsr	svmw_load_vram
 
 	;
 	; Init sprites to be offscreen
@@ -118,9 +133,10 @@ level_1:
 
 	sep	#$20	; mem/A = 8 bit
 .a8
-	stz	$0000		; set sprite 0 X to 0
+	lda	#104
+	sta	$0000		; set sprite 0 X to 0
 
-	lda	#100		; set sprite 0 Y to 100
+	lda	#192		; set sprite 0 Y to 100
 	sta	$0001
 
 	; Xxxxxxxxx yyyyyyy cccccccc vhoopppN
@@ -151,15 +167,26 @@ level_1:
 	jsr	svmw_transfer_sprite
 
 
-SetupVideo:
-	rep #$10
-	sep #$20
+	;======================
+	; Setup the Video Modes
+	;======================
+level1_setup_video:
 
-	lda	#%00010001	; Enable BG1 and sprites
-	sta	$212C
-	stz	$212d
+	sep	#$20	; mem/A = 8 bit
+.a8
+	rep	#$10	; X/Y = 16 bit
+.i16
 
-	lda	#$0F
+	lda	#$01		; 8x8 tiles, Mode 1
+	sta	$2105
+
+	lda	#$11		; Enable BG1 and sprites
+;	lda	#$01		; Enable BG1
+	sta	$212c
+
+	stz	$212d		; disable subscreen
+
+	lda	#$0f
 	sta	$2100		; Turn on screen, full Brightness
 
 
@@ -288,8 +315,8 @@ done_vblank:
 .segment "HIGHROM"
 
 ; sprite data
-    .include "level1_pal0.sprites"
-
+.include "level1_pal0.sprites"
+.include "level1_background.tiles"
 
 .segment "BSS"
 x_direction:	.word 0

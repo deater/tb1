@@ -43,7 +43,10 @@ start_program:
 
 	jsr	display_title
 
-;	jsr	level_1
+	jsr	level_1
+
+vblank_nop:
+	rti
 
 .include "title_screen.s"
 .include "opening.s"
@@ -76,7 +79,7 @@ wram_fill_byte:
         .word   $0000	; Native:BRK
         .word   $0000	; Native:ABORT
 vblank_vector:
-        .word   $0000	; Native:NMI
+        .word   vblank_nop	; Native:NMI
         .word   $0000	;
         .word   $0000	; Native:IRQ
 
