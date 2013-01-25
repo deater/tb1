@@ -24,22 +24,33 @@ level_1:
 	; Setup Background
 	;==========================
 
-	; we want the BG1 Tilemap to start at VRAM $e000
+	; we want the BG1 Tilemap to start at VRAM $f000
 	; Format is
 	; aaaa aass   a is shifted by 10 for address
 	;             ss = size of screen in tiles 00 = 32x32
 	;
-	; 0111 0000
+	; 0111 1000
 
-        lda	#$70		; BG1 Tilemap starts at VRAM $e000/2
+        lda	#$78		; BG1 Tilemap starts at VRAM $f000/2
         sta	$2107		; bg1 src
+
+	; we want the BG2 Tilemap to start at VRAM $d000
+	; Format is
+	; aaaa aass   a is shifted by 10 for address
+	;             ss = size of screen in tiles 10 = 32x64
+	;
+	; 0110 1010
+
+        lda	#$6a		; BG2 Tilemap starts at VRAM $d000/2
+        sta	$2108		; bg2 src
+
 
 	; aaaa bbbb  a= BG2 tiles, b= BG1 tiles
 	; bbbb<<13
 	; 0000 0000
 	; our BG1 tiles are stored starting in VRAM $0000
 
-	lda	#$02
+	lda	#$32		; bg2 tile data starts at VRAM 5000/2
 	sta	$210b		; bg1 tile data starts at VRAM 4000/2
 
 
@@ -70,13 +81,53 @@ level_1:
 	;===================================
 	; Load Level1 Tile Map
 	;===================================
-	ldx	#$7000		;
+	ldx	#$7800		;
 	stx	$2116		; set adddress for VRAM read/write
 				; multiply by 2, so 0xe000
 
 	lda	#^level1_background_tilemap
 	ldx	#.LOWORD(level1_background_tilemap)
 	ldy	#$0700		; 32x28 = 896 * 2 = 0x700
+	jsr	svmw_load_vram
+
+
+
+
+        ;===============================
+        ; Load Level1 Star Palette
+        ;===============================
+	lda	#16
+	sta	$2121		; start with color 16
+	ldy	#(16*2)		; we have 16 colors
+	lda	#^star_background_palette
+	ldx	#.LOWORD(star_background_palette)
+	jsr	svmw_load_palette
+
+	;======================
+	; Load Level1 Star Data
+	;======================
+	ldx	#$3000		;
+	stx	$2116		; set adddress for VRAM read/write
+				; multiply by 2, so 0x4000
+
+	lda	#^star_background_tile_data
+	ldx	#.LOWORD(star_background_tile_data)
+	ldy	#$4420		; Copy 545 tiles, which are 32 bytes each
+				;  8x8 tile with 4bpp
+				; (545*32) = 17,440 = 0x4420
+
+	jsr	svmw_load_vram
+
+	;===================================
+	; Load Level1 Star Tile Map
+	;===================================
+	ldx	#$6800		;
+	stx	$2116		; set adddress for VRAM read/write
+				; multiply by 2, so 0xd000
+
+	lda	#^star_background_tilemap
+	ldx	#.LOWORD(star_background_tilemap)
+	ldy	#$1000		; 32x64 = 2048 * 2 = 0x1000
 	jsr	svmw_load_vram
 
 
@@ -128,15 +179,15 @@ level_1:
 	lda	#192		; set sprite 0 Y to 100
 	sta	$0201
 
-	; Xxxxxxxxx yyyyyyy cccccccc vhoopppN
+	; Xxxxxxxxx yyyyyyy cccccccc vhoo pppN
 	;
 
 	stz	$0202		; set sprite 0
 
-	; 00000000
-	; no flip, priority 0, N=0 palette=0 (128)
+	; 0010 0000
+	; no flip, priority 2, N=0 palette=0 (128)
 
-	lda	#$00
+	lda	#$20
 	sta	$0203
 
 	; X high bit = 0 for sprite 0
@@ -169,7 +220,7 @@ level1_setup_video:
 	lda	#$01		; 8x8 tiles, Mode 1
 	sta	$2105
 
-	lda	#$11		; Enable BG1 and sprites
+	lda	#$13		; Enable BG1,BG2, and sprites
 	sta	$212c
 
 	stz	$212d		; disable subscreen
@@ -293,4 +344,4 @@ done_vblank:
 ; sprite data
 .include "level1_pal0.sprites"
 .include "level1_background.tiles"
-
+.include "star_background.tiles"
