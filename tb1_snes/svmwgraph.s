@@ -235,3 +235,38 @@ done_fade_out:
 	plp			; restore status
 
 	rts			; return
+
+
+;========================
+;========================
+; repeat until keypressed
+;========================
+;========================
+; this assumes auto-joypad read enabled
+
+svmw_repeat_until_keypressed:
+	php			; save status register
+
+        sep     #$20            ; set accumulator to 8 bit
+.a8
+
+wait_for_keypress:
+	wai			; wait until next interrupt
+
+wait_for_joypad_ready:
+	lda     $4212		; get joypad status
+	and     #$01		; loop if joypad is not ready
+	bne	wait_for_joypad_ready
+
+        lda     $4219           ; read joypad (BYSTudlr)
+	bne	found_keypress
+
+	lda	$4218		; read joypad (axlriiii)
+	bne	found_keypress
+
+        bra	wait_for_keypress
+
+found_keypress:
+
+	plp			; restore status
+	rts

@@ -109,27 +109,15 @@ title_setup_video:
 	sta	$2100		; Turn on screen, full Brightness
 
 
-;	lda	#$81		; Enable NMI (VBlank Interrupt) and joypads
-	lda	#$01		; Enable joypad
-;	lda	#$00
+	lda	#$81		; Enable NMI (VBlank Interrupt) and joypads
 	sta	$4200		;
 
-;big:
-;	bra big
+	jsr	svmw_fade_in
 
-title_joypad_read:
-        lda     $4212           ; get joypad status
-        and     #%00000001              ; if joy is not ready
-        bne     title_joypad_read     ; wait
+	jsr	svmw_repeat_until_keypressed
 
-       lda     $4219           ; read joypad (BYSTudlr)
+	jsr	svmw_fade_out
 
-        and     #%11110000      ; see if a button pressed
-
-        beq     title_joypad_read
-
-        lda     #$80
-        sta     $2100           ; Turn off screen
 
         rts
 
