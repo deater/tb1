@@ -37,8 +37,8 @@ static int rgb2bgr(int r,int g, int b) {
 
 static char symbol_name[BUFSIZ]="temp";
 
-#define MAX_TILE_X 32
-#define MAX_TILE_Y 32
+#define MAX_TILE_X 64
+#define MAX_TILE_Y 64
 #define MAX_PLANES_DIV2 4
 #define Y_SIZE 8
 
@@ -49,8 +49,9 @@ static unsigned short
 static unsigned short temp_tile[Y_SIZE][MAX_PLANES_DIV2];
 static int total_tiles=0;
 static int compressed_tiles=0;
-static int max_planes=8;
 
+static int max_planes=8;
+static int palette=0;
 
 /* File already open */
 static int vmwLoadPCX(int pcx_fd) {
@@ -176,7 +177,7 @@ static int vmwLoadPCX(int pcx_fd) {
 	 }
 
 
-	int v=0,h=0,o=0,pal=0,found_tile=0,found=0,match;
+	int v=0,h=0,o=0,pal=palette,found_tile=0,found=0,match;
 
         /* see if the new tile matches an existing one */
 
@@ -351,6 +352,10 @@ int main(int argc, char **argv) {
 
     if (argc>2) {
        max_planes=atoi(argv[2]);
+    }
+
+    if (argc>3) {
+       palette=atoi(argv[3]);
     }
 
     /* read from stdin */
