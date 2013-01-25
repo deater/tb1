@@ -4,6 +4,8 @@
 joypad1 = $0000
 joypad2 = $0001
 shipx   = $0002
+star_scroll = $0003
+star_scroll_h = $0004	; 0004 too, 16-bit
 
 .setcpu "65816"
 
@@ -242,17 +244,29 @@ level1_setup_video:
 
 	jsr	svmw_fade_in
 
-;	lda	#$0f
-;	sta	$2100		; Turn on screen, full Brightness
-
-
 	; init vars
 	lda	#104
 	sta	shipx
 
+	stz	star_scroll
+	stz	star_scroll_h
+
 level1_loop:
 
 	wai			; wait for interrupt
+
+
+	; scroll background
+	lda	star_scroll
+	sta	$2110
+	lda	star_scroll_h
+	sta	$2110
+
+	rep #$20        ; A/mem=16 bit
+.a16
+	dec	star_scroll
+	sep #$20        ; A/mem=8 bit
+.a8
 
 	; handle keypress
 	lda	joypad1
