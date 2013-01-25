@@ -1,5 +1,9 @@
+; Level 1
+
 ; Page zero locations
-ball_x = $0000
+joypad1 = $0000
+joypad2 = $0001
+shipx   = $0002
 
 .setcpu "65816"
 
@@ -15,20 +19,6 @@ level_1:
 .a8
 	rep	#$10	; X/Y = 16 bit
 .i16
-
-
-	;==========================
-	; Setup VBLANK routine
-	;==========================
-
-;	sei		; disable interrupts
-
-;	lda	#level1_vblank
-;	sta	vblank_vector
-
-;	cli		; enable interrupts
-
-
 
 	;==========================
 	; Setup Background
@@ -123,38 +113,37 @@ level_1:
 
 	jsr	svmw_load_vram
 
-	;
 	; Init sprites to be offscreen
 
 	jsr	svmw_move_sprites_offscreen
 
 	; Set our sprite active
-	; assume 544 byte sprite table in $0000
+	; assume 544 byte sprite table in $0200
 
 	sep	#$20	; mem/A = 8 bit
 .a8
 	lda	#104
-	sta	$0000		; set sprite 0 X to 0
+	sta	$0200		; set sprite 0 X to 0
 
 	lda	#192		; set sprite 0 Y to 100
-	sta	$0001
+	sta	$0201
 
 	; Xxxxxxxxx yyyyyyy cccccccc vhoopppN
 	;
 
-	stz	$0002		; set sprite 0
+	stz	$0202		; set sprite 0
 
 	; 00000000
 	; no flip, priority 0, N=0 palette=0 (128)
 
 	lda	#$00
-	sta	$0003
+	sta	$0203
 
 	; X high bit = 0 for sprite 0
 	; sprite size = 0 (smaller)
 
 	lda	#%01010110
-	sta	$0200
+	sta	$0400
 
 	; Enable sprite
 	; sssnnbbb
@@ -181,29 +170,70 @@ level1_setup_video:
 	sta	$2105
 
 	lda	#$11		; Enable BG1 and sprites
-;	lda	#$01		; Enable BG1
 	sta	$212c
 
 	stz	$212d		; disable subscreen
 
-	lda	#$0f
-	sta	$2100		; Turn on screen, full Brightness
 
 
-;	lda	#$81		; Enable NMI (VBlank Intterupt) and joypads
-;	sta	$4200		;
+	lda	#$00		; Disable NMI (VBlank Interrupt) and joypads
+	sta	$4200		;
 
+	;==========================
+	; Setup VBLANK routine
+	;==========================
+
+	ldx	#level1_vblank
+	stx	vblank_vector
+
+	lda	#$81		; Enable NMI (VBlank Interrupt) and joypads
+	sta	$4200		;
+
+	jsr	svmw_fade_in
+
+;	lda	#$0f
+;	sta	$2100		; Turn on screen, full Brightness
+
+
+	; init vars
+	lda	#104
+	sta	shipx
 
 level1_loop:
 
-	; all work done in interrupt handler
+	wai			; wait for interrupt
+
+	; handle keypress
+	lda	joypad1
+check_left:
+	bit	#$02
+	beq	check_right
+
+	dec	shipx
+
+	bpl	check_right
+	stz	shipx
+
+check_right:
+	bit	#$01
+	beq	no_keypress
+
+	inc	shipx
+
+no_keypress:
+
+
+	; update OAM
+
+	lda	shipx
+	sta	$0200		; set sprite 0 X to shipx
+
 
 	bra	level1_loop
 
 
 ;=============================
-; VBLank Routine
-;  All the action happens here
+; Level 1 VBLank Routine
 ;=============================
 
 level1_vblank:
@@ -221,75 +251,22 @@ level1_vblank:
 
 l1_joypad_read:
 	lda	$4212		; get joypad status
-	and #%00000001		; if joy is not ready
-	bne l1_joypad_read		; wait
+	and	#$01		; if joy is not ready
+	bne	l1_joypad_read	; wait
 
 	lda	$4219		; read joypad (BYSTudlr)
+	sta	joypad1
 
-	and	#%11110000  	; see if a button pressed
-
-	bne	done_vblank	; if so, skip and don't move ball
+	lda	$4218		; read joypad (AXLRiiii)
+	sta	joypad2
 
 done_joypad:
-
-	lda	#^x_direction	; get bank for x_direction var (probably $7E)
-	pha			;
-	plb			; set the data bank to the one containing x_direction
-
-	lda	ball_x		; get current ball X value
-				; in the zero page, which is mirrored on SNES
-
-	ldx	x_direction	; get x_direction  0=right, 1=left
-	bne	ball_left	; if 1 skip ahead to handle going left
-
-	ina			; ball_x += 2
-	ina
-
-	cmp	#248		; have we reached right side?
-
-	bne	done_moving	; if not, keep moving right
-
-	ldx	#1		; if so, switch to moving left
-	bra	done_moving
-
-ball_left:
-	dea			; ball_x -= 2
-	dea
-	bne	done_moving	; if not at zero, keep moving left
-
-	ldx	#0		; hit wall, switchto moving right
-
-done_moving:
-	sta	ball_x		; save ball_x co-ord
-	stx	x_direction	; save x_direction
-
 
 	;=======================================
 	; Update the sprite info structure (OAM)
 	;=======================================
-.a8
 
-	lda	#$0		; set data bank back to 0
-	pha
-	plb
-
-	; Setup DMA transfer to copy our OAM structure in the zero page
-	; into the actual OAM
-
-	stz	$2102		; set OAM address to 0
-	stz	$2103
-
-	ldy	#$0400
-	sty	$4300		; CPU -> PPU, auto increment, write 1 reg, $2104 (OAM Write)
-	stz	$4302
-	stz	$4303		; source offset
-	ldy	#$0220
-	sty	$4305		; number of bytes to transfer
-	lda	#$7E
-	sta	$4304		; bank address = $7E  (work RAM)
-	lda	#$01
-	sta	$420B		;start DMA transfer
-
+	jsr	svmw_transfer_sprite
 
 done_vblank:
 
@@ -303,7 +280,6 @@ done_vblank:
 	pla
 	plb
 
-	sep #$20
 	plp
 	rti		; return from interrupt
 
@@ -317,7 +293,4 @@ done_vblank:
 ; sprite data
 .include "level1_pal0.sprites"
 .include "level1_background.tiles"
-
-.segment "BSS"
-x_direction:	.word 0
 

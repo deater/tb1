@@ -8,6 +8,7 @@
 ; Move Sprites Offscreen
 ;====================================
 ;====================================
+; assumes we have RAM copy of OAM at $0200
 
 svmw_move_sprites_offscreen:
 
@@ -30,7 +31,7 @@ svmw_move_sprites_offscreen:
 	;  ppp      = palette
 	;  s        = sprite size
 clear_xy:
-	sta $0000,X	; page 0?
+	sta $0200,X	; assume at $0200
 	inx
 	inx
 	inx
@@ -41,7 +42,7 @@ clear_xy:
 	ldx #$0000
 	lda #$5555	; set high bit of X, effective setting X to 256
 set_top:
-	sta $0200, X	; writing to top of screen
+	sta $0400, X	; writing to top of screen
 	inx		; increment
 	inx
 	cpx #$0020	; put all 32 values
@@ -53,7 +54,7 @@ set_top:
 ;========================================
 ;========================================
 ; transfer sprite
-;  assumes sprite_data starts at $7e:0000
+;  assumes sprite_data starts at $7e:0200
 ;========================================
 ;========================================
 
@@ -87,9 +88,9 @@ svmw_transfer_sprite:
 	sty	$4300		; CPU -> PPU, auto increment,
 				; write 1 reg, $2104 (OAM Write)
 
-	stz	$4302
-	stz	$4303		; source offset in RAM (low/high)
-				; $0000
+	ldx	#$0200
+	stx	$4302		; source offset in RAM (low/high)
+				; $0200
 
 	ldy	#$0220
 	sty	$4305		; number of bytes to transfer

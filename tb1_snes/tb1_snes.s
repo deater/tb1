@@ -79,7 +79,7 @@ wram_fill_byte:
         .word   $0000	; Native:BRK
         .word   $0000	; Native:ABORT
 vblank_vector:
-        .word   vblank_nop	; Native:NMI
+        .word   level1_vblank	; Native:NMI
         .word   $0000	;
         .word   $0000	; Native:IRQ
 

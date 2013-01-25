@@ -109,7 +109,7 @@ init_snes:
 			; $2180  -  read/write WRAM register, no initialization required
 			; $2181-$2183  -  WRAM address, no initialization required
 
-			; $4016-$4017  - serial JoyPad read registers, no need to initialize
+        stz     $4016	; $4016-$4017  - serial JoyPad read registers, no need to initialize
 
         stz     $4200   ; disable timers, v-blank interrupt, joypad register
 
