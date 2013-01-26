@@ -14,14 +14,19 @@ PERFECT_AIM     = $1
 
 
 ; Page zero locations
-joypad1		= $00
-joypad2		= $01
 shipx		= $02
 star_scroll	= $03
 star_scroll_h	= $04	; 0004 too, 16-bit
 RANDOM_SEED     = $05
 YSAV		= $06
 YSAV_H		= $07
+
+joypad1_raw	= $08
+joypad1_raw_h	= $09
+joypad1_pressed = $0a
+joypad1_pressed_h	= $0b
+joypad1_held	= $0c
+joypad1_held_h	= $0d
 
 HISCORE_1	= $cb
 HISCORE_2	= $cc
@@ -1864,78 +1869,51 @@ loop_draw_missiles_noadd:
 ;	bne	draw_missiles	       ; if not, loop
 
 
+	;===============================
+	; handle joypad input
+	;===============================
 
 game_read_keyboard:
-;	jsr	get_key
-;	lda	LASTKEY
-;	bne	game_q
-;	jmp	move_ship	       ; if no keypressed, move the ship
+	ldx	joypad1_pressed
+	bne	key_start
+	jmp	move_ship		; if no keypressed, move the ship
 
-game_q:
-;	cmp	#'Q'
-;	bne	game_j
-	;; call verify_quit
-;	jmp	done_game
-	;; jmp set_pause_flag
+key_start:
+	lda	joypad1_pressed_h
+	bit	#$10			; start button
+	beq	key_left
 
-game_j:
-;	cmp	#'J'
-;	bne	game_k
+	; pause game
+	; ask for resume/save/toggle_sound/help/quit
 
-;	lda	SHIPXADD       	       ; load xadd
-;	beq	game_j_sub
-;	bpl	game_j_0	       ; is switch dir, then 0 it
-game_j_sub:
-;	dec	SHIPXADD	       ; else, dec XADD
-;	jmp	move_ship
-game_j_0:
-;	lda	#$0
-;	sta	SHIPXADD
-;	jmp	move_ship
+key_left:
+	bit	#$02
+	beq	key_right
 
-game_k:
-;	cmp     #'K'
-;	bne	game_c
+	lda	SHIPXADD       	       ; load xadd
+	beq	game_l_sub
+	bpl	game_l_0	       ; is switch dir, then 0 it
+game_l_sub:
+	dec	SHIPXADD	       ; else, dec XADD
+	jmp	move_ship
+game_l_0:
+	lda	#$0
+	sta	SHIPXADD
+	jmp	move_ship
 
-;	lda	SHIPXADD	       ; load xadd
-;	bmi	game_j_0	       ; if we are switching dirs, set to zero
-;	inc	SHIPXADD	       ; else xadd++
-;	jmp	move_ship
+key_right:
+	bit	#$01
+	beq	key_A
 
-game_c:
-;        cmp	#'C'
-;	bne	game_p
+	lda	SHIPXADD	       ; load xadd
+	bmi	game_l_0	       ; if we are switching dirs, set to zero
+	inc	SHIPXADD	       ; else xadd++
+	jmp	move_ship
 
-;	lda	PADDLE_STATUS
-;	eor	#$80
-;	sta	PADDLE_STATUS
-
-;	jmp	move_ship
-
-game_p:
-;	cmp	#'P'
-;	bne	game_s
-;        bit	KEYRESET
-;	jsr	wait_until_keypressed
-;	jmp	move_ship
-
-game_s:
-;	cmp     #'S'
- ;       bne	game_h
-;	lda	SOUND_ON
-;	eor	#$ff
-;	sta	SOUND_ON
-;	jmp	move_ship
-
-game_h:
-;	cmp	#'H'
-;	bne	game_space
-;	jsr	do_help
-;	jsr	set_page0_gr
-
-game_space:
-;	cmp     #' '+128	       ; +128 because of get_key 'feature'
-;	bne	game_unknown
+key_A:
+	lda	joypad1_pressed
+	bit	#$80
+	beq	game_unknown
 
 ;	ldy	#$0	    	       ; point to missile[y]
 fire_missiles:
@@ -1968,28 +1946,26 @@ done_fire_missiles:
 game_unknown:
 
 
-
-
 move_ship:
-;	clc			       ; Clear carry
-;	lda	shipx		       ; load ship_x
-;	adc	SHIPXADD	       ; ship_x+=xadd
-;	sta	shipx		       ; store it back
+	clc			       ; Clear carry
+	lda	shipx		       ; load ship_x
+	adc	SHIPXADD	       ; ship_x+=xadd
+	sta	shipx		       ; store it back
 
 check_x_under:
-;	bpl	check_x_over	       ; if positive, keep going
-;	lda	#$0		       ; we were below zero
-;	sta	shipx		       ; so shipx=0
-;	sta	SHIPXADD	       ; xadd=0
-;	bra	update_shields2	       ; go to blit
+	bpl	check_x_over	       ; if positive, keep going
+	lda	#$0		       ; we were below zero
+	sta	shipx		       ; so shipx=0
+	sta	SHIPXADD	       ; xadd=0
+	bra	update_shields2	       ; go to blit
 
 check_x_over:
-;	cmp	#$21		       ; are we over 33?
-;	bmi	update_shields2	       ; if not, blit ship
-;	lda	#$0		       ; shipxadd=0
-;	sta	SHIPXADD
-;	lda	#$21		       ; shipx=33
-;	sta	shipx
+	cmp	#$70		       ; are we over 33?
+	bmi	update_shields2	       ; if not, blit ship
+	lda	#$0		       ; shipxadd=0
+	sta	SHIPXADD
+	lda	#$70		       ; shipx=33
+	sta	shipx
 
 	; Update shields
 update_shields2:
@@ -2059,9 +2035,10 @@ level_print_loop:
 ;	bne	level_print_loop
 
 
-	;==========
-
+	;========================
 	; scroll background
+	;========================
+
 	lda	star_scroll
 	sta	$2110
 	lda	star_scroll_h
@@ -2073,27 +2050,29 @@ level_print_loop:
 	sep #$20        ; A/mem=8 bit
 .a8
 
+
 	; handle keypress
-	lda	joypad1
+;	lda	joypad1
 check_left:
-	bit	#$02
-	beq	check_right
+;	bit	#$02
+;	beq	check_right
 
-	dec	shipx
+;	dec	shipx
 
-	bpl	check_right
-	stz	shipx
+;	bpl	check_right
+;	stz	shipx
 
 check_right:
-	bit	#$01
-	beq	no_keypress
+;	bit	#$01
+;	beq	no_keypress
 
-	inc	shipx
+;	inc	shipx
 
-no_keypress:
+;no_keypress:
 
-
+	;========================
 	; update OAM
+	;========================
 
 	lda	shipx
 	sta	$0200		; set sprite 0 X to shipx
@@ -2341,16 +2320,33 @@ level1_vblank:
 	sep #$20        ; A/mem=8 bit
 .a8
 
-l1_joypad_read:
+joypad_read:
 	lda	$4212		; get joypad status
 	and	#$01		; if joy is not ready
-	bne	l1_joypad_read	; wait
+	bne	joypad_read	; wait
 
-	lda	$4219		; read joypad (BYSTudlr)
-	sta	joypad1
+	rep	#$20
+.a16
 
-	lda	$4218		; read joypad (AXLRiiii)
-	sta	joypad2
+	ldx	joypad1_raw	; load previous raw value
+
+	lda	$4218		; load 2 bytes of joypad status
+	sta	joypad1_raw	; save new raw value
+
+	txa			; transfer old raw into A
+
+	eor	joypad1_raw	; set the bits that have changed
+
+	and	joypad1_raw	; set the bits just pressed
+
+	sta	joypad1_pressed	; store the pressed value
+	txa			; transfer back prev value
+	and	joypad1_raw	; find buttons being held
+	sta	joypad1_held	; store held down buttons
+
+	sep	#$20
+.a8
+
 
 done_joypad:
 
