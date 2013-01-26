@@ -218,7 +218,7 @@ level_1:
 
 
 	;==========================
-	; Setup Sprite
+	; Setup Sprites
 	;==========================
 
 	; Load Palette for our sprite
@@ -249,23 +249,29 @@ level_1:
 
 	jsr	svmw_load_vram
 
+	;=============================
 	; Init sprites to be offscreen
 
 	jsr	svmw_move_sprites_offscreen
 
+	;=============================
 	; Set our sprite active
 	; assume 544 byte sprite table in $0200
 
 	sep	#$20	; mem/A = 8 bit
 .a8
+
+	; setup ship sprite
+
+
+	; Xxxxxxxxx yyyyyyy cccccccc vhoo pppN
+	;
+
 	lda	#104
 	sta	$0200		; set sprite 0 X to 0
 
 	lda	#192		; set sprite 0 Y to 100
 	sta	$0201
-
-	; Xxxxxxxxx yyyyyyy cccccccc vhoo pppN
-	;
 
 	stz	$0202		; set sprite 0
 
@@ -275,15 +281,33 @@ level_1:
 	lda	#$20
 	sta	$0203
 
+	; set sprites 1,2,3 to be missiles
+
+	lda	#100
+	sta	$0204
+	sta	$0205
+
+
+
+	lda	#12		; sprite location 13
+	sta	$0206
+	sta	$020a
+	sta	$020e
+
+	lda	#$20
+	sta	$0207
+	sta	$020b
+	sta	$020f
+
 	; X high bit = 0 for sprite 0
-	; sprite size = 0 (smaller)
+	; sprite size = 1 (larger)
 
 	lda	#%01010110
 	sta	$0400
 
 	; Enable sprite
 	; sssnnbbb
-	; sss = size (16x16 and 32x32 in our case)
+	; sss = size (011 = 16x16 and 32x32)
 	; nn = name
 	; bbb = base selection
 	lda	#%01100000
@@ -1923,16 +1947,21 @@ fire_missiles:
 ;	lda	#$1		       ; set missile[y].out=1
 ;	sta	(MISSILE_PL),Y
 ;	iny		      	       ; point to missile[y].x
-;	lda	#$3
-;	clc
-;	adc	shipx		       ; missile[y].x=shipx+3
-;	sta	(MISSILE_PL),Y
+	lda	#8
+	clc
+	adc	shipx		       ; missile[y].x=shipx+3
+	sta	$0204
 ;	iny		      	       ; point to missile[y].y
-;	lda	#$10		       ; set to 16
-;	sta	(MISSILE_PL),Y
+	lda	#190		       ; set to 16
+	sta	$0205
+
+	lda	$0400
+	and	#~$4
+	sta	$0400
+
 ;	jmp	done_fire_missiles
 
-end_fire_loop:
+;end_fire_loop:
 ;	iny
 ;	iny
 ;	iny
@@ -1941,7 +1970,7 @@ end_fire_loop:
 ;	bne	fire_missiles	       ; if so, loop
 done_fire_missiles:
 
-;	jmp	move_ship
+	jmp	move_ship
 
 game_unknown:
 
