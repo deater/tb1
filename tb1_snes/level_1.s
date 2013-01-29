@@ -28,6 +28,9 @@ joypad1_pressed_h	= $0b
 joypad1_held	= $0c
 joypad1_held_h	= $0d
 
+sprite_l	= $10
+sprite_h	= $11
+
 HISCORE_1	= $cb
 HISCORE_2	= $cc
 HISCORE_3	= $cd
@@ -261,51 +264,49 @@ level_1:
 	sep	#$20	; mem/A = 8 bit
 .a8
 
+	;==================
 	; setup ship sprite
-
 
 	; Xxxxxxxxx yyyyyyy cccccccc vhoo pppN
 	;
 
-	lda	#104
-	sta	$0200		; set sprite 0 X to 0
+	lda	#104		; set shipx to 104
+	sta	$0200		;
 
-	lda	#192		; set sprite 0 Y to 100
+	lda	#192		; set shipy to 192
 	sta	$0201
 
-	stz	$0202		; set sprite 0
+	stz	$0202		; set ship sprite to 0
 
-	; 0010 0000
-	; no flip, priority 2, N=0 palette=0 (128)
-
-	lda	#$20
+	lda	#$20		; no flip, priority 2, N=0 palette=0 ($20)
 	sta	$0203
-
-	; set sprites 1,2,3 to be missiles
-
-	lda	#100
-	sta	$0204
-	sta	$0205
-
-
-
-	lda	#12		; sprite location 13
-	sta	$0206
-	sta	$020a
-	sta	$020e
-
-	lda	#$20
-	sta	$0207
-	sta	$020b
-	sta	$020f
 
 	; X high bit = 0 for sprite 0
 	; sprite size = 1 (larger)
-
 	lda	#%01010110
 	sta	$0400
 
-	; Enable sprite
+	;=====================================
+	; set sprites 8,9,10,11 to be missiles
+
+	lda	#12		; sprite location 13
+	sta	$0202 + 4*8
+	sta	$0202 + 4*9
+	sta	$0202 + 4*10
+	sta	$0202 + 4*11
+
+	lda	#$20		; pal=0, priority=2, flip=none
+	sta	$0203 + 4*8
+	sta	$0203 + 4*9
+	sta	$0203 + 4*10
+	sta	$0203 + 4*11
+
+
+	;=========================
+	;=========================
+	; Enable sprites
+	;=========================
+	;=========================
 	; sssnnbbb
 	; sss = size (011 = 16x16 and 32x32)
 	; nn = name
@@ -378,8 +379,8 @@ do_new_game:
 
 	;; set up struct pointers
 
-	ldx	#.LOWORD(missile_0)	; setup missle struct pointer
-	stx	MISSILE_PL
+;	ldx	#.LOWORD(missile_0)	; setup missle struct pointer
+;	stx	MISSILE_PL
 
 	ldx	#.LOWORD(enemy_0)	; setup enemy struct pointer
 	stx	ENEMY_PL
@@ -1768,6 +1769,12 @@ laser_hit:
 
 done_with_boss:
 
+	;====================
+	; Move Missiles
+	;====================
+	; Missiles are 8,9,10,11 in sprite table
+
+
 ;	ldy     #$0		       		 ; point to missile[0]
 move_missiles:
 ;	lda     (MISSILE_PL),Y			 ; get missile[y]
@@ -1949,15 +1956,15 @@ fire_missiles:
 ;	iny		      	       ; point to missile[y].x
 	lda	#8
 	clc
-	adc	shipx		       ; missile[y].x=shipx+3
-	sta	$0204
+	adc	shipx		       ; missile[y].x=shipx+8
+	sta	$0220
 ;	iny		      	       ; point to missile[y].y
-	lda	#190		       ; set to 16
-	sta	$0205
+	lda	#190		       ; set to 190
+	sta	$0221
 
-	lda	$0400
-	and	#~$4
-	sta	$0400
+	lda	$0402
+	and	#.LOBYTE(~$1)
+	sta	$0402
 
 ;	jmp	done_fire_missiles
 
