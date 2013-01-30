@@ -358,3 +358,43 @@ activate_sprite:
 	plx
 	plp
 	rts
+
+
+;===========================
+;===========================
+; deactivate_sprite
+;===========================
+;===========================
+; assumes high sprite table at $0400
+; sets carry if active
+; clears carry if not
+; sprite number in X
+deactivate_sprite:
+
+	php
+	phx
+	phy
+
+	lda	#$0
+	xba
+
+	tyx
+
+	; address=$0400 + Y/4
+	txa
+	lsr
+	lsr
+	tay
+
+	txa
+	and	#$3
+	tax
+	lda	SPRITE_HIGH_LOOKUP,X
+
+	ora	$0400,Y			; sprite off screen when bit is 1
+	sta	$0400,Y
+
+	ply
+	plx
+	plp
+	rts

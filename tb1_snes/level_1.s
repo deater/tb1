@@ -1811,24 +1811,18 @@ move_missiles:
 
 	ply
 
-;	iny					 ; move to missile.y
-;	iny
-;	clc					 ; clear carry
-;	lda	(MISSILE_PL),Y			 ; get missile.y
-;	adc	#$FF				 ; move up (subtract 1)
-;	sta	(MISSILE_PL),Y			 ; store missile.y
-;	bpl	missile_collision_detection	 ; if not off screen, contine
+	cmp	#200
 
-;	dey					 ; back up to missile.out
-;	dey
-;	lda	#$0
-;	sta	(MISSILE_PL),Y			 ; set missile.out=0
+	; bge
+	bcc	missile_collision_detection	; if not off screen, contine
 
-;	lda	#<(~PERFECT_AIM)		 ; shot missed!
-;	and	BONUS_FLAGS     		 ; clear perfect shot flag
-;	sta	BONUS_FLAGS
+	jsr	deactivate_sprite
 
-;	jmp	loop_move_missiles		 ; continue
+	lda	#<(~PERFECT_AIM)		; shot missed!
+	and	BONUS_FLAGS			; clear perfect shot flag
+	sta	BONUS_FLAGS
+
+	jmp	loop_move_missiles		; continue
 
 missile_collision_detection:
 
