@@ -271,3 +271,90 @@ found_keypress:
 
 	plp			; restore status
 	rts
+
+;===========================
+;===========================
+; is_sprite_active
+;===========================
+;===========================
+; assumes high sprite table at $0400
+; sets carry if active
+; clears carry if not
+; sprite number in X
+is_sprite_active:
+
+;	php
+	phx
+	phy
+
+	lda	#$0
+	xba
+
+	tyx
+
+	; address=$0400 + Y/4
+	txa
+	lsr
+	lsr
+	tay
+
+	txa
+	and	#$3
+	tax
+	lda	SPRITE_HIGH_LOOKUP,X
+
+	and	$0400,Y			; sprite on screen when bit is 0
+	beq	sprite_is_active
+
+	clc
+	bra	done_sprite_is_active
+
+sprite_is_active:
+	sec
+
+done_sprite_is_active:
+	ply
+	plx
+;	plp
+	rts
+
+
+;===========================
+;===========================
+; activate_sprite
+;===========================
+;===========================
+; assumes high sprite table at $0400
+; sets carry if active
+; clears carry if not
+; sprite number in X
+activate_sprite:
+
+	php
+	phx
+	phy
+
+	lda	#$0
+	xba
+
+	tyx
+
+	; address=$0400 + Y/4
+	txa
+	lsr
+	lsr
+	tay
+
+	txa
+	and	#$3
+	tax
+	lda	SPRITE_HIGH_LOOKUP,X
+	eor	#$ff
+
+	and	$0400,Y			; sprite on screen when bit is 0
+	sta	$0400,Y
+
+	ply
+	plx
+	plp
+	rts

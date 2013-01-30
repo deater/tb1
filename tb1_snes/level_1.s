@@ -31,6 +31,11 @@ joypad1_held_h	= $0d
 sprite_l	= $10
 sprite_h	= $11
 
+SPRITE_HIGH_LOOKUP = $20
+SHL2		= $21
+SHL3		= $22
+SHL4		= $23
+
 HISCORE_1	= $cb
 HISCORE_2	= $cc
 HISCORE_3	= $cd
@@ -351,6 +356,20 @@ level1_setup_video:
 	sta	$4200		;
 
 	jsr	svmw_fade_in
+
+
+	;===========================
+	; init lookup tables
+	;===========================
+
+	lda	#$01
+	sta	SPRITE_HIGH_LOOKUP
+	lda	#$04
+	sta	SHL2
+	lda	#$10
+	sta	SHL3
+	lda	#$40
+	sta	SHL4
 
   ;====================
   ; setup the high score
@@ -1775,10 +1794,22 @@ done_with_boss:
 	; Missiles are 8,9,10,11 in sprite table
 
 
-;	ldy     #$0		       		 ; point to missile[0]
+	ldy	#$8			; point to missile[0]
 move_missiles:
-;	lda     (MISSILE_PL),Y			 ; get missile[y]
-;	beq	loop_move_missiles		 ; if missile.out==0 skip
+	jsr	is_sprite_active
+	bcc	loop_move_missiles	; if not active, skip
+
+	phy
+	tya
+	asl
+	asl
+	tay
+
+	lda	$0201,Y
+	dea
+	sta	$0201,Y
+
+	ply
 
 ;	iny					 ; move to missile.y
 ;	iny
@@ -1856,49 +1887,11 @@ done_missile_collision:
 ;	jmp	loop_move_at_y
 
 loop_move_missiles:
-;	iny
-;	iny
-loop_move_at_y:
-;	iny
-;	cpy	#NUM_MISSILES*3	       ; have we checked all missiles?
-;	bne	move_missiles	       ; if not, loop
+	iny
+	cpy	#(8+NUM_MISSILES)	; have we checked all missiles?
+	bne	move_missiles		; if not, loop
 
 done_move_missiles:
-
-;	ldy	#$0		       ; point to missiles[0]
-draw_missiles:
-;	lda     (MISSILE_PL),Y	       ; get missile[y]
-;	beq	loop_draw_missiles     ; if missile.out==0 skip
-
-;	iny			       ; point to missile.x
-;	lda	(MISSILE_PL),Y	       ; load it
-;	sta	CH
-;	iny	  		       ; point to missile.y
-;	lda	(MISSILE_PL),Y	       ; load it
-;	sta	CV
-
-;	sty	YSAV1		       ; save Y
-
-;	lda	#>missile_sprite       ; point to the missile sprite
-;	sta	STRINGH
-;	lda	#<missile_sprite
-;	sta	STRINGL
-;	jsr	blit   		       ; blit the missile sprite
-
-;	ldy	YSAV1		       ; restore Y
-
-;	jmp	loop_draw_missiles_noadd
-
-loop_draw_missiles:
-;	iny
-;	iny
-
-loop_draw_missiles_noadd:
-;	iny
-
-;	cpy	#NUM_MISSILES*3	       ; have we looped through them all?
-;	bne	draw_missiles	       ; if not, loop
-
 
 	;===============================
 	; handle joypad input
@@ -1946,35 +1939,37 @@ key_A:
 	bit	#$80
 	beq	game_unknown
 
-;	ldy	#$0	    	       ; point to missile[y]
+	ldy	#$8			; point to missile[y]
 fire_missiles:
-;	lda     (MISSILE_PL),Y	       ; get missile[y].out
-;	bne	end_fire_loop	       ; if not out, skip ahead
+	jsr	is_sprite_active
+	bcs	end_fire_loop		; if active, skip to next
 
-;	lda	#$1		       ; set missile[y].out=1
-;	sta	(MISSILE_PL),Y
-;	iny		      	       ; point to missile[y].x
+	phy
+	tya
+	asl
+	asl
+	tay
+
 	lda	#8
 	clc
-	adc	shipx		       ; missile[y].x=shipx+8
-	sta	$0220
-;	iny		      	       ; point to missile[y].y
-	lda	#190		       ; set to 190
-	sta	$0221
+	adc	shipx			; missile[y].x=shipx+8
+	sta	$0200,Y			; $220 + 4*(Y-8)
 
-	lda	$0402
-	and	#.LOBYTE(~$1)
-	sta	$0402
+	lda	#190			; set to 190
+	sta	$0201,Y
 
-;	jmp	done_fire_missiles
 
-;end_fire_loop:
-;	iny
-;	iny
-;	iny
+	ply
+	jsr	activate_sprite
 
-;	cpy	#NUM_MISSILES*3	       ; see if we have more missiles
-;	bne	fire_missiles	       ; if so, loop
+	bra	done_fire_missiles	; done firing missile
+
+end_fire_loop:
+	iny				; point to next missile
+
+	cpy	#(8+NUM_MISSILES)	; see if we have more missiles
+	bne	fire_missiles		; if so, loop
+
 done_fire_missiles:
 
 	jmp	move_ship
@@ -2448,7 +2443,7 @@ update_shields:
 
 	lda	SHIELDS
 	bne	normal_shields
-	
+
 
 flash_shields:
 	lda	#$7f
@@ -2457,29 +2452,29 @@ flash_shields:
 	iny
 	cpy	#$7
 	bne	flash_shields
-	jmp	shields_line	
+	jmp	shields_line
 
-normal_shields:	
+normal_shields:
 	lda	#$80
 	ora	(STRINGL),Y
 	sta	(STRINGL),Y
 	iny
 	cpy	#$7
 	bne	normal_shields
-	
+
 shields_line:
 
 	ldy  	#$A
 	ldx	#$0
-shield_line_loop:	
-	
+shield_line_loop:
+
 	cpx	SHIELDS
 	bmi	shield_box
 	lda	#'_'+128
 	jmp	shield_char
 shield_box:
 	lda	#' '
-shield_char:	
+shield_char:
 	sta	(STRINGL),Y
 	iny
 	iny
