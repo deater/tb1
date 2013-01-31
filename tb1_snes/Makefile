@@ -13,13 +13,17 @@ tb1_snes.o:	tb1_snes.s \
 	svmwgraph.s \
 	tb1_title.tiles tb1_opening.tiles level1_background.tiles \
 	star_background.tiles \
-	level1_pal0.sprites \
+	level1_pal0.sprites level1_pal2.sprites \
 	tbfont.inc
 	$(AS) -t none -o tb1_snes.o -l tb1_snes.lst -c tb1_snes.s
 
 
 level1_pal0.sprites:	graphics/level1_pal0.pcx tools/pcx_to_tiles_4bpp
 	./tools/pcx_to_tiles_4bpp level1_pal0 < graphics/level1_pal0.pcx > level1_pal0.sprites
+
+level1_pal2.sprites:	graphics/level1_pal2.pcx tools/pcx_to_tiles_4bpp
+	./tools/pcx_to_tiles_4bpp level1_pal2 < graphics/level1_pal2.pcx > level1_pal2.sprites
+
 
 level1_background.tiles:	graphics/level1_background.pcx ./tools/pcx_to_compressed_tilemap
 	./tools/pcx_to_compressed_tilemap level1_background 4 0 < graphics/level1_background.pcx > level1_background.tiles

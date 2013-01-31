@@ -233,6 +233,8 @@ level_1:
 
 	; Sprite Palettes start at color 128
 
+	; Load palette 0
+
 	lda	#128		; start with color 128
 	sta	$2121		;
 	ldy	#(16*2)		; we have 16 colors
@@ -240,12 +242,24 @@ level_1:
 	ldx	#.LOWORD(level1_pal0_palette)
 	jsr	svmw_load_palette
 
+	; Load palette 2
+
+	lda	#160		; start with color 128
+	sta	$2121		;
+	ldy	#(16*2)		; we have 16 colors
+	lda	#^level1_pal2_palette
+	ldx	#.LOWORD(level1_pal2_palette)
+	jsr	svmw_load_palette
+
+
 	;=========================
 	; Load sprite data to VRAM
 	;=========================
 
 	lda	#$80		; increment after writing $2119
 	sta	$2115
+
+	; Pal0 Sprites
 
 	ldx	#$0000		;
 	stx	$2116		; set adddress for VRAM read/write
@@ -256,6 +270,19 @@ level_1:
 	ldy	#$0800		; 32 bytes * 64 tiles
 
 	jsr	svmw_load_vram
+
+	; Pal2 Sprites
+
+				; 0x0000 + 32*0x60 / 2 = 0x600
+	ldx	#$0600		;
+	stx	$2116		; set adddress for VRAM read/write
+
+	lda	#^level1_pal2_data
+	ldx	#.LOWORD(level1_pal2_data)
+	ldy	#$0400		; 32 bytes * 32 tiles
+
+	jsr	svmw_load_vram
+
 
 	;=============================
 	; Init sprites to be offscreen
@@ -799,11 +826,13 @@ setup_enemy_defaults:
 store_enemy_kind:
 ;	sta	(ENEMY_PL),Y
 
-	lda	#12		; temp use missile
+	lda	#$60		; temp use missile
 	sta	$282		; $200 + $20*4 + 2
 
-	lda	#$20
-	sta	$283		; noflip, pal0, priority=2
+	; Xxxxxxxxx yyyyyyy cccccccc vhoo pppN
+
+	lda	#$24
+	sta	$283		; noflip, pal2, priority=2
 
 	; determine enemy _x
 	; if < 0, make random between 2->34
@@ -2631,6 +2660,7 @@ end_bss:
 
 ; sprite data
 .include "level1_pal0.sprites"
+.include "level1_pal2.sprites"
 .include "level1_background.tiles"
 .include "star_background.tiles"
 
