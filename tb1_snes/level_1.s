@@ -504,139 +504,132 @@ level1_loop:
 	;  put out new enemies (if needed)
 	; ================================
 
-;	inc	BETWEEN_DELAY	; inc how long we've delayed
-;	lda	BETWEEN_DELAY	; load it in
-;	cmp	ENEMY_WAIT	; have we waited long enough?
-;	beq     reset_delay
+	inc	BETWEEN_DELAY	; inc how long we've delayed
+	lda	BETWEEN_DELAY	; load it in
+	cmp	ENEMY_WAIT	; have we waited long enough?
+	beq     reset_delay
 
-;	jmp	move_enemies	; if not, go on to movement
+	jmp	move_enemies	; if not, go on to movement
 
-;reset_delay:
+reset_delay:
 
 	; delay==wait, so attempt to put out new enemy
 
-;	lda	BETWEEN_DELAY
-;	and	#$1
-;	sta	BETWEEN_DELAY          ; reset delay
+	lda	BETWEEN_DELAY
+	and	#$1
+	sta	BETWEEN_DELAY          ; reset delay
 
 	; special case for boss
 
-;	lda	#$9			; if boss, don't keep track of
-;	cmp	ENEMY_TYPE		; how many enemies were spawned
-;	bne	not_boss_dont_clear
+	lda	#$9			; if boss, don't keep track of
+	cmp	ENEMY_TYPE		; how many enemies were spawned
+	bne	not_boss_dont_clear
 
-;	lda	#$1			; store 1 so we don't increment wave
-;	sta	ENEMIES_SPAWNED
+	lda	#$1			; store 1 so we don't increment wave
+	sta	ENEMIES_SPAWNED
 
-;not_boss_dont_clear:
+not_boss_dont_clear:
 
 	; see if we are at a new wave
 	; basically, if 16 have been spawned, change
 
-;	lda	ENEMIES_SPAWNED
-;	and	#$0f
-;	bne	same_enemy_type		; if not 16 gone by, move on
+	lda	ENEMIES_SPAWNED
+	and	#$0f
+	bne	same_enemy_type		; if not 16 gone by, move on
 
 	;=======================
 	; change  the enemy type
 
-;	inc	ENEMIES_SPAWNED
+	inc	ENEMIES_SPAWNED
 
-;	jsr	random_number
-;	and	#$7			; get a random number 0-7
-;	sta	ENEMY_TYPE
+	jsr	random_number
+	and	#$7			; get a random number 0-7
+	sta	ENEMY_TYPE
 
-;	inc	ENEMY_WAVE
+	inc	ENEMY_WAVE
 
-;	lda	ENEMY_WAVE		; have we enough waves to reach boss?
-;	cmp	#WAVES_TILL_BOSS
-;	bne	not_boss_yet
+	lda	ENEMY_WAVE		; have we enough waves to reach boss?
+	cmp	#WAVES_TILL_BOSS
+	bne	not_boss_yet
 
-;	lda	#$8
-;	sta	ENEMY_TYPE
+	lda	#$8
+	sta	ENEMY_TYPE
 
-;not_boss_yet:
+not_boss_yet:
 
 	; set various constants
 	; these may be overriden later
 
-;	lda	#20
-;	sec
-;	sbc	LEVEL
-;	sta	ENEMY_WAIT		; enemy_wait=20-level
+	lda	#20
+	sec
+	sbc	LEVEL
+	sta	ENEMY_WAIT		; enemy_wait=20-level
 
 	; set kind and init x to be random by default
 
-;	lda	#$ff
-;	sta	CURRENT_ENEMY_KIND
-;	sta	CURRENT_INIT_X
+	lda	#$ff
+	sta	CURRENT_ENEMY_KIND
+	sta	CURRENT_INIT_X
 
 same_enemy_type:
 
 	; find empty enemy slot
 
-;	ldy	#$0		       ; point to enemies[0]
-;	tya
-
+	ldy	#$20			; point to enemies[0]
 find_empty_enemy:
-;	pha
-;	lda     (ENEMY_PL),Y	       ; get enemy[y].out
-;	beq	add_enemy
+	jsr	is_sprite_active
+	bcc	add_enemy
 
-;	pla
-;	clc
-;	adc	#$9
-;	tay
-;	cpy	#(NUM_ENEMIES*9)
-;	bne	find_empty_enemy
+	iny
+	cpy	#($20+NUM_ENEMIES)
+	bne	find_empty_enemy
 
-;	jmp	move_enemies	       ; no empty, slots, move on
+	jmp	move_enemies		; no empty, slots, move on
 
 add_enemy:
-;	pla
 
 	;==============================================
 	; First see if we must wait for enemy to clear
 	; types 2 and 8
 
-;	lda	ENEMY_TYPE
-;	cmp	#$2
+	lda	ENEMY_TYPE
+	cmp	#$2
 
-;	bne	check_type_8
+	bne	check_type_8
 
-;	lda	TOTAL_ENEMIES_OUT
-;	beq     change_to_type_3
-;	jmp	move_enemies
+	lda	TOTAL_ENEMIES_OUT
+	beq     change_to_type_3
+	jmp	move_enemies
 change_to_type_3:
-;	lda	#$3
-;	sta	ENEMY_TYPE
+	lda	#$3
+	sta	ENEMY_TYPE
 
-;	jsr	random_number
-;	and	#$8
-;	sta	CURRENT_ENEMY_KIND
+	jsr	random_number
+	and	#$8
+	sta	CURRENT_ENEMY_KIND
 
-;	jsr	random_number
-;	and	#$1F	      	       ; mask off so 0-31
-;	clc
-;	adc	#$2
-;	asl	A
-;	sta	CURRENT_INIT_X
-;	jmp	setup_enemy_defaults
+	jsr	random_number
+	and	#$1f			; mask off so 0-31
+	clc
+	adc	#$2
+	asl	A
+	sta	CURRENT_INIT_X
+	jmp	setup_enemy_defaults
 
 check_type_8:
 
-;	cmp	#$8
-;	beq	before_boss_stuff
-;	jmp	check_type_9
+	cmp	#$8
+	beq	before_boss_stuff
+	jmp	check_type_9
 
 before_boss_stuff:
 
 	;======================
 	; before boss stuff
 
-;	lda	TOTAL_ENEMIES_OUT
-;	beq	prepare_for_boss
-;	jmp	move_enemies
+	lda	TOTAL_ENEMIES_OUT
+	beq	prepare_for_boss
+	jmp	move_enemies
 
 prepare_for_boss:
 
@@ -738,32 +731,32 @@ done_bonus:
 	;======================
 	; setup boss
 
-;	lda	#$0C
-;	sta	BOSS_X			; boss_x = 13
+	lda	#$0C
+	sta	BOSS_X			; boss_x = 13
 
-;	lda	#$1
-;	sta	BOSS_XADD		; boss_xadd=1
-;	sta	BOSS_WAITING		; boss_waiting=1
+	lda	#$1
+	sta	BOSS_XADD		; boss_xadd=1
+	sta	BOSS_WAITING		; boss_waiting=1
 
-;	jsr	random_number
-;	and	#$1f
-;	sta	BOSS_COUNT		; boss_count = rand%32
+	jsr	random_number
+	and	#$1f
+	sta	BOSS_COUNT		; boss_count = rand%32
 
-;	lda	#$0
-;	sta	BOSS_SMOKE		; boss_smoke=0
-;	sta	BOSS_EXPLODING		; boss_exploding=0
-;	sta	BOSS_SHOOTING		; boss_shooting=0
+	lda	#$0
+	sta	BOSS_SMOKE		; boss_smoke=0
+	sta	BOSS_EXPLODING		; boss_exploding=0
+	sta	BOSS_SHOOTING		; boss_shooting=0
 
-;	lda	LEVEL
-;	asl	A
-;	clc
-;	adc	#$10
-;	sta	BOSS_HITS		; boss_hits=(level*2)+20
+	lda	LEVEL
+	asl	A
+	clc
+	adc	#$10
+	sta	BOSS_HITS		; boss_hits=(level*2)+20
 
-;	lda	#$9
-;	sta	ENEMY_TYPE		; enemy_type=9
+	lda	#$9
+	sta	ENEMY_TYPE		; enemy_type=9
 
-;	jmp	move_enemies
+	jmp	move_enemies
 
 
 check_type_9:
@@ -771,21 +764,23 @@ check_type_9:
 	; if boss, and he's waiting,
 	; don't produce enemies
 
-;	cmp	#$9
-;	bne	setup_enemy_defaults
-;	lda	BOSS_WAITING
-;	beq	setup_enemy_defaults
-;	jmp     move_enemies
+	cmp	#$9
+	bne	setup_enemy_defaults
+	lda	BOSS_WAITING
+	beq	setup_enemy_defaults
+	jmp     move_enemies
 
 
 	;========================
 	; setup enemy defaults
 setup_enemy_defaults:
-;	inc	ENEMIES_SPAWNED
-;	inc	TOTAL_ENEMIES_OUT
+	inc	ENEMIES_SPAWNED
+	inc	TOTAL_ENEMIES_OUT
 
 ;	lda	#$1
 ;	sta	(ENEMY_PL),Y	       ; enemy[i].out=1
+
+	jsr	activate_sprite
 
 ;	lda	#$0
 ;	iny	; exploding
@@ -804,27 +799,36 @@ setup_enemy_defaults:
 store_enemy_kind:
 ;	sta	(ENEMY_PL),Y
 
+	lda	#12		; temp use missile
+	sta	$282		; $200 + $20*4 + 2
+
+	lda	#$20
+	sta	$283		; noflip, pal0, priority=2
+
 	; determine enemy _x
 	; if < 0, make random between 2->34
 
-;	lda     CURRENT_INIT_X
-;	bpl	store_init_x
+	lda     CURRENT_INIT_X
+	bpl	store_init_x
 
-;	jsr	random_number
-;	and	#$1f
-;	clc
-;	adc	#$2
-;	asl
+	jsr	random_number
+	and	#$1f
+	clc
+	adc	#$2
+	asl
 
 store_init_x:
 ;	iny	; X
 ;	sta	(ENEMY_PL),Y
 
+	sta	$280
+
 	; enemy_y is always 0 by default
 
 ;	iny	; Y
-;	lda	#$0
+	lda	#$0
 ;	sta	(ENEMY_PL),Y
+	sta	$281
 
 ;	lda	#$0
 ;	iny
@@ -2406,18 +2410,18 @@ done_vblank:
         ; algorithm from Pop Science ~1980s
         ; when seeded with non-zero, will generate all 255 values
         ; before repeating
-
+.a8
 random_number:
-        lda   RANDOM_SEED
-        bne   random_not_zero
-        lda   #$D
+	lda	RANDOM_SEED
+	bne	random_not_zero
+	lda	#$D
 random_not_zero:
-        asl   A
-        bcc   random_num_done
-        eor   #$87
+	asl	A
+	bcc	random_num_done
+	eor	#$87
 random_num_done:
-        sta   RANDOM_SEED
-        rts
+	sta	RANDOM_SEED
+	rts
 
 
 ;==========================================================
