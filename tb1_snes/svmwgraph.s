@@ -280,42 +280,54 @@ found_keypress:
 ; assumes high sprite table at $0400
 ; sets carry if active
 ; clears carry if not
-; sprite number in X
+; sprite number in Y
 is_sprite_active:
 
-;	php
-	phx
-	phy
+	php			; save status
 
-	lda	#$0
-	xba
+	rep	#$30
+.i16
+.a16
 
-	tyx
+	phx			; save X
+	phy			; save Y
+
+	tyx			; copy Y to X
 
 	; address=$0400 + Y/4
-	txa
-	lsr
-	lsr
-	tay
+	tya			; copy Y to A
 
-	txa
-	and	#$3
-	tax
+	lsr			; divide by 4
+	lsr
+	tay			; copy back to Y
+
+	txa			; copy original Y to A
+	and	#$3		; mask to get low 2 bits
+	tax			; copy back to X
+
+	sep	#$20		; A=8bit
+.a8
 	lda	SPRITE_HIGH_LOOKUP,X
+				; get bitmask for X
 
-	and	$0400,Y			; sprite on screen when bit is 0
+	and	$0400,Y		; sprite on screen when bit is 0
+
+	rep	#$20
+.a16
 	beq	sprite_is_active
 
-	clc
-	bra	done_sprite_is_active
-
-sprite_is_active:
-	sec
-
-done_sprite_is_active:
+sprite_is_not_active:
 	ply
 	plx
-;	plp
+	plp
+	clc
+	rts
+
+sprite_is_active:
+	ply
+	plx
+	plp
+	sec
 	rts
 
 
