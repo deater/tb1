@@ -289,8 +289,8 @@ is_sprite_active:
 .i16
 .a16
 
-	phx			; save X
-	phy			; save Y
+	phx			; save X on stack
+	phy			; save Y on stack
 
 	tyx			; copy Y to X
 
@@ -312,8 +312,6 @@ is_sprite_active:
 
 	and	$0400,Y		; sprite on screen when bit is 0
 
-	rep	#$20		; A=16 bit
-.a16
 	beq	sprite_is_active
 
 sprite_is_not_active:
@@ -339,37 +337,40 @@ sprite_is_active:
 ; assumes high sprite table at $0400
 ; sets carry if active
 ; clears carry if not
-; sprite number in X
+; sprite number in Y
 activate_sprite:
 
-	php
-	phx
-	phy
+	php				; store status
+	phx				; store X on stack
+	phy				; store Y on stack
 
-	lda	#$0
-	xba
+	rep	#$20			; make A 16-bit
+.a16
 
-	tyx
+	tyx				; copy Y to X
 
 	; address=$0400 + Y/4
-	txa
+	tya				; copy Y to A
+	lsr				; divide by 4
 	lsr
-	lsr
-	tay
+	tay				; transfer back to Y
 
-	txa
-	and	#$3
-	tax
-	lda	SPRITE_HIGH_LOOKUP,X
-	eor	#$ff
+	txa				; get saved copy of Y
+	and	#$3			; mask to get low bits
+	tax				; transfer back to X
+
+	sep	#$20			; make A 8-bit
+.a8
+	lda	SPRITE_HIGH_LOOKUP,X	; load from lookup table
+	eor	#$ff			; negate it
 
 	and	$0400,Y			; sprite on screen when bit is 0
-	sta	$0400,Y
+	sta	$0400,Y			; store it back out
 
-	ply
+	ply				; restore values from stack
 	plx
 	plp
-	rts
+	rts				; return
 
 
 ;===========================
