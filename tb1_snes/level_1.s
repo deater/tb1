@@ -472,34 +472,11 @@ new_level:
 	sta	ENEMY_WAIT		; ???
 
 	stz	BETWEEN_DELAY
-	stz	SHIPXADD	       ; clear shipxadd
+	stz	SHIPXADD		; clear shipxadd
 	stz	ENEMY_WAVE
 	stz	TOTAL_ENEMIES_OUT
 	stz	ENEMIES_SPAWNED
 	stz	ENEMY_TYPE
-
-	;=======================
-	; Print "LEVEL X"
-	;=======================
-
-;	jsr	set_page0_text
-;	jsr	HOME
-
-	;===================
-	; set level to level
-	;===================
-
-;	lda	#>(level_string+9)
-;	sta	STRINGH
-;	lda	#<(level_string+9)
-;	sta	STRINGL
-
-;	lda	#0
-;	sta	BCD_BYTEH
-;	lda	LEVEL
-;	sta	BCD_BYTE
-;	jsr	print_bcd_byte
-
 
 	;======================
 	; Print level on screen
@@ -514,7 +491,7 @@ new_level:
 
 ;	ldx	#20
 ;	jsr	wait_X_100msec	       ; pause for 3 seconds
-;	bit	KEYRESET	       ; clear keyboard	
+;	bit	KEYRESET	       ; clear keyboard
 
 
         ;/========================\
@@ -664,11 +641,6 @@ prepare_for_boss:
 	; HANDLE BONUSES
 	;===============
 
-	; Set text mode
-
-;	jsr	set_page0_text
-;	jsr	HOME
-
 	; Print "BONUS POINTS"
 
 ;	lda	#>bonus_string
@@ -804,29 +776,22 @@ setup_enemy_defaults:
 	inc	ENEMIES_SPAWNED
 	inc	TOTAL_ENEMIES_OUT
 
-;	lda	#$1
-;	sta	(ENEMY_PL),Y	       ; enemy[i].out=1
-
-	jsr	activate_sprite
+	jsr	activate_sprite		; enemy[i].out=1
 
 ;	lda	#$0
 ;	iny	; exploding
 ;	sta	(ENEMY_PL),Y	       ; enemy[i].exploding=0
 
-;	iny	; kind
+	lda	CURRENT_ENEMY_KIND     ; if kind <0 then random
+	bpl	store_enemy_kind
 
-;	lda	CURRENT_ENEMY_KIND     ; if kind <0 then random
-;	bpl	store_enemy_kind
-
-;	jsr	random_number
-;	and	#$38
-
-;	jmp	store_enemy_kind
+	jsr	random_number
+	and	#$8
 
 store_enemy_kind:
-;	sta	(ENEMY_PL),Y
 
-	lda	#$60		; temp use missile
+	clc
+	adc	#$60		; Use pal2 enemies for now
 	sta	$282		; $200 + $20*4 + 2
 
 	; Xxxxxxxxx yyyyyyy cccccccc vhoo pppN
