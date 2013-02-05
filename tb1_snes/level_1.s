@@ -809,21 +809,11 @@ store_enemy_kind:
 	tya			; copy Y to A
 	asl
 	asl			; multiply by 4
-	clc
-	adc	#$200		; add in $200
-	tax
+	tax			; put in X
 
 
 	sep	#$20		; set A back to 8-bit
 .a8
-	pla			; restore A
-
-
-	sta	$282		; $200 + $20*4 + 2
-
-
-	lda	#$24
-	sta	$283		; noflip, pal2, priority=2
 
 	; determine enemy _x
 	; if < 0, make random between 2->34
@@ -838,17 +828,25 @@ store_enemy_kind:
 	asl
 
 store_init_x:
-;	iny	; X
 ;	sta	(ENEMY_PL),Y
 
-	sta	$280
+	sta	$200,X		; store x value at $200+(Y*4)
 
 	; enemy_y is always 0 by default
 
-;	iny	; Y
+	inx			; store y value at $201+(Y*4)
 	lda	#$0
-;	sta	(ENEMY_PL),Y
-	sta	$281
+	sta	$200,X
+
+	pla			; pull enemy type off stack
+
+	inx			; store SPRITE value to $202+(Y*4)
+	sta	$200,X
+
+	lda	#$24		; noflip, pal2, priority=2
+	inx
+	sta	$200,X		; store paramaters to $203+(Y*4)
+
 
 ;	lda	#$0
 ;	iny
