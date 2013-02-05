@@ -381,33 +381,36 @@ activate_sprite:
 ; assumes high sprite table at $0400
 ; sets carry if active
 ; clears carry if not
-; sprite number in X
+; sprite number in Y
 deactivate_sprite:
 
-	php
-	phx
-	phy
+	php					; save status on stack
+	phx					; save X
+	phy					; save Y
 
-	lda	#$0
-	xba
+	tyx					; copy Y to X
 
-	tyx
+	rep	#$20				; set A to 16-bit
+.a16
 
 	; address=$0400 + Y/4
-	txa
+	tya					; copy Y to A
+	lsr					; divide by 4
 	lsr
-	lsr
-	tay
+	tay					; copy back to Y
 
-	txa
-	and	#$3
+	txa					; get low bits into X
+	and	#$3				; Mask
 	tax
-	lda	SPRITE_HIGH_LOOKUP,X
+
+	sep	#$20				; set A to 8-bit
+.a8
+	lda	SPRITE_HIGH_LOOKUP,X		; lookup bits in table
 
 	ora	$0400,Y			; sprite off screen when bit is 1
-	sta	$0400,Y
+	sta	$0400,Y			; save value back out
 
-	ply
-	plx
-	plp
-	rts
+	ply				; restore Y
+	plx				; restore X
+	plp				; restore status
+	rts				; return
