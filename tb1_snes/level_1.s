@@ -428,8 +428,8 @@ do_new_game:
 ;	ldx	#.LOWORD(missile_0)	; setup missle struct pointer
 ;	stx	MISSILE_PL
 
-	ldx	#.LOWORD(enemy_0)	; setup enemy struct pointer
-	stx	ENEMY_PL
+;	ldx	#.LOWORD(enemy_0)	; setup enemy struct pointer
+;	stx	ENEMY_PL
 
 	;; Clear BSS
 
@@ -828,7 +828,6 @@ store_enemy_kind:
 	asl
 
 store_init_x:
-;	sta	(ENEMY_PL),Y
 
 	sta	$200,X		; store x value at $200+(Y*4)
 
@@ -847,22 +846,21 @@ store_init_x:
 	inx
 	sta	$200,X		; store paramaters to $203+(Y*4)
 
+	; X = (Y*4)+3
 
-;	lda	#$0
-;	iny
-;	sta	(ENEMY_PL),Y	       ; xadd
-;	iny
-;	sta	(ENEMY_PL),Y	       ; yadd
-;	lda	#$2
-;	iny
-;	sta	(ENEMY_PL),Y	       ; xmin
-;	iny
-;	lda	#$24
-;	sta	(ENEMY_PL),Y	       ; ymin
+	lda	#$24
+	sta	extra_sprite,X	       ; ymin
+	inx
 
-;	dey			       ; xmin
-;	dey			       ; yadd
-;	dey			       ; xadd
+	sta	extra_sprite,X	       ; xmin
+	inx
+
+	stz	extra_sprite,X	       ; yadd
+	lda	#$2
+
+	inx
+
+	stz	extra_sprite,X	       ; xadd
 
 
 	;===========================================
@@ -882,15 +880,15 @@ enemy_type_1:
 	; diagonal, no wait
 	; movement proportional to level
 
-;	lda	LEVEL		       ; xadd = level
-;	sta	(ENEMY_PL),Y
+	lda	LEVEL			; xadd = level
+	sta	extra_sprite,X
 
-;	iny
+	inx				; point to yadd
 
-;	lsr	A
-;	ora	#$1
-;	sta	(ENEMY_PL),Y	       ; yadd = level/2
-;	jmp	move_enemies
+	lsr	A
+	ora	#$1
+	sta	extra_sprite,X		; yadd = level/2
+	jmp	move_enemies
 
 enemy_type_2:
 	;=====================
@@ -2619,8 +2617,7 @@ outside:
 .bss
 
 start_bss:
-missile_0:	  .res NUM_MISSILES*3
-enemy_0:	  .res NUM_ENEMIES*9
+extra_sprite:	  .res 256
 end_bss:
 
 
