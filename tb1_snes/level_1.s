@@ -499,6 +499,8 @@ new_level:
 	;+    MAIN LEVEL1 LOOP    +
 	;+                        +
 	;\========================/
+.a8
+.i16
 
 level1_loop:
 
@@ -790,11 +792,35 @@ setup_enemy_defaults:
 
 store_enemy_kind:
 
+	; Xxxxxxxxx yyyyyyy cccccccc vhoo pppN
+
 	clc
 	adc	#$60		; Use pal2 enemies for now
+
+	pha			; store type for later
+
+				; Y = $20+enemies
+
+				; want to store to $200 + (Y*4)
+
+	rep	#$20		; set A to 16-bit
+.a16
+
+	tya			; copy Y to A
+	asl
+	asl			; multiply by 4
+	clc
+	adc	#$200		; add in $200
+	tax
+
+
+	sep	#$20		; set A back to 8-bit
+.a8
+	pla			; restore A
+
+
 	sta	$282		; $200 + $20*4 + 2
 
-	; Xxxxxxxxx yyyyyyy cccccccc vhoo pppN
 
 	lda	#$24
 	sta	$283		; noflip, pal2, priority=2
@@ -2067,31 +2093,12 @@ level_print_loop:
 	lda	star_scroll_h
 	sta	$2110
 
-	rep #$20        ; A/mem=16 bit
+	rep	#$20        ; A/mem=16 bit
 .a16
 	dec	star_scroll
-	sep #$20        ; A/mem=8 bit
+	sep	#$20        ; A/mem=8 bit
 .a8
 
-
-	; handle keypress
-;	lda	joypad1
-check_left:
-;	bit	#$02
-;	beq	check_right
-
-;	dec	shipx
-
-;	bpl	check_right
-;	stz	shipx
-
-check_right:
-;	bit	#$01
-;	beq	no_keypress
-
-;	inc	shipx
-
-;no_keypress:
 
 	;========================
 	; update OAM
@@ -2107,7 +2114,7 @@ check_right:
 done_game:
 
 
-	ldx	#30
+;	ldx	#30
 ;	jsr	wait_X_100msec	       ; pause for 3 seconds
 ;	bit	KEYRESET	       ; clear keyboard
 
@@ -2334,6 +2341,7 @@ level1_vblank:
 	php		; save status register
 	rep	#$30	; Set A/mem=16 bits, X/Y=16 bits (to push all 16 bits)
 .a16			; tell assembler the A is 16-bits
+.i16
 	phb		; save b
 	pha		; save A
 	phx		; save X
@@ -2348,7 +2356,7 @@ joypad_read:
 	and	#$01		; if joy is not ready
 	bne	joypad_read	; wait
 
-	rep	#$20
+	rep	#$20		; A 16-bit
 .a16
 
 	ldx	joypad1_raw	; load previous raw value
@@ -2367,7 +2375,7 @@ joypad_read:
 	and	joypad1_raw	; find buttons being held
 	sta	joypad1_held	; store held down buttons
 
-	sep	#$20
+	sep	#$20		; A=8bit
 .a8
 
 
@@ -2385,6 +2393,7 @@ done_vblank:
 
 	rep	#$30	; A/Mem=16 bits, X/Y=16 bits
 .a16
+.i16
 	pld		; restore saved vaules from stack
 	ply
 	plx

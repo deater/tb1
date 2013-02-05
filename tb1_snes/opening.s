@@ -100,7 +100,7 @@ display_opening:
 				; BG2 tile data starts at VRAM e000
 
 
-	rep	#$20	; mem/A = 8 bit
+	rep	#$20	; mem/A = 16 bit
 .a16
 
 

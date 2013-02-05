@@ -148,8 +148,9 @@ ClearVRAM:
 	phx
 	php
 
-	rep	#$30	; mem/A = 8 bit, X/Y = 16 bit
-	sep	#$20
+	rep	#$10	; X/Y = 16 bit
+.i16
+	sep	#$20	; A = 8 bit
 .a8
 	lda	#$80
 	sta	$2115	; Set VRAM port to word access
@@ -175,8 +176,9 @@ ClearVRAM:
 ClearPalette:
 	phx
 	php
-	rep	#$30		; mem/A = 8 bit, X/Y = 16 bit
-	sep	#$20
+	rep	#$10		; X/Y = 16 bit
+.i16
+	sep	#$20		; A = 8 bit
 .a8
 	stz	$2121
 	ldx	#$0100

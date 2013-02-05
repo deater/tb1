@@ -285,7 +285,7 @@ is_sprite_active:
 
 	php			; save status
 
-	rep	#$30
+	rep	#$30		; A=16bit X/Y=16bit
 .i16
 .a16
 
@@ -312,7 +312,7 @@ is_sprite_active:
 
 	and	$0400,Y		; sprite on screen when bit is 0
 
-	rep	#$20
+	rep	#$20		; A=16 bit
 .a16
 	beq	sprite_is_active
 
