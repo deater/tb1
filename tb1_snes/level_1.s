@@ -1110,11 +1110,11 @@ move_enemy_x:
 
 	lsr	A
 
-;	cmp	ENEMY_XMIN	       ; are we less than xmin?
-;	bmi	switch_dir_enemy_x     ; if so, switch direction
+	cmp	ENEMY_XMIN	       ; are we less than xmin?
+	bmi	switch_dir_enemy_x     ; if so, switch direction
 
-;	cmp	ENEMY_XMAX	       ; are we greater than xmax?
-;	bpl	switch_dir_enemy_x     ; if so, switch direction
+	cmp	ENEMY_XMAX	       ; are we greater than xmax?
+	bpl	switch_dir_enemy_x     ; if so, switch direction
 
 	jmp	move_enemy_y
 
@@ -1164,26 +1164,21 @@ no_y_special_case:
 	lsr	A
 	lsr	A
 
-;	cmp	#$12		       ; is y<=12?
-;	bmi	done_enemy_y	       ; if so no need to do anything
-;	beq	done_enemy_y
+	cmp	#50		       ; is y<=12?
+	bmi	done_enemy_y	       ; if so no need to do anything
+	beq	done_enemy_y
 
 	; off screen
 
-;	pla   	    		       ; pop saved Y off stack
-;	tay
-;	pha			       ; push y back on stack
+	jsr	deactivate_sprite      ; set enemy[i].out=0
 
-;	lda	#$0
-;	sta	(ENEMY_PL),Y	       ; set enemy[i].out=0
+	dec	TOTAL_ENEMIES_OUT
 
-;	dec	TOTAL_ENEMIES_OUT
+	lda	BONUS_FLAGS
+	and	#<(~PERFECT_KILLS)
+	sta	BONUS_FLAGS
 
-;	lda	BONUS_FLAGS
-;	and	#<(~PERFECT_KILLS)
-;	sta	BONUS_FLAGS
-
-;	jmp	skip_to_next_enemy     ; skip to next enemy
+	jmp	skip_to_next_enemy     ; skip to next enemy
 
 
 done_enemy_y:
