@@ -1068,17 +1068,13 @@ move_enemies:
   ; Move Enemies!  (first thing, if no new added)
   ;==============================================
 
-;	ldy	#$0		       ; point to enemies[0]
+	ldy	#$20			; point to enemies[0]
 handle_enemies:
 
-;	tya
-;	pha			       ; store y on stack
+	jsr	is_sprite_active	; set if enemy[y].out
+	bcs	load_enemy_zero_page	; if enemy.out then we are good
 
-;	lda     (ENEMY_PL),Y	       ; get enemy[y].out
-;	bne	load_enemy_zero_page   ; if enemy.out then we are good
-
-;	jmp	skip_to_next_enemy     ; enemy is not out, so skip to next
-
+	jmp	skip_to_next_enemy	; enemy is not out, so skip to next
 
 
    ;==========================================
@@ -1452,13 +1448,12 @@ save_from_zero_page:
 skip_to_next_enemy:
 
 ;	pla	  		       ; get saved value of Y
-;	clc
-;	adc	#$9		       ; add 9 to point to next
-;	tay
 
-;	cpy	#NUM_ENEMIES*9	       ; have we looped through them all?
-;	beq	draw_the_boss	       ; if not, loop
-;	jmp	handle_enemies
+	iny
+
+	cpy	#($20+NUM_ENEMIES)	; have we looped through them all?
+	beq	draw_the_boss		; if not, loop
+	jmp	handle_enemies
 
 
 	;===================================================
