@@ -1,5 +1,8 @@
 ; Level 1
 
+;; Memory areas
+extra_sprite    = $600
+
 ;; GAME PARAMETERS
 NUM_MISSILES    =  2
 NUM_ENEMIES     =  6
@@ -798,17 +801,7 @@ store_enemy_kind:
 
 				; want to store to $200 + (Y*4)
 
-;	rep	#$20		; set A to 16-bit
-;.a16
-
-	tyx			; copy Y to A
-;	asl
-;	asl			; multiply by 4
-;	tax			; put in X
-
-
-;	sep	#$20		; set A back to 8-bit
-;.a8
+	tyx			; copy Y to X
 
 	; determine enemy _x
 	; if < 0, make random between 2->34
@@ -824,38 +817,28 @@ store_enemy_kind:
 
 store_init_x:
 
-	sta	$200,X		; store x value at $200+(Y*4)
+	sta	$200,Y		; store x value at $200+(Y*4)
 
 	; enemy_y is always 0 by default
-
-	inx			; store y value at $201+(Y*4)
 	lda	#$0
-	sta	$200,X
+	sta	$201,Y		; store y value at $201+(Y*4)
+
 
 	pla			; pull enemy type off stack
 
-	inx			; store SPRITE value to $202+(Y*4)
-	sta	$200,X
+	sta	$202,Y		; store SPRITE value to $202+(Y*4)
 
 	lda	#$24		; noflip, pal2, priority=2
-	inx
-	sta	$200,X		; store paramaters to $203+(Y*4)
+	sta	$203,Y		; store paramaters to $203+(Y*4)
 
-	; X = (Y*4)+3
+	lda	#$0
+	sta	extra_sprite,Y		; xadd
+	sta	extra_sprite+1,Y	; yadd
 
-	lda	#$24
-	sta	extra_sprite,X	       ; ymin
-	inx
-
-	sta	extra_sprite,X	       ; xmin
-	inx
-
-	stz	extra_sprite,X	       ; yadd
-	lda	#$2
-
-	inx
-
-	stz	extra_sprite,X	       ; xadd
+	lda	#2
+	sta	extra_sprite+2,Y	; xmin
+	lda	#100
+	sta	extra_sprite+3,Y	; xmax
 
 
 	;===========================================
@@ -876,13 +859,11 @@ enemy_type_1:
 	; movement proportional to level
 
 	lda	LEVEL			; xadd = level
-	sta	extra_sprite,X
-
-	inx				; point to yadd
+	sta	extra_sprite,Y
 
 	lsr	A
 	ora	#$1
-	sta	extra_sprite,X		; yadd = level/2
+	sta	extra_sprite+1,y	; yadd = level/2
 	jmp	move_enemies
 
 enemy_type_2:
@@ -1063,7 +1044,7 @@ move_enemies:
   ; Move Enemies!  (first thing, if no new added)
   ;==============================================
 
-	ldy	#$20			; point to enemies[0]
+	ldy	#$80			; point to enemies[0] (4*$20)
 handle_enemies:
 
 	jsr	is_sprite_active	; set if enemy[y].out
@@ -1078,6 +1059,22 @@ handle_enemies:
    ;==========================================
 
 load_enemy_zero_page:
+
+
+	lda	extra_sprite,Y
+	sta	ENEMY_XADD
+	lda	extra_sprite+1,Y
+	sta	ENEMY_YADD
+	lda	extra_sprite+2,Y
+	sta	ENEMY_XMIN
+	lda	extra_sprite+3,Y
+	sta	ENEMY_XMAX
+
+	lda	$200,Y
+	sta	ENEMY_X
+	lda	$201,Y
+	sta	ENEMY_Y
+
 ;	ldx	#ENEMY_EXPLODING
 load_to_zero_page:
 ;	iny			       ; point to exploding
@@ -1106,12 +1103,12 @@ load_to_zero_page:
      ;========
 
 move_enemy_x:
-;	clc
-;	lda	ENEMY_X	       	       ; X
-;	adc	ENEMY_XADD	       ; x+=xadd
-;	sta	ENEMY_X
+	clc
+	lda	ENEMY_X	       	       ; X
+	adc	ENEMY_XADD	       ; x+=xadd
+	sta	ENEMY_X
 
-;	lsr	A
+	lsr	A
 
 ;	cmp	ENEMY_XMIN	       ; are we less than xmin?
 ;	bmi	switch_dir_enemy_x     ; if so, switch direction
@@ -1119,18 +1116,18 @@ move_enemy_x:
 ;	cmp	ENEMY_XMAX	       ; are we greater than xmax?
 ;	bpl	switch_dir_enemy_x     ; if so, switch direction
 
-;	jmp	move_enemy_y
+	jmp	move_enemy_y
 
 
 switch_dir_enemy_x:
 
 	; switch X direction
 
-;	lda	#$0	    	       ; load zero
-;	sec
-;	sbc	ENEMY_XADD	       ; 0 - ENEMY_XADD
-;	sta	ENEMY_XADD	       ; store it back out, negated
-;	jmp	move_enemy_x	       ; re-add it in
+	lda	#$0	    	       ; load zero
+	sec
+	sbc	ENEMY_XADD	       ; 0 - ENEMY_XADD
+	sta	ENEMY_XADD	       ; store it back out, negated
+	jmp	move_enemy_x	       ; re-add it in
 
      ;========
      ; Move Y
@@ -1138,34 +1135,34 @@ switch_dir_enemy_x:
 
 move_enemy_y:
 
-;	lda	#$0		       ; load in zero
-;	cmp	ENEMY_YADD	       ; compare to YADD
+	lda	#$0		       ; load in zero
+	cmp	ENEMY_YADD	       ; compare to YADD
 
-;	bmi	no_y_special_case      ; if minus, we have special case
+	bmi	no_y_special_case      ; if minus, we have special case
 
-;	inc	ENEMY_YADD
-;	bne	done_enemy_y
+	inc	ENEMY_YADD
+	bne	done_enemy_y
 
-;	lda	#$0
-;	sta	ENEMY_XADD
-;	lda	#$2
-;	sta	ENEMY_YADD
+	lda	#$0
+	sta	ENEMY_XADD
+	lda	#$2
+	sta	ENEMY_YADD
 
 	; increment y
 	; is it > 0?
 	; if not keep going
 	; if so, yadd=level*2
 
-;	jmp	done_enemy_y
+	jmp	done_enemy_y
 
 no_y_special_case:
-;	clc
-;	lda	ENEMY_Y		       ; get Y
-;	adc	ENEMY_YADD	       ; y+=yadd
-;	sta	ENEMY_Y	       	       ; store back out
+	clc
+	lda	ENEMY_Y		       ; get Y
+	adc	ENEMY_YADD	       ; y+=yadd
+	sta	ENEMY_Y	       	       ; store back out
 
-;	lsr	A
-;	lsr	A
+	lsr	A
+	lsr	A
 
 ;	cmp	#$12		       ; is y<=12?
 ;	bmi	done_enemy_y	       ; if so no need to do anything
@@ -1422,6 +1419,25 @@ enemies_xy:
 save_zp_enemy_back:
 	; save zero page copy back to RAM
 
+	lda	ENEMY_XADD
+	sta	extra_sprite,Y
+
+	lda	ENEMY_YADD
+	sta	extra_sprite+1,Y
+
+	lda	ENEMY_XMIN
+	sta	extra_sprite+2,Y
+
+	lda	ENEMY_XMAX
+	sta	extra_sprite+3,Y
+
+	lda	ENEMY_X
+	sta	$200,Y
+
+	lda	ENEMY_Y
+	sta	$201,Y
+
+
 ;	ldx	#ENEMY_EXPLODING
 
 ;	pla
@@ -1445,8 +1461,11 @@ skip_to_next_enemy:
 ;	pla	  		       ; get saved value of Y
 
 	iny
+	iny
+	iny
+	iny
 
-	cpy	#($20+NUM_ENEMIES)	; have we looped through them all?
+	cpy	#($80+4*NUM_ENEMIES)	; have we looped through them all?
 	beq	draw_the_boss		; if not, loop
 	jmp	handle_enemies
 
@@ -2612,9 +2631,9 @@ outside:
 ;; *********************
 .bss
 
-start_bss:
-extra_sprite:	  .res 256
-end_bss:
+;start_bss:
+;extra_sprite:	  .res 256
+;end_bss:
 
 
 ;============================================================================
