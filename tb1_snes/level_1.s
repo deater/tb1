@@ -423,22 +423,14 @@ level1_setup_video:
 
 do_new_game:
 
-	;; set up struct pointers
-
-;	ldx	#.LOWORD(missile_0)	; setup missle struct pointer
-;	stx	MISSILE_PL
-
-;	ldx	#.LOWORD(enemy_0)	; setup enemy struct pointer
-;	stx	ENEMY_PL
-
 	;; Clear BSS
 
-	ldx	#$0
-clear_bss:
-	stz	start_bss,X
-	inx
-	cpx	#end_bss-start_bss
-	bne	clear_bss
+;	ldx	#$0
+;clear_bss:
+;	stz	start_bss,X
+;	inx
+;	cpx	#end_bss-start_bss
+;	bne	clear_bss
 
 	;; Init one-time vars
 
@@ -450,7 +442,7 @@ clear_bss:
 ;	jsr	update_shields
 
 	lda	#104
-	sta	shipx			; shipx at start is 18
+	sta	shipx			; shipx at start is 104
 
 	lda	#$1
 	sta	LEVEL			; start at level 1
@@ -581,13 +573,16 @@ same_enemy_type:
 
 	; find empty enemy slot
 
-	ldy	#$20			; point to enemies[0]
+	ldy	#$80			; point to enemies[0] $20 * 4
 find_empty_enemy:
 	jsr	is_sprite_active
 	bcc	add_enemy
 
 	iny
-	cpy	#($20+NUM_ENEMIES)
+	iny
+	iny
+	iny
+	cpy	#($80+4*NUM_ENEMIES)
 	bne	find_empty_enemy
 
 	jmp	move_enemies		; no empty, slots, move on
@@ -803,17 +798,17 @@ store_enemy_kind:
 
 				; want to store to $200 + (Y*4)
 
-	rep	#$20		; set A to 16-bit
-.a16
+;	rep	#$20		; set A to 16-bit
+;.a16
 
-	tya			; copy Y to A
-	asl
-	asl			; multiply by 4
-	tax			; put in X
+	tyx			; copy Y to A
+;	asl
+;	asl			; multiply by 4
+;	tax			; put in X
 
 
-	sep	#$20		; set A back to 8-bit
-.a8
+;	sep	#$20		; set A back to 8-bit
+;.a8
 
 	; determine enemy _x
 	; if < 0, make random between 2->34
@@ -1809,22 +1804,22 @@ done_with_boss:
 	; Missiles are 8,9,10,11 in sprite table
 
 
-	ldy	#$8			; point to missile[0]
+	ldy	#$20			; point to missile[0] (8*4)
 move_missiles:
 	jsr	is_sprite_active
 	bcc	loop_move_missiles	; if not active, skip
 
-	phy
-	tya
-	asl
-	asl
-	tay
+;	phy
+;	tya
+;	asl
+;	asl
+;	tay
 
 	lda	$0201,Y
 	dea
 	sta	$0201,Y
 
-	ply
+;	ply
 
 	cmp	#200
 
@@ -1897,7 +1892,10 @@ done_missile_collision:
 
 loop_move_missiles:
 	iny
-	cpy	#(8+NUM_MISSILES)	; have we checked all missiles?
+	iny
+	iny
+	iny
+	cpy	#($20+4*NUM_MISSILES)	; have we checked all missiles?
 	bne	move_missiles		; if not, loop
 
 done_move_missiles:
@@ -1948,16 +1946,16 @@ key_A:
 	bit	#$80
 	beq	game_unknown
 
-	ldy	#$8			; point to missile[y]
+	ldy	#$20			; point to missile[y] (8*4)
 fire_missiles:
 	jsr	is_sprite_active
 	bcs	end_fire_loop		; if active, skip to next
 
-	phy
-	tya
-	asl
-	asl
-	tay
+;	phy
+;	tya
+;	asl
+;	asl
+;	tay
 
 	lda	#8
 	clc
@@ -1968,15 +1966,18 @@ fire_missiles:
 	sta	$0201,Y
 
 
-	ply
+;	ply
 	jsr	activate_sprite
 
 	bra	done_fire_missiles	; done firing missile
 
 end_fire_loop:
 	iny				; point to next missile
+	iny
+	iny
+	iny
 
-	cpy	#(8+NUM_MISSILES)	; see if we have more missiles
+	cpy	#($20+4*NUM_MISSILES)	; see if we have more missiles
 	bne	fire_missiles		; if so, loop
 
 done_fire_missiles:

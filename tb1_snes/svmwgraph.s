@@ -272,32 +272,31 @@ found_keypress:
 	plp			; restore status
 	rts
 
-;===========================
-;===========================
-; is_sprite_active
-;===========================
-;===========================
-; assumes high sprite table at $0400
-; sets carry if active
-; clears carry if not
-; sprite number in Y
-is_sprite_active:
 
-	php			; save status
+;===========================
+;===========================
+; get_sprite_mask
+;===========================
+;===========================
+; only meant to be called by the routines below
+; sprite number is Y/4
+get_sprite_mask:
 
 	rep	#$30		; A=16bit X/Y=16bit
 .i16
 .a16
 
 	phx			; save X on stack
-	phy			; save Y on stack
 
-	tyx			; copy Y to X
+;	tyx			; copy Y to X
 
-	; address=$0400 + Y/4
+	; address=$0400 + Y/16
 	tya			; copy Y to A
 
-	lsr			; divide by 4
+	lsr			; divide by 16
+	lsr
+	tax
+	lsr
 	lsr
 	tay			; copy back to Y
 
@@ -309,6 +308,26 @@ is_sprite_active:
 .a8
 	lda	SPRITE_HIGH_LOOKUP,X
 				; get bitmask for X
+	plx
+	rts
+
+;===========================
+;===========================
+; is_sprite_active
+;===========================
+;===========================
+; assumes high sprite table at $0400
+; sets carry if active
+; clears carry if not
+; sprite number is Y/4
+is_sprite_active:
+
+	php			; save status
+	phy			; save Y on stack
+
+	jsr	get_sprite_mask
+.a8
+	; mask is in A
 
 	and	$0400,Y		; sprite on screen when bit is 0
 
@@ -316,14 +335,12 @@ is_sprite_active:
 
 sprite_is_not_active:
 	ply
-	plx
 	plp
 	clc
 	rts
 
 sprite_is_active:
 	ply
-	plx
 	plp
 	sec
 	rts
@@ -335,40 +352,20 @@ sprite_is_active:
 ;===========================
 ;===========================
 ; assumes high sprite table at $0400
-; sets carry if active
-; clears carry if not
-; sprite number in Y
+; sprite number is Y/4
 activate_sprite:
 
 	php				; store status
-	phx				; store X on stack
 	phy				; store Y on stack
 
-	rep	#$20			; make A 16-bit
-.a16
-
-	tyx				; copy Y to X
-
-	; address=$0400 + Y/4
-	tya				; copy Y to A
-	lsr				; divide by 4
-	lsr
-	tay				; transfer back to Y
-
-	txa				; get saved copy of Y
-	and	#$3			; mask to get low bits
-	tax				; transfer back to X
-
-	sep	#$20			; make A 8-bit
+	jsr	get_sprite_mask
 .a8
-	lda	SPRITE_HIGH_LOOKUP,X	; load from lookup table
 	eor	#$ff			; negate it
 
 	and	$0400,Y			; sprite on screen when bit is 0
 	sta	$0400,Y			; store it back out
 
 	ply				; restore values from stack
-	plx
 	plp
 	rts				; return
 
@@ -379,38 +376,18 @@ activate_sprite:
 ;===========================
 ;===========================
 ; assumes high sprite table at $0400
-; sets carry if active
-; clears carry if not
-; sprite number in Y
+; sprite number is Y/4
 deactivate_sprite:
 
 	php					; save status on stack
-	phx					; save X
 	phy					; save Y
 
-	tyx					; copy Y to X
-
-	rep	#$20				; set A to 16-bit
-.a16
-
-	; address=$0400 + Y/4
-	tya					; copy Y to A
-	lsr					; divide by 4
-	lsr
-	tay					; copy back to Y
-
-	txa					; get low bits into X
-	and	#$3				; Mask
-	tax
-
-	sep	#$20				; set A to 8-bit
+	jsr	get_sprite_mask
 .a8
-	lda	SPRITE_HIGH_LOOKUP,X		; lookup bits in table
 
 	ora	$0400,Y			; sprite off screen when bit is 1
 	sta	$0400,Y			; save value back out
 
 	ply				; restore Y
-	plx				; restore X
 	plp				; restore status
 	rts				; return
