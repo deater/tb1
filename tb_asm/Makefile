@@ -15,18 +15,18 @@ compress_data.o:    compress_data.c
 		
 			      
 lzss.o:    lzss.c
-	    gcc -O2 -Wall -c lzss.c
+		$(CC) $(CFLAGS) -c lzss.c
 					 
 lzss_new.o:    lzss_new.c
-	                          gcc -O2 -Wall -c lzss_new.c
+		$(CC) $(CFLAGS) -c lzss_new.c
 
 
 tb_asm:				  tb_asm.o	./sstrip/sstrip
-				  ld -o tb_asm tb_asm.o
+				  ld -melf_i386 -N -o tb_asm tb_asm.o
 				  ./sstrip/sstrip tb_asm
 		
 tb_asm.o:			  tb_asm.s data.lzss data.labels
-				  as -o tb_asm.o tb_asm.s
+				  as --32 -o tb_asm.o tb_asm.s
 			
 tb_asm.s:			  configure
 				  ./configure
@@ -40,7 +40,7 @@ data.lzss:			  compress_data data.inc
 				  
 
 configure:			  configure.c
-				  gcc -O2 -Wall -o configure configure.c
+				  $(CC) $(CFLAGS) -o configure configure.c
 					
 clean:	
 	rm -f *~ *.o tb_asm tb_asm.s core configure compress_data data.lzss data.header data.raw data.labels

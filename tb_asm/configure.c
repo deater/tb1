@@ -7,14 +7,14 @@
 #include "arch.h"
 
 int linux_detect_arch(void) {
- 
+
     /* Yes this is a bit messy, but it cleans up the makefile a bit *\
     \* The C-Preproccessor can be out friend ;)                     */
 
 /*   return ARCH_SPARC;  */
-      
+
 #if defined(__alpha__)
-   return ARCH_ALPHA;   
+   return ARCH_ALPHA;
 #elif defined(__arm__)
     return ARCH_ARM;
 #elif defined(__cris__)
@@ -34,14 +34,16 @@ int linux_detect_arch(void) {
 #elif defined(__s390__)
     return ARCH_S390;
 #elif defined(__sh3__) || defined(__sh2__) || defined(__sh4)
-    return ARCH_SH3  
+    return ARCH_SH3
 #elif defined(__sparc__)
     return ARCH_SPARC;
 #elif defined(__vax__)
     return ARCH_VAX;
+#elif defined(__x86_64__)
+    return ARCH_IX86;
 #else
     return ARCH_UNKNOWN;
-#endif 
+#endif
 
 }
 

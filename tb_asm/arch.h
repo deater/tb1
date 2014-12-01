@@ -12,6 +12,7 @@
 #define ARCH_SH3    11
 #define ARCH_SPARC  12
 #define ARCH_VAX    13
+#define ARCH_X86_64 14
 
 
 char *arch_names[]={
@@ -19,7 +20,7 @@ char *arch_names[]={
     "alpha",
     "arm",
     "cris",
-    "ia64", 
+    "ia64",
     "ix86",
     "m68k",
     "mips",
@@ -28,5 +29,6 @@ char *arch_names[]={
     "s390",
     "sh3",
     "sparc",
-    "vax"
+    "vax",
+    "x86_64",
 };
