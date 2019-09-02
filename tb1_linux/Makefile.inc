@@ -8,6 +8,8 @@
 #
 CC= gcc
 
+CFLAGS = -O2 -Wall -g
+
 #
 # Uncomment the following for SDL_mixer sound
 #
@@ -26,9 +28,9 @@ SDL_INCLUDE= `sdl-config --cflags`
 #
 # Uncomment the following for ncurses
 #
-#CURSES_TARGET= curses_svmwgraph.o
-#CURSES_FLAGS= -DCURSES_TARGET=1
-#CURSES_LIBS= -lncurses
+CURSES_TARGET= curses_svmwgraph.o
+CURSES_FLAGS= -DCURSES_TARGET=1
+CURSES_LIBS= -lncurses
 
 #
 # On machines w/ curses instead of ncurses [i.e. solaris, Irix, etc] 
@@ -42,14 +44,14 @@ SDL_INCLUDE= `sdl-config --cflags`
 #
 # Uncomment the following for opengGL
 #
-#OPENGL_TARGET= opengl_svmwgraph.o
-#OPENGL_FLAGS=-DOPENGL_TARGET
-#OPENGL_LIBS= -L/usr/X11R6/lib -lX11 -lICE -lXmu -lGL -lGLU
+OPENGL_TARGET= opengl_svmwgraph.o
+OPENGL_FLAGS=-DOPENGL_TARGET
+OPENGL_LIBS= -lX11 -lICE -lGL -lGLU
 
 
 ##############################
 # DO NOT EDIT BELOW THIS LINE
 ##############################
 
-INCLUDE_GLOBAL= -Wall -O2 $(SDL_INCLUDE)
+INCLUDE_GLOBAL= $(SDL_INCLUDE)
 LIBS_GLOBAL= -lm $(SDL_MIXER_LIBS) $(SDL_LIBS) $(CURSES_LIBS) $(OPENGL_LIBS)

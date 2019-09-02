@@ -134,26 +134,26 @@ void SDL_NoScale32bpp_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
 }
 
 
-void SDL_Double32bpp_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) { 
-   
-    int x,y,scale,color;
-        
+void SDL_Double32bpp_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
+
+    int x,y,color;//,scale;
+
     unsigned char *s_pointer,*t_pointer;
-        
+
     SDL_Surface *target;
-        
+
     target=(SDL_Surface *)target_p->output_screen;
-        
-    scale=target_p->scale;
-        
+
+//    scale=target_p->scale;
+
     if ( SDL_MUSTLOCK(target) ) {
        if ( SDL_LockSurface(target) < 0 )
           return;
     }
-   
+
     s_pointer=source->memory;
     t_pointer=((Uint8 *)target->pixels);
-     
+
     for(y=0;y<source->ysize;y++) {
        for(x=0;x<source->xsize;x++) {
           color=SDL_MapRGB(target->format,
@@ -173,7 +173,7 @@ void SDL_Double32bpp_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
              /* i=1 j=1 */
           *((Uint32 *) ( (t_pointer+4+(4*target_p->xsize)  )))=color;
 
-          s_pointer++; t_pointer+=8;          
+          s_pointer++; t_pointer+=8;
        }
        t_pointer+=4*target_p->xsize;
     }
@@ -182,159 +182,155 @@ void SDL_Double32bpp_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
     if ( SDL_MUSTLOCK(target) ) {
        SDL_UnlockSurface(target);
     }
-        
+
        /* Write this out to the screen */
     SDL_UpdateRect(target, 0, 0, target_p->xsize, target_p->ysize);
 }
 
 
 void SDL_NoScale16bpp_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
-   
+
    int x,y;
-   
+
    unsigned char *s_pointer,*t_pointer;
-   
+
    SDL_Surface *target;
-   
+
    target=(SDL_Surface *)target_p->output_screen;
-   
+
    if ( SDL_MUSTLOCK(target) ) {
       if ( SDL_LockSurface(target) < 0 )
       return;
    }
-   
+
    s_pointer=source->memory;
    t_pointer=((Uint8 *)target->pixels);
 
 //   printf("%i %i\n",source->xsize,source->ysize);
-   
+
    for (x=0;x<source->xsize;x++)
        for (y=0;y<source->ysize;y++) {
            *((Uint16 *)(t_pointer))=target_p->palette[*(s_pointer)];
            s_pointer++; t_pointer+=2;
        }
-   
-   
+
      /* Update the display */
       if ( SDL_MUSTLOCK(target) ) {
 	 SDL_UnlockSurface(target);
       }
-   
+
       /* Write this out to the screen */
    SDL_UpdateRect(target, 0, 0, source->xsize, source->ysize);
-   
+
 }
 
    /* I should make this generic, but it makes it really slow */
 void SDL_Double16bpp_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
-   
-   int x,y,scale;
-   
+
+   int x,y;
+
    unsigned char *s_pointer,*t_pointer;
-   
+
    SDL_Surface *target;
-   
+
    target=(SDL_Surface *)target_p->output_screen;
-   
-   scale=target_p->scale;
-   
+
+   //scale=target_p->scale;
+
    if ( SDL_MUSTLOCK(target) ) {
       if ( SDL_LockSurface(target) < 0 )
       return;
    }
-   
+
    s_pointer=source->memory;
    t_pointer=((Uint8 *)target->pixels);
 
    for (y=0;y<source->ysize;y++) {
        for (x=0;x<source->xsize;x++) {
-	   
+
 	   /* i=0, j=0 */
 	   *((Uint16 *) ( (t_pointer)))=
 	                                  target_p->palette[*(s_pointer)];
-	  
+
 	   /* i=1, j=0 */
 	   *((Uint16 *) ( (t_pointer+(2*target_p->xsize)  )))=
 	                                  target_p->palette[*(s_pointer)];
 	   /* i=0, j=1 */
 	   *((Uint16 *) ( (t_pointer+2) ))=
 	                                  target_p->palette[*(s_pointer)];
-	  
+
            /* i=1 j=1 */
 	    *((Uint16 *) ( (t_pointer+2+(2*target_p->xsize)  )))=
 	                                  target_p->palette[*(s_pointer)];
-	  
-	  
+
            s_pointer++; t_pointer+=4;
        }
        t_pointer+=2*target_p->xsize;
    }
-   
-   
+
      /* Update the display */
       if ( SDL_MUSTLOCK(target) ) {
 	 SDL_UnlockSurface(target);
       }
-   
+
       /* Write this out to the screen */
    SDL_UpdateRect(target, 0, 0, target_p->xsize, target_p->ysize);
-   
+
 }
 
 void SDL_NoScale8bpp_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
-   
+
    int x,y;
-   
+
    unsigned char *s_pointer,*t_pointer;
-   
+
    SDL_Surface *target;
-   
+
    target=(SDL_Surface *)target_p->output_screen;
-   
+
    if ( SDL_MUSTLOCK(target) ) {
       if ( SDL_LockSurface(target) < 0 )
       return;
    }
-   
+
    s_pointer=source->memory;
    t_pointer=((Uint8 *)target->pixels);
-   
+
    for (x=0;x<source->xsize;x++)
        for (y=0;y<source->ysize;y++) {
            *((Uint8 *)(t_pointer))=*(s_pointer);
            s_pointer++; t_pointer++;
        }
-   
-   
+
      /* Update the display */
       if ( SDL_MUSTLOCK(target) ) {
 	 SDL_UnlockSurface(target);
       }
-   
+
       /* Write this out to the screen */
    SDL_UpdateRect(target, 0, 0, source->xsize, source->ysize);
-   
+
 }
 
 
 void SDL_Double8bpp_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
-   
+
    int x,y;
-   
+
    unsigned char *s_pointer,*t_pointer;
-   
+
    SDL_Surface *target;
-   
+
    target=(SDL_Surface *)target_p->output_screen;
-   
+
    if ( SDL_MUSTLOCK(target) ) {
       if ( SDL_LockSurface(target) < 0 )
       return;
    }
-   
+
    s_pointer=source->memory;
    t_pointer=((Uint8 *)target->pixels);
-   
+
    for (y=0;y<source->ysize;y++) {
        for (x=0;x<source->xsize;x++) {
 	      /* i=0, j=0 */
@@ -349,36 +345,34 @@ void SDL_Double8bpp_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
        }
        t_pointer+=target_p->xsize;
    }
-   
+
      /* Update the display */
       if ( SDL_MUSTLOCK(target) ) {
 	 SDL_UnlockSurface(target);
       }
-   
+
       /* Write this out to the screen */
    SDL_UpdateRect(target, 0, 0, target_p->xsize, target_p->ysize);
-   
 }
 
 
-void SDL_clearKeyboardBuffer() {
+void SDL_clearKeyboardBuffer(void) {
    SDL_Event event;
    while (SDL_PollEvent(&event)) {
-      
    }
 }
 
-int SDL_getInput() {
-   
+int SDL_getInput(void) {
+
    SDL_Event event;
    int keypressed,button;
    int axis,direction;
-   
+
    static int going_right=0;
    static int going_left=0;
-   
+
    while ( SDL_PollEvent(&event)) {
-      
+
        switch(event.type) {
 	case SDL_JOYBUTTONDOWN:
 	     button=event.jbutton.button;
@@ -393,7 +387,7 @@ int SDL_getInput() {
 	     direction=event.jaxis.value;
 //	     printf("%i %i\n",axis,direction);
 	     if (axis==0) { /* X */
-		
+
 	        if (direction>5000) {
 		   if (!going_right) {
 		      going_right=1;
@@ -415,7 +409,7 @@ int SDL_getInput() {
 //		if (direction>0) return VMW_UP;
 //		if (direction<0) return VMW_DOWN;
 //	     }
-	  
+
 	     break;
 	case SDL_KEYDOWN:
 	     keypressed=event.key.keysym.sym;

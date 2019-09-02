@@ -185,27 +185,24 @@ void openGL_flushPalette(vmwSVMWGraphState *state) {
 
 void openGL_BlitMem(vmwSVMWGraphState *target_p, vmwVisual *source) {
 
-   
-   int x=0,y=0,temp_col,i,j,ending_j,ending_i;
+
+   int x=0,y=0,i,j;//temp_col,ending_j,ending_i;
    unsigned char *s_pointer;
 
     GLubyte temp_data[64*64*4];
-   
-    GLubyte *t_pointer;
+
+//    GLubyte *t_pointer;
 
     GLfloat light_position[]={0.0,0.0,25.0,0.0};
-    GLfloat light_ambient[]={0.65,0.65,0.65,1.0};
+//    GLfloat light_ambient[]={0.65,0.65,0.65,1.0};
     GLfloat lmodel_ambient[]={0.4,0.4,0.4,1.0};
     GLfloat white_light[]={1.0,1.0,1.0,1.0};
-   
-      
+
     glLoadIdentity();
 
     gluLookAt(0.0,0.0,20.0,
 	      0.0,0.0,0.0,
 	      0.0,1.0,1.0);
-   
-    
 
     glLightfv(GL_LIGHT0, GL_POSITION, light_position);
     glLightfv(GL_LIGHT0, GL_DIFFUSE, white_light);

@@ -264,7 +264,7 @@ struct obstruction_type {
 
 void leveltwoengine(tb1_state *game_state, char *shipfile, char *levelfile,
 		    char *spritefile,char *level_num, char *level_desc,
-		    void *close_function) 
+		    void *close_function)
 {
     int ch,i,temp_y;
     char tempst[BUFSIZ];
@@ -274,15 +274,15 @@ void leveltwoengine(tb1_state *game_state, char *shipfile, char *levelfile,
     int levelover=0,j,offscreen_row=0;
     struct timeval timing_info;
     struct timezone dontcare;
-   
-    long oldsec,oldusec,time_spent;
+
+    long oldusec,time_spent;//oldsec
     int howmuchscroll=200; /* there is a reason for this */
     struct obstruction_type obstruction[12][20];
     int shipadd=0,shipframe=1;
     int our_row,rows_goneby=0,rows_offset=0;
     int grapherror;
     int done_waiting,type;
-   
+
     vmwFont *tb1_font;
     vmwVisual *virtual_1;
     vmwVisual *virtual_2;
@@ -296,17 +296,20 @@ void leveltwoengine(tb1_state *game_state, char *shipfile, char *levelfile,
     tb1_font=game_state->graph_state->default_font;
     virtual_1=game_state->virtual_1;
     virtual_2=game_state->virtual_2;
-   
+
        /* Set this up for Save Game */
     game_state->begin_score=game_state->score;
     game_state->begin_shields=game_state->shields;
-    
+
        /* Load Sprite Data */
     grapherror=vmwLoadPicPacked(0,0,virtual_1,1,1,
 			        tb1_data_file(shipfile,
 					      game_state->path_to_data),
 				game_state->graph_state);
-   
+	if (grapherror) {
+		return;
+	}
+
     ship_shape[0]=vmwGetSprite(0,0,48,30,virtual_1);
     ship_shape[1]=vmwGetSprite(0,32,48,30,virtual_1);
     ship_shape[2]=vmwGetSprite(0,64,48,30,virtual_1);
@@ -360,15 +363,14 @@ void leveltwoengine(tb1_state *game_state, char *shipfile, char *levelfile,
      
     change_shields(game_state);
 
-   
-       /* Ready the timing loop */
-    gettimeofday(&timing_info,&dontcare);
-    oldsec=timing_info.tv_sec; oldusec=timing_info.tv_usec;
+	/* Ready the timing loop */
+	gettimeofday(&timing_info,&dontcare);
+	//oldsec=timing_info.tv_sec;
+	oldusec=timing_info.tv_usec;
 
-   
-       /* Get the initial background ready */
-       /* We copy the last 40 rows into vaddr_2 */
-       /* as we are scrolling bottom_up         */
+	/* Get the initial background ready */
+	/* We copy the last 40 rows into vaddr_2 */
+	/* as we are scrolling bottom_up         */
     offscreen_row=data->level_length-(COL_HEIGHT*2);
     for(i=0;i<ROW_WIDTH;i++) {
        for(j=0;j<40;j++) {
@@ -754,31 +756,28 @@ void leveltwoengine(tb1_state *game_state, char *shipfile, char *levelfile,
        if (time_spent<30000) usleep(100);
        else (done_waiting=1);                       
     }
-    oldusec=timing_info.tv_usec;
-    oldsec=timing_info.tv_sec;
-       
-       /* If game is paused, don't keep track of time */
-      
-    if (game_paused) {
-       gettimeofday(&timing_info,&dontcare);
-       oldusec=timing_info.tv_usec;
-       oldsec=timing_info.tv_sec;
-       game_paused=0;
-    }
-    
 
-       /* The leve is over */
-       /* FIXME autocalculate rather than 1950 */
-       
+	oldusec=timing_info.tv_usec;
+	//oldsec=timing_info.tv_sec;
+
+	/* If game is paused, don't keep track of time */
+	if (game_paused) {
+		gettimeofday(&timing_info,&dontcare);
+		oldusec=timing_info.tv_usec;
+		//oldsec=timing_info.tv_sec;
+		game_paused=0;
+	}
+
+	/* The level is over */
+	/* FIXME autocalculate rather than 1950 */
+
     if (rows_goneby>1950) {
 //       printf("%i\n",rows_goneby);
 //       coolbox(35,85,215,110,1,virtual_1);
 //       vmwTextXY("TO BE CONTINUED...",55,95,4,7,0,tb1_font,virtual_1);
 //       vmwBlitMemToDisplay(game_state->graph_state,virtual_1);
 //       pauseawhile(10);
-       
-	 
-  
+
        vmwClearKeyboardBuffer();
        pauseawhile(5);
        vmwLoadPicPacked(0,0,game_state->virtual_3,0,1,

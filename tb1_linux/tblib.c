@@ -8,14 +8,14 @@
 #include "graphic_tools.h"
 
 void pauseawhile(int howlong) {
-   
+
        struct timeval bob;
        struct timezone mree;
-       long begin_s,begin_u;
-   
+       long begin_s;
+
        vmwClearKeyboardBuffer();
        gettimeofday(&bob,&mree);
-       begin_s=bob.tv_sec; begin_u=bob.tv_usec;
+       begin_s=bob.tv_sec;
        while ((bob.tv_sec-begin_s)<howlong) {
 	         if (vmwGetInput()) return;
 	         usleep(30);

@@ -9,7 +9,7 @@
 #include <stdio.h>  /* For printf */
 #include <stdlib.h> /* For Memory Allocation */
 
-void *(*vmwSetupGraphics)(int *xsize,int *ysize, int *bpp, 
+void *(*vmwSetupGraphics)(int *xsize,int *ysize, int *bpp,
 			  int fullscreen,int verbose);
 void (*vmwBlitMemToDisplay)(vmwSVMWGraphState *display, vmwVisual *source);
 void (*vmwFlushPalette)(vmwSVMWGraphState *state);
@@ -21,29 +21,29 @@ void (*vmwCloseGraphics)(void);
 vmwSVMWGraphState *vmwSetupSVMWGraph(int display_type,int xsize,int ysize,
 				     int bpp,int scale,int fullscreen,
 				     int verbose) {
-   
+
     vmwSVMWGraphState *temp_state;
-   
+
     if  ( (temp_state=calloc(1,sizeof(vmwSVMWGraphState)) )==NULL) {
        printf("Error allocating memory!\n");
        return NULL;
     }
        /* Setup Setup routines */
     switch (display_type) {
-        case VMW_NULLTARGET:   
+        case VMW_NULLTARGET:
                                vmwSetupGraphics=null_setupGraphics;
                                break;
-        case VMW_CURSESTARGET: 
+        case VMW_CURSESTARGET:
 #ifdef CURSES_TARGET
                                vmwSetupGraphics=curses_setupGraphics;
 #endif
                                break;
-        case VMW_OPENGLTARGET: 
+        case VMW_OPENGLTARGET:
 #ifdef OPENGL_TARGET
                                vmwSetupGraphics=openGL_setupGraphics;
 #endif
                                break;
-        case VMW_SDLTARGET:    
+        case VMW_SDLTARGET:
 #ifdef SDL_TARGET
                                vmwSetupGraphics=SDL_setupGraphics;
 #endif
@@ -51,14 +51,14 @@ vmwSVMWGraphState *vmwSetupSVMWGraph(int display_type,int xsize,int ysize,
         default: printf("ERROR! Unknown Display Target %i.\n",display_type);
                  return NULL;
     }
-   
+
     temp_state->bpp=bpp;
     temp_state->xsize=xsize;
     temp_state->ysize=ysize;
     temp_state->scale=scale;
     temp_state->default_font=NULL;
     temp_state->palette_size=256;
-   
+
     if ( (temp_state->palette=calloc(temp_state->palette_size,sizeof(int)) )==NULL) {
        printf("Error allocating palette of size %i!\n",temp_state->palette_size);
        return NULL;
@@ -69,6 +69,10 @@ vmwSVMWGraphState *vmwSetupSVMWGraph(int display_type,int xsize,int ysize,
        return NULL;
     }
 
+	if (vmwSetupGraphics==NULL) {
+		fprintf(stderr,"Unsupported graphics target!\n");
+		return NULL;
+	}
 
        /* Attempt to get desired graphics state */
     temp_state->output_screen=vmwSetupGraphics(&temp_state->xsize,
@@ -76,7 +80,7 @@ vmwSVMWGraphState *vmwSetupSVMWGraph(int display_type,int xsize,int ysize,
 					       &temp_state->bpp,
 					       fullscreen,verbose);
    if (temp_state->output_screen==NULL) return NULL;
-       /* Setup proper blitter and others*/   
+       /* Setup proper blitter and others*/
     switch (display_type) {
        case VMW_NULLTARGET: 
                vmwFlushPalette=null_flushPalette;

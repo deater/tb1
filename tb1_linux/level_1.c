@@ -473,7 +473,7 @@ int add_another_enemy(int start_of_level,
 
     /* The Main Level One */
 void LevelOneEngine(tb1_state *game_state) {
-   
+
     int ch=0;
     int i,j,grapherror;
     char tempst[300];
@@ -481,32 +481,35 @@ void LevelOneEngine(tb1_state *game_state) {
     int shipx=36,shipadd=0,shipframe=1;
     vmwSprite *bigship1,*bigship2,*bigship3;
     vmwSprite *shapetable[20];
-    long oldsec,oldusec,time_spent=1;
+    long oldusec,time_spent=1; // oldsec;
     int howmuchscroll=0;
     int game_paused=0;
     int done_waiting=0;
-    
+
     vmwVisual *virtual_1,*virtual_2;
     vmwFont *tb1_font;
-   
+
        /* For convenience */
     tb1_font=game_state->graph_state->default_font;
     virtual_1=game_state->virtual_1;
     virtual_2=game_state->virtual_2;
-   
+
        /* Set this up for Save Game */
     game_state->begin_score=game_state->score;
     game_state->begin_shields=game_state->shields;
-   
+
        /* Load Ship Sprites */
     grapherror=vmwLoadPicPacked(0,0,virtual_1,1,1,
 	       tb1_data_file("level1/ships.tb1",game_state->path_to_data),
 	       game_state->graph_state);
+	if (grapherror) {
+		return;
+	}
 
     bigship1=vmwGetSprite(0,0,48,30,virtual_1);
     bigship2=vmwGetSprite(0,32,48,30,virtual_1);
     bigship3=vmwGetSprite(0,64,48,30,virtual_1);
-   
+
        /* Load Inanimate Object Shapes */
     grapherror=vmwLoadPicPacked(0,0,virtual_1,0,1,
 	       tb1_data_file("level1/tbshapes.tb1",game_state->path_to_data),
@@ -552,14 +555,14 @@ void LevelOneEngine(tb1_state *game_state) {
     }
        /* Initialize shield state */
     change_shields(game_state);
-   
+
        /* Initiate some last variables */
     add_another_enemy(1,game_state);
-    pauseawhile(5); 
-   
+    pauseawhile(5);
+
        /* Get time values for frame-limiting */
     gettimeofday(&timing_info,&dontcare);
-    oldsec=timing_info.tv_sec; 
+    //oldsec=timing_info.tv_sec;
     oldusec=timing_info.tv_usec;
 
        /* MAIN GAME LOOP */
@@ -567,7 +570,7 @@ void LevelOneEngine(tb1_state *game_state) {
        ch=0;
           /* Scroll the Stars */
           /* We have a 240x400 field of stars */
-       howmuchscroll--; 
+       howmuchscroll--;
        if (howmuchscroll<0) howmuchscroll=399;
 
           /* If scroll>199, then we have to split into two copies */
@@ -578,14 +581,13 @@ void LevelOneEngine(tb1_state *game_state) {
 				400-howmuchscroll,
 				virtual_1,0,0);
 	  vmwArbitraryCrossBlit(virtual_2,0,0,240,howmuchscroll-200,
-			        virtual_1,0,400-howmuchscroll); 
+			        virtual_1,0,400-howmuchscroll);
        }
        else {
 	  vmwArbitraryCrossBlit(virtual_2,0,howmuchscroll,240,200,
 				virtual_1,0,0);
        }
 
-       
           /* Add new enemies and move to next wave if needed */
        if (enemies_out<NUM_ENEMIES) {
 	  if (add_another_enemy(0,game_state)==LEVEL_OVER) {
@@ -594,16 +596,14 @@ void LevelOneEngine(tb1_state *game_state) {
 	     return;
 	  }
        }
-       
-	 
-	  
+
           /* See if the enemies have hit anything/scrolled off screen */
        for(i=0;i<NUM_ENEMIES;i++) {
           if (!enemy[i].dead) {
-	     
+
                 /* Check to see if our missiles have hit any enemies */
              for(itemp=0;itemp<NUM_MISSILES;itemp++) {
-	        if (missile[itemp].out) { 
+	        if (missile[itemp].out) {
                    if (collision(missile[itemp].x,missile[itemp].y,10,10,
                        enemy[i].x,enemy[i].y,9,9)) {
                       if ((game_state->sound_possible)&&(game_state->sound_enabled)) 
@@ -619,7 +619,7 @@ void LevelOneEngine(tb1_state *game_state) {
 		   }
 		}
 	     }
-	     
+
 	        /* While we are at it, see if scrolled off screen */
 	     if (enemy[i].y>179) {
 		enemy[i].out=0;
@@ -628,7 +628,7 @@ void LevelOneEngine(tb1_state *game_state) {
 	     }
 	  }
        }
-       
+
           /* Explode the things that are exploding */
        for(i=0;i<NUM_ENEMIES;i++) {
           if (enemy[i].exploding) {
@@ -644,9 +644,9 @@ void LevelOneEngine(tb1_state *game_state) {
              else enemy[i].exploding=0;
 	  }
        }
-       
+
           /* Move the Missiles */
-       for(i=0;i<NUM_MISSILES;i++) { 
+       for(i=0;i<NUM_MISSILES;i++) {
           if (missile[i].out) {
 	     missile[i].y-=5;
              if (missile[i].y<5) missile[i].out=0;
@@ -654,7 +654,7 @@ void LevelOneEngine(tb1_state *game_state) {
 			       virtual_1);
 	  }
        }
-       
+
           /* MOVE ENEMIES */
        for(i=0;i<NUM_ENEMIES;i++) {
           if ((enemy[i].out) && (!enemy[i].dead)) {
@@ -708,10 +708,12 @@ void LevelOneEngine(tb1_state *game_state) {
 			usleep(30000);
 		     }
 	             break;
-	   case 'S': 
-	   case 's': if (game_state->sound_possible) 
-	                game_state->sound_enabled=!(game_state->sound_enabled); break;
-           case VMW_F2: game_paused=1; 
+	   case 'S':
+	   case 's': if (game_state->sound_possible) {
+	                	game_state->sound_enabled=!(game_state->sound_enabled);
+			}
+			break;
+           case VMW_F2: game_paused=1;
 	                savegame(game_state);
 	               break;
            case ' ':  for(j=0;j<2;j++)
@@ -766,21 +768,18 @@ void LevelOneEngine(tb1_state *game_state) {
 	  if (time_spent<0) time_spent+=1000000;
 	  if (time_spent<30000) usleep(100);
 	  else (done_waiting=1);
-	  
-       }              
+       }
        oldusec=timing_info.tv_usec;
-       oldsec=timing_info.tv_sec;
-       
+       //oldsec=timing_info.tv_sec;
+
           /* If game is paused, don't keep track of time */
-       
        if (game_paused) {
 	  gettimeofday(&timing_info,&dontcare);
 	  oldusec=timing_info.tv_usec;
-	  oldsec=timing_info.tv_sec;
+	  //oldsec=timing_info.tv_sec;
 	  game_paused=0;
        }
     }
-   
 }
 
     /* The little opener before Level 1 */

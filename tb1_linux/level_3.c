@@ -24,14 +24,13 @@ vmwSprite *shape_table[80];
 
 void loadlevel3shapes(tb1_state *game_state) {
 
-   
     int i,j;
-   
+
     vmwLoadPicPacked(0,0,game_state->virtual_2,0,1,
 		  tb1_data_file("level3/tblev3.tb1",
       	                      game_state->path_to_data),
 		  game_state->graph_state);
-   
+
     for(j=0;j<5;j++) {
        for(i=0;i<20;i++) {
 	  shape_table[(j*20)+i]=vmwGetSprite(1+(i*11),1+(j*11),
@@ -41,7 +40,7 @@ void loadlevel3shapes(tb1_state *game_state) {
 }
 
 int our_sgn(int value) {
-   
+
    if (value==0) return 0;
    if (value<0) return -1;
    return 1;
@@ -176,24 +175,22 @@ void LevelThreeEngine(tb1_state *game_state) {
     int ch,direction=NORTH;
     int x_add=0,y_add=0;
     int game_paused=0;
-   
+
     int tom_x=100,tom_y=100,walking=0;
-    
-   
-    vmwVisual *virtual_1,*virtual_2;
-    vmwFont *tb1_font;
-   
+
+    vmwVisual *virtual_1;//,*virtual_2;
+//    vmwFont *tb1_font;
+
     long oldsec,oldusec,time_spent;
-   
+
     struct timeval timing_info;
     struct timezone dontcare;
-    int speed_factor=0;
-   
-   
+//    int speed_factor=0;
+
     virtual_1=game_state->virtual_1;
-    virtual_2=game_state->virtual_2;
-    tb1_font=game_state->graph_state->default_font;
-    
+//    virtual_2=game_state->virtual_2;
+//    tb1_font=game_state->graph_state->default_font;
+
     loadlevel3shapes(game_state);
 /*  computer_0hits:=0;
   whatdelay:=1;
@@ -245,7 +242,7 @@ void LevelThreeEngine(tb1_state *game_state) {
   pauseawhile(300);
   numpassive:=0;
   levelover:=false;
-  
+
 newroom:
    numpits:=0;
    changeroom:=false;
@@ -276,7 +273,7 @@ newroom:
      end;
      numpits:=2;  { actual}
      dopits;
-     
+
   for i:=0 to 10 do
       for j:=0 to 2 do begin
           put10shape240(shape3array[4],vaddr2,60+(j*10),80+(i*10));
@@ -310,7 +307,7 @@ newroom:
 
      doroom(true,true,false,false);
 
-  
+
   end;
   if room=1 then begin
      whichroomnext[0]:=2;
@@ -431,11 +428,11 @@ newroom:
 
     gettimeofday(&timing_info,&dontcare);
     oldsec=timing_info.tv_sec; oldusec=timing_info.tv_usec;
-   
+
 
 /**** GAME LOOP ****/
 /*******************/
-  
+
     while (!level_over) {
 
 
@@ -566,7 +563,7 @@ newroom:
            end;
         end;
 */
- 
+
        /***MOVE BULLETS***/
 /*    if bullet1out then begin
        case bullet1dir of
@@ -628,7 +625,7 @@ newroom:
     end;
    }
 */
-     
+
        /***READ KEYBOARD***/
     if ( (ch=vmwGetInput())!=0) {
        switch(ch){
@@ -654,7 +651,7 @@ newroom:
 	case VMW_F1:   game_paused=1;
 	               help(game_state);
 	               break;
-	  
+
         case 'P':
 	case 'p':      game_paused=1;
                        coolbox(65,85,175,110,1,virtual_1);
@@ -670,14 +667,14 @@ newroom:
 	case 's':      if (game_state->sound_possible)
 	                  game_state->sound_enabled=!(game_state->sound_enabled);
                        break;
-	  
+
 	case VMW_F2:   game_paused=1;
 	               savegame(game_state);
 	               break;
 	case ' ':      /* shoot */
 	               break;
 	  /*
-	  
+
       if (ch=' ') and havegun then begin
          if (bullet1out=false) then begin
             {if sbeffects then StartSound(Sound[4], 0, false);}
@@ -700,15 +697,15 @@ newroom:
 */
        }
     }
-       
+
        /***MOVE TOM***/
-        
+
 
      /*   ucollide:=upcollide(shipx,shipy,abs(shipyadd),-abs(shipyadd),10,vaddr2);
         dcollide:=upcollide(shipx,shipy,abs(shipyadd),8,10,vaddr2);
         lcollide:=leftcollide(shipx,shipy,abs(shipxadd),-abs(shipxadd),8,vaddr2);
         rcollide:=leftcollide(shipx,shipy,abs(shipxadd),0,8,vaddr2);*/
-       
+
        /* if (shipframe=1) and (ucollide<>0) then shipyadd:=0;
         if (shipframe=3) and (dcollide<>0) then shipyadd:=0;
         if (shipframe=2) and (rcollide<>0) then shipxadd:=0;
@@ -745,10 +742,10 @@ newroom:
               end;
         end;
 	*/
-       
+
        if ((!y_add) || (!x_add)) walking+=4;
        else walking=0;
-       
+
        if (walking>12) walking=0;
 
           switch(direction) {
@@ -760,10 +757,9 @@ newroom:
                          break;
 	     case WEST:  vmwPutSprite (shape_table[TOM_SHAPE+3+walking],tom_x,tom_y,game_state->virtual_1);
 	  }
-       
+
        vmwBlitMemToDisplay(game_state->graph_state,game_state->virtual_1);
-       
-       
+
           /* Calculate how much time has passed */
        gettimeofday(&timing_info,&dontcare);
        time_spent=timing_info.tv_usec-oldusec;
@@ -771,7 +767,7 @@ newroom:
 #ifdef DEBUG_ON
           printf("%f\n",1000000/(float)time_spent);
 #endif
-              
+
           /* If time passed was too little, wait a bit */
        while (time_spent<33000){
 	  gettimeofday(&timing_info,&dontcare);
@@ -779,36 +775,35 @@ newroom:
 	  time_spent=timing_info.tv_usec-oldusec;
 	  if (timing_info.tv_sec-oldsec) time_spent+=1000000;
        }
-           
+
           /* It game is paused, don't keep track of time */
        if (game_paused) {
 	  gettimeofday(&timing_info,&dontcare);
 	  oldusec=timing_info.tv_usec;
 	  oldsec=timing_info.tv_sec;
 	  game_paused=0;
-	  speed_factor=1;
+	  //speed_factor=1;
        }
        else {
-	  speed_factor=(time_spent/30000);
+	  //speed_factor=(time_spent/30000);
 	  oldusec=timing_info.tv_usec;
 	  oldsec=timing_info.tv_sec;
        }
-       
     }
 }
 
 
 
 void LevelThreeLittleOpener(tb1_state *game_state) {
-   
+
     int grapherror,i,j;
-   
+
     vmwFont *tb1_font;
     vmwVisual *virtual_1,*virtual_2;
-   
+
     int star_x[6];
     int star_y[6];
-   
+
     tb1_font=game_state->graph_state->default_font;
     virtual_1=game_state->virtual_1;
     virtual_2=game_state->virtual_2;
@@ -819,6 +814,10 @@ void LevelThreeLittleOpener(tb1_state *game_state) {
     grapherror=vmwLoadPicPacked(0,0,virtual_2,
 			        1,1,tb1_data_file("level3/tbl3intr.tb1",
 				game_state->path_to_data),game_state->graph_state);
+	if (grapherror) {
+		return;
+	}
+
     vmwArbitraryCrossBlit(game_state->virtual_2,0,3,171,114,
 			  game_state->virtual_1,10,10);
 

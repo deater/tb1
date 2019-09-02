@@ -101,13 +101,13 @@ void vmw_opener(tb1_state *game_state, vmwVisual *virtual_1) {
 }
 
 int main(int argc,char **argv) {
-   
+
    int i,grapherror,reloadpic=0;
    int ch,barpos,time_sec;
    int graphics_target=VMW_SDLTARGET;
    FILE *fff;
    char *dir_name,options_file[BUFSIZ];
-   vmwVisual *virtual_1,*virtual_2,*virtual_3; 
+   vmwVisual *virtual_1,*virtual_3;//*virtual_2 
 
    tb1_state *game_state;
 
@@ -130,7 +130,7 @@ int main(int argc,char **argv) {
    game_state->shields=0;
    game_state->score=0;
    game_state->virtual_1=NULL;
-   game_state->virtual_2=NULL;
+   //game_state->virtual_2=NULL;
    game_state->virtual_3=NULL;
    game_state->sound_possible=1;
    game_state->music_enabled=1;
@@ -310,7 +310,7 @@ int main(int argc,char **argv) {
 
       /* To ease typing burden */
    virtual_1=game_state->virtual_1;
-   virtual_2=game_state->virtual_2;
+   //virtual_2=game_state->virtual_2;
    virtual_3=game_state->virtual_3;
    tb1_font=game_state->graph_state->default_font;
 
@@ -328,6 +328,9 @@ int main(int argc,char **argv) {
 			       tb1_data_file("tbomb1.tb1",
 					      game_state->path_to_data),
 				game_state->graph_state);
+	if (grapherror) {
+		return -1;
+	}
 
       /* Bit of a hack to load proper unfade colors */
    vmwFadeToBlack(game_state->graph_state,virtual_1,1);
