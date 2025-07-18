@@ -1,16 +1,3 @@
-Update:
-	I've included the DOS binaries too.  Note the source code here
-	is for the last DOS release, which has some 386 code to speed up
-	things as well as more compact PAINTPROV6.0 assets.  You'll find
-	this executable in "exe32" directory.
-
-	The "exe" directory contains the files from the tbv24a.zip which
-	is the one that has lived on my website since 1996.
-
-
-what follows is the old dos readme... I'll update it one of these days..
-
-
 °°°°°² °°°°°² °²  °²     °°°°²  °°°°°² °²  °² °°°°²  °°°°°² °²  °²
   °²   °²  °² °°²°°²     °²  °² °²  °² °°²°°² °²  °² °²     °°²°°²
   °²   °²  °² °²°²°²     °°°°²  °²  °² °²°²°² °°°°²  °°°°²  °²°²°²
@@ -227,10 +214,9 @@ Contents
       be a big help.
 
       Vince Weaver                    vmweaver@wam.umd.edu
-      [real home address]
-      [redacted]
-      [it was simpler times]
-      Joppa, MD 21085
+      [real home]
+      326 Foster Knoll Dr.
+      Joppa, MD 21085-4706
 
 
  8.0  ACKNOWLEDGEMENTS

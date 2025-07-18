@@ -1,0 +1,6 @@
+This is apparently the "final" DOS version that matches the source code before.
+
+It's mostly the same, but in theory it uses some 386 instructions to
+speed up some routines, as well as the slightly more compact
+PAINTPROV6.0 format for the assets.
+
